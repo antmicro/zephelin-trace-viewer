@@ -1,0 +1,3 @@
+[submodule "third-party/speedscope"]
+	path = third-party/speedscope
+	url = ../speedscope.git

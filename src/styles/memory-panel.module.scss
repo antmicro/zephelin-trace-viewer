@@ -1,0 +1,108 @@
+///
+/// The definition of styles for the panel with memory usage.
+///
+
+@use "./colors.scss";
+
+$select-height: 3rem;
+
+.ram-overview-content {
+  flex: 9 0;
+  width: 100%;
+  max-height: calc(100% - $select-height - 0.1rem - 2px);
+
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+
+  .ram-overview-selectors {
+    flex: 0 1 auto;
+
+    $ver-margin: 1rem;
+    height: calc(100% - $ver-margin);
+    margin-top: $ver-margin;
+    padding: 0 0.5rem;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    button {
+      flex: 1 0;
+      border-radius: 0.2rem;
+      background-color: transparent;
+
+      &:hover {
+        background-color: var(--color-gray-500);
+      }
+
+      &.selected {
+        color: var(--color-green-900);
+        border-color: var(--color-green-900);
+      }
+    }
+  }
+}
+
+
+.memory-usage-content {
+  flex: 9 0;
+  width: 100%;
+  max-height: calc(100% - $select-height - 0.1rem - 2px);
+
+  display: flex;
+  flex-direction: row;
+
+  .memory-usage-legend {
+    $ver-padding: 0.5rem;
+    max-height: calc(100% - 2*$ver-padding);
+    margin: auto 0.5rem;
+    padding: $ver-padding 0;
+    overflow: auto;
+
+    p {
+      padding-bottom: 0.5rem;
+
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 0.5rem;
+
+      // Allow to break really long names
+      word-break: break-word;
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.switch>form {
+  max-height: $select-height;
+  flex: 1 0;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+
+  border: var(--color-gray-500) 1px solid;
+  border-radius: 0.5rem;
+  padding: 0.1rem;
+
+  input {
+    display: none;
+  }
+
+  &>label {
+    padding: 0.3rem;
+    margin: 0.2rem;
+    border-radius: 0.3rem;
+    background-color: transparent;
+
+    &:has(input:checked) {
+      background-color: var(--color-green-500);
+    }
+  }
+
+}

@@ -1,0 +1,36 @@
+///
+/// The definition of styles for the panel with model information.
+///
+
+@use "./colors.scss";
+
+.model-event-section {
+  table {
+    thead {
+      border-bottom: 1px solid var(--borderGray-default);
+    }
+
+    th {
+      padding: 0.2rem 0.3rem;
+      text-align: right;
+
+      &.key {
+        text-align: left;
+      }
+    }
+  }
+}
+
+.model-layer-section {
+  margin-top: 1rem;
+
+  h3 {
+    border-bottom: 1px solid var(--borderGray-default);
+    margin: 0.5rem 0;
+  }
+
+  li {
+    padding: 0.2rem 0.3rem;
+    margin-left: 0.5rem;
+  }
+}

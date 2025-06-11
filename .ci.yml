@@ -1,0 +1,1 @@
+include: analog-devices-zephyr-ai-ci-scripts@main:trace_viewer.yml

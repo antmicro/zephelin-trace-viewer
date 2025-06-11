@@ -1,0 +1,38 @@
+import { useState } from "preact/hooks";
+import { FrameInfo } from '@speedscope/lib/profile';
+import { profileGroupAtom, viewModeAtom } from '@speedscope/app-state';
+import { FlamechartViewState, SandwichViewState } from '@speedscope/app-state/profile-group';
+import { ViewMode } from '@speedscope/lib/view-mode';
+
+/** Provides the frame selected in the Speedscope, returns statefull object */
+export function useFrameProvider() {
+    const [frameSt, setFrameSt] = useState<FrameInfo | undefined>(undefined);
+    profileGroupAtom.subscribe(() => {
+        const activeProfile = profileGroupAtom.getActiveProfile();
+        if (activeProfile === null) {
+            setFrameSt(undefined);
+            return;
+        }
+        const viewMode = viewModeAtom.get();
+        let activeView: FlamechartViewState | SandwichViewState;
+        switch (viewMode) {
+        case ViewMode.CHRONO_FLAME_CHART:
+            activeView = activeProfile.chronoViewState;
+            break;
+        case ViewMode.LEFT_HEAVY_FLAME_GRAPH:
+            activeView = activeProfile.leftHeavyViewState;
+            break;
+        case ViewMode.SANDWICH_VIEW:
+            activeView = activeProfile.sandwichViewState;
+            break;
+        }
+        if (viewMode === ViewMode.SANDWICH_VIEW) {
+            setFrameSt((activeView as SandwichViewState)?.callerCallee?.selectedFrame);
+
+        } else {
+            setFrameSt((activeView as FlamechartViewState)?.selectedNode?.frame);
+        }
+    });
+
+    return { frameSt };
+}

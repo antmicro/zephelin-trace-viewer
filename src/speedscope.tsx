@@ -6,7 +6,7 @@ import { Fragment, JSX, VNode } from 'preact';
 import { ThemeProvider, useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
 import { ApplicationContainer } from '@speedscope/views/application-container';
-import { customWelcomeMessagesAtom, toolbarTitleAtom } from '@speedscope/app-state';
+import { customWelcomeMessagesAtom, toolbarConfigAtom } from '@speedscope/app-state';
 import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
@@ -111,8 +111,10 @@ export const PALE_PURPLE = "#af7fe4";
 
 /** Element representing Speedscope app */
 const Speedscope = memo((): JSX.Element => {
-    // Remove title from Speedscope toolbar
-    toolbarTitleAtom.set("");
+    // Remove title and additional buttons from Speedscope toolbar
+    toolbarConfigAtom.set({
+        title: '', importButton: false, exportButton: false, themeButton: false, dragImport: false,
+    });
     // Adjust Speedscope theme colors
     darkTheme.selectionPrimaryColor = DEEP_PURPLE;
     darkTheme.selectionSecondaryColor = PURPLE;
@@ -141,6 +143,7 @@ const Speedscope = memo((): JSX.Element => {
         if (divRef.current !== null) {
             resizeOserver.observe(divRef.current);
         }
+
         // Disconnect all elements on cleanup
         return () => resizeOserver.disconnect();
     }, []);

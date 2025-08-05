@@ -30,7 +30,6 @@ export function getDieTempData() {
     // Delete sensor values if all of them are equal to null
     dataMap.forEach((data, k) => {
         const temps = new Set(data.map(v => v.temp));
-        console.log(k, temps, temps.size, temps.values().next());
         if (temps.size === 1 && temps.values().next().value === null) {
             dataMap.delete(k);
         }

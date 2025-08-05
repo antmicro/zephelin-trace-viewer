@@ -7,7 +7,7 @@ import { render } from 'preact';
 import '@styles/flexlayout.scss';
 import style from '@styles/app.module.scss';
 import TopBar from "./top-bar";
-import TilingLayout from './tiling-layout';
+import DragDropLayout from './drag-drop-layout';
 
 
 /**
@@ -15,10 +15,11 @@ import TilingLayout from './tiling-layout';
  * Speedscope and the panel with additional information.
  */
 export function App() {
+
     return (
         <div id={style.app}>
             <TopBar />
-            <TilingLayout />
+            <DragDropLayout />
         </div>
     );
 }

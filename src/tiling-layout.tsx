@@ -126,10 +126,13 @@ export default memo(() => {
     });
 
     return (
-        <div id={style['layout-container']}>
+        <div id={style['tiling-layout']}>
             <Layout
                 model={model}
-                factory={factory} />
+                factory={factory}
+                popoutWindowName="Zephelin Trace Viewer"
+                realtimeResize={true}
+            />
         </div>
     );
 // Override props comparison to avoid unnecessary reloads

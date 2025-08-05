@@ -75,34 +75,6 @@ function WelcomeMessage(divClass: string, pClass: string, aClass: string, browse
 }
 
 
-/**
- * Creates element with message displayed when trace with only metadata has been loaded.
- * @param divClass CSS class name for DIV elements
- * @param pClass CSS class name for P elements
- * @param aClass CSS class name for links
- * @param browseButton An element with a button that allows to select the file with a trace
- */
-function MetadataOnlyMessage(divClass: string, pClass: string, aClass: string, browseButton: VNode<HTMLButtonElement>) {
-    return (
-        <div className={divClass}>
-            <p className={pClass}>
-                Loaded trace contains only metadata, an interactive{' '}
-                <a
-                    className={aClass}
-                    href="http://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html"
-                >
-                    flamegraph
-                </a>{' '}
-                visualizer will not be displayed.
-            </p>
-            <SelectTraceMessage pClass={pClass} aClass={aClass}>
-                {browseButton}
-            </SelectTraceMessage>
-        </div>
-    );
-}
-
-
 // Zephyr-based variants of purple color
 export const DEEP_PURPLE = "#7929d2";
 export const PURPLE = "#9454db";
@@ -122,8 +94,8 @@ const Speedscope = memo((): JSX.Element => {
     lightTheme.selectionSecondaryColor = PALE_PURPLE;
     // Set custom welcome message
     const customMsg = customWelcomeMessagesAtom.get();
-    if (customMsg.default === undefined || customMsg.metadataOnly === undefined) {
-        customWelcomeMessagesAtom.set({default: WelcomeMessage, metadataOnly: MetadataOnlyMessage});
+    if (customMsg.default === undefined) {
+        customWelcomeMessagesAtom.set({default: WelcomeMessage});
     }
     // For default value, set theme to Dark
     if (colorSchemeAtom.get() === ColorScheme.SYSTEM) {

@@ -1,0 +1,33 @@
+name: zephelin_trace_viewer
+run-name: Zephelin Trace Viewer
+on: [push, pull_request]
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Prepare dependencies
+        run: |
+          corepack enable
+          yarn
+      - name: Lint code
+        run: yarn lint
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Prepare dependencies
+        run: |
+          corepack enable
+          yarn
+      - name: Build Zephelin Trace Viewer
+        run: yarn build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephelin-trace-viewer
+          path: dist

@@ -3,70 +3,69 @@
 /// It is not SCSS module to avoid names mangling and skipping styles unsused in the code.
 ///
 
-@use "./colors.scss";
+@use "./colors";
 
 $axis-color: var(--color-gray-900);
 $annotation-color: var(--color-gray-900);
 
 d3fc-group {
-  overflow: visible !important;
+    overflow: visible !important;
 
-  d3fc-svg.x-axis,
-  d3fc-svg.y-axis {
-    path {
-      stroke: $axis-color;
+    d3fc-svg.x-axis,
+    d3fc-svg.y-axis {
+        path {
+            stroke: $axis-color;
+        }
+
+        g text {
+            fill: $axis-color;
+        }
     }
 
-    g text {
-      fill: $axis-color;
-    }
-  }
-
-  .x-label,
-  .y-label {
-    color: $axis-color;
-  }
-
-  d3fc-svg {
-    &.svg-plot-area.plot-area {
-      // Allow annotations to overflow, so they are readable for small plots
-      overflow: visible !important;
-      z-index: 10000;
+    .x-label,
+    .y-label {
+        color: $axis-color;
     }
 
-    g.annotation {
-      path {
-        stroke: $annotation-color;
-      }
+    d3fc-svg {
+        &.svg-plot-area.plot-area {
+            // Allow annotations to overflow, so they are readable for small plots
+            overflow: visible !important;
+            z-index: 10000;
+        }
 
-      text {
-        fill: $annotation-color;
-      }
+        g.annotation {
+            path {
+                stroke: $annotation-color;
+            }
 
-      rect {
-        fill-opacity: 1.0;
-        fill: var(--bgGray-hover);
-        transform: translateY(-3.5px);
-      }
-    }
-  }
+            text {
+                fill: $annotation-color;
+            }
 
-  &.cartesian-chart {
-    &>.y-label {
-      transform: none !important;
-      writing-mode: sideways-lr;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    &.left-label {
-      grid-row: 2 / 4;
-      -ms-grid-row: 2 / 4;
+            rect {
+                fill-opacity: 1;
+                fill: var(--bgGray-hover);
+                transform: translateY(-3.5px);
+            }
+        }
     }
 
-  }
+    &.cartesian-chart {
+        & > .y-label {
+            transform: none !important;
+            writing-mode: sideways-lr;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        &.left-label {
+            grid-row: 2 / 4;
+            -ms-grid-row: 2 / 4;
+        }
+    }
 }
 
 div.legend {
-  width: 25%;
+    width: 25%;
 }

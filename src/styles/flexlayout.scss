@@ -2,25 +2,24 @@
 /// Custom styles overriding base dark theme from FlexLayout.
 ///
 
-
-@use 'flexlayout-react/style/dark.css';
+@use "flexlayout-react/style/dark.css";
 
 .flexlayout__layout {
-  // Disable these colors to make Speedscope's canvas visible
-  --color-background: transparent;
-  --color-1: transparent;
+    // Disable these colors to make Speedscope's canvas visible
+    --color-background: transparent;
+    --color-1: transparent;
 }
 
 // Enable overflow for plots annotations
 .enable-overflow {
-  overflow: visible;
-
-  .flexlayout__tab_moveable {
     overflow: visible;
-  }
+
+    .flexlayout__tab_moveable {
+        overflow: visible;
+    }
 }
 
 // Make sure Speedscope in fullscreen mode does not overlap the nav bar
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top.flexlayout__tabset-selected.flexlayout__tabset-maximized {
-  z-index: 11;
+    z-index: 11;
 }

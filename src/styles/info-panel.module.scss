@@ -2,36 +2,36 @@
 /// The definition of styles for additional information panels.
 ///
 
-@use "./colors.scss";
+@use "./colors";
 
 .panel-element {
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  flex-flow: column nowrap;
-
-  .section-content {
-    box-sizing: border-box;
-    $content-padding: 0.5rem;
-    padding: $content-padding;
     width: 100%;
     height: 100%;
 
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow: auto;
-  }
+    flex-flow: column nowrap;
+
+    .section-content {
+        box-sizing: border-box;
+        $content-padding: 0.5rem;
+        padding: $content-padding;
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+    }
 }
 
 :global(.enable-overflow) {
-  .section-content {
-    overflow: visible;
-  }
+    .section-content {
+        overflow: visible;
+    }
 }
 
 .generic-info {
-  text-align: center;
-  margin: 0 1rem;
+    text-align: center;
+    margin: 0 1rem;
 }

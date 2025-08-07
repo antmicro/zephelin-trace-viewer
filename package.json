@@ -17,6 +17,7 @@
 		"d3fc": "^15.2.13",
 		"flexlayout-react": "^0.8.17",
 		"preact": "^10.25.3",
+		"react-click-away-listener": "^2.4.0",
 		"speedscope": "workspace:*"
 	},
 	"devDependencies": {

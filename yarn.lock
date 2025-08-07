@@ -9067,6 +9067,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-click-away-listener@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "react-click-away-listener@npm:2.4.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/e5db70a161cd1269d96e8dd713be1011e373959421016dcb30797c8c3b324132244a6d445a1a80ea525cb056374cde4ba81978dadc97e96e216b5177b001e5bf
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^16.13.1, react-is@npm:^16.8.4":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
@@ -9517,6 +9527,7 @@ __metadata:
     eslint-plugin-unused-imports: "npm:^4.1.4"
     flexlayout-react: "npm:^0.8.17"
     preact: "npm:^10.25.3"
+    react-click-away-listener: "npm:^2.4.0"
     sass-embedded: "npm:^1.89.1"
     speedscope: "workspace:*"
     typescript: "npm:^5.8.3"

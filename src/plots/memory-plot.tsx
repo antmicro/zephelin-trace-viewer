@@ -5,8 +5,9 @@
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
 
-import Plot, { PlotBaseProps, ThresholdAnnotationProps } from './base-plot';
+import { PlotBaseProps, ThresholdAnnotationProps } from './base-plot';
 import { LinePlot } from './line-plot';
+import TimeBasedPlot from './time-based-plot';
 import { MemoryPlotData } from '@/utils/memory';
 
 
@@ -69,7 +70,7 @@ export interface TotalMemoryPlotProps extends MemoryUsagePlotProps {
 /**
  * The component with plot showing an overview of the whole memory.
  */
-export class TotalMemoryPlot extends Plot<MemoryPlotData, TotalMemoryPlotProps> {
+export class TotalMemoryPlot extends TimeBasedPlot<MemoryPlotData, TotalMemoryPlotProps> {
     protected _createXScale() {
         return d3.scaleLinear().domain(
             fc.extentLinear().include([0]).accessors([(d: MemoryPlotData) => d.ts])(this.props.plotData.flat()) as Iterable<d3.NumberValue>,

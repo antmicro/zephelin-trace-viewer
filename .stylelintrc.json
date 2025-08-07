@@ -1,0 +1,19 @@
+{
+    "plugins": [
+        "stylelint-prettier"
+    ],
+    "extends": "stylelint-config-recommended-scss",
+    "rules": {
+        "selector-pseudo-class-no-unknown": [
+            true,
+            {
+                "ignorePseudoClasses": [
+                    "global",
+                    "/^--my-/",
+                    "--pseudo-class"
+                ]
+            }
+        ],
+        "prettier/prettier": true
+    }
+}

@@ -5,9 +5,8 @@
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
 
-import { useMemo } from 'preact/hooks';
-import { JSX } from 'preact/jsx-runtime';
-import Plot, { PlotBaseProps } from './base-plot';
+import { PlotBaseProps } from './base-plot';
+import TimeBasedPlot from './time-based-plot';
 
 /**
  * The definition of Component for drawing simple line plots.
@@ -15,7 +14,7 @@ import Plot, { PlotBaseProps } from './base-plot';
  * @abstract
  * @extends {Plot<D,T>}
  */
-export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends Plot<D, T> {
+export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends TimeBasedPlot<D, T> {
     quadtree: d3.Quadtree<D> | undefined;
 
     /** Extract x-axis data from an event */
@@ -48,8 +47,19 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
     }
 
     protected override _findClosestPoint(x: number, y: number): D | null | undefined {
-        if (!this.quadtree) {return;}
-        return this.quadtree.find(x, y);
+        // Find closest datapoints to X on each plot
+        const closestX = this.props.plotData.map(v => d3.least(v, (a) => Math.abs(this._xAccess(a) - x))).filter(Boolean) as D[];
+
+        const [xBegin, xEnd] = this._xScaleInitial.domain();
+        const normX = (a: number) => (a - xBegin) / (xEnd - xBegin);
+        const [yBegin, yEnd] = this._yScaleInitial.domain();
+        const normY = (a: number) => (a - yBegin) / (yEnd - yBegin);
+
+        // Find closest datapoint from the closest X points on each plots
+        return d3.least(closestX, (a) => {
+            const [ax, ay] = [this._xAccess(a), this._yAccess(a)];
+            return (normX(ax) - normX(x)) ** 2 + (normY(ay) - normY(y)) ** 2;
+        });
     }
 
     protected override _annotationData(d: D): { x: number; y: number; title: string; note: string; } | null {
@@ -87,17 +97,5 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
             @typescript-eslint/no-unsafe-assignment,
             @typescript-eslint/no-unsafe-return
         */
-    }
-
-    render(): JSX.Element {
-        this.quadtree = useMemo(() => {
-            if (!this.props.plotData) {return;}
-            return d3.quadtree<D>()
-                .x((e: D) => this._xAccess(e))
-                .y((e: D) => this._yAccess(e))
-                .addAll(this.props.plotData.flat());
-        }, [this.props.plotData]);
-
-        return super.render();
     }
 }

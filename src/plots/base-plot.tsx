@@ -14,7 +14,6 @@ import seriesSvgAnnotation from './series-annotation';
 import axisLabelHide from './axis-label-hide';
 import "@styles/plots.scss";
 
-
 type ScaleType = d3.ScaleContinuousNumeric<any, any, never>;
 
 /** The properties of threshold type annotation */
@@ -235,6 +234,54 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     }
 
     /**
+     * Adds annotation based on provided datapoint.
+     */
+    protected _addAnnotation(d: D | null | undefined) {
+        if (!d) {
+            console.debug("Cannot find the closest point");
+            this.redraw();
+            return;
+        }
+
+        const annotationData = this._annotationData(d);
+
+        if (!annotationData) {
+            console.debug("No annotation data received");
+            this.redraw();
+            return;
+        }
+
+        const xDomain = this.xScale.domain();
+        const yDomain = this.yScale.domain();
+        const yRange = this.yScale.range() as [number, number];
+
+        const annotationX = Math.max(Math.min(annotationData.x, xDomain[1]), xDomain[0]);
+        const xMult = (annotationX < (xDomain[1] + xDomain[0]) / 2) ? 1 : -1;
+
+        const annotationY = Math.max(Math.min(annotationData.y, yDomain[1]), yDomain[0]);
+        this.annotations.push(
+            {
+                x: annotationX,
+                y: annotationY,
+                dx: xMult * 20,
+                dy: ((annotationY - yDomain[0]) / (yDomain[1] - yDomain[0]) >= 0.5) ? 15 : -15,
+                note: {
+                    title: annotationData.title,
+                    label: annotationData.note,
+                    wrapSplitter: "\n",
+                    bgPadding: 5,
+                },
+                subject: {
+                    y1: yRange[0],
+                    y2: yRange[1],
+                },
+            },
+        );
+
+        this.redraw();
+    }
+
+    /**
      * Creates the pointer which displays annotations.
      *
      * It requires following methods to return valid data:
@@ -257,46 +304,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             const y = this.yScale.invert(coord.y as d3.NumberValue);
             const d = this._findClosestPoint(x, y);
 
-            if (!d) {
-                console.debug("Cannot find the closest point");
-                this.redraw();
-                return;
-            }
-
-            const annotationData = this._annotationData(d);
-
-            if (!annotationData) {
-                console.debug("No annotation data received");
-                this.redraw();
-                return;
-            }
-
-            const xDomain = this.xScale.domain();
-            const yDomain = this.yScale.domain();
-            const yRange = this.yScale.range() as [number, number];
-            const xMult = (x < (xDomain[1] + xDomain[0]) / 2) ? 1 : -1;
-
-            const annotationY = Math.max(Math.min(annotationData.y, yDomain[1]), yDomain[0]);
-            this.annotations.push(
-                {
-                    x: annotationData.x,
-                    y: annotationY,
-                    dx: xMult * 20,
-                    dy: ((annotationY - yDomain[0]) / (yDomain[1] - yDomain[0]) >= 0.5) ? 15 : -15,
-                    note: {
-                        title: annotationData.title,
-                        label: annotationData.note,
-                        wrapSplitter: "\n",
-                        bgPadding: 5,
-                    },
-                    subject: {
-                        y1: yRange[0],
-                        y2: yRange[1],
-                    },
-                },
-            );
-
-            this.redraw();
+            this._addAnnotation(d);
         });
     }
 

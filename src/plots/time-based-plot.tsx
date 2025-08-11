@@ -1,12 +1,9 @@
 import { JSX } from 'preact/jsx-runtime';
 import * as fc from 'd3fc';
 import { Selection } from 'd3-selection';
-import { Atom } from '@speedscope/lib/atom';
+import { timestampHoveredAtom } from '@speedscope/app-state';
 
 import Plot, { PlotBaseProps } from './base-plot';
-
-
-const timestampHoveredAtom = new Atom<{x: number, yProc: number} | null>(null, 'timestampHovered');
 
 
 export default abstract class TimeBasedPlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends Plot<D, T> {

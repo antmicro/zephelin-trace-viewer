@@ -22,7 +22,7 @@ interface ModelInfoPanelProps {
  * included in selected event.
  */
 function EventInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
-    const filterKeys: (keyof ModelEventArgs)[] = ["subgraph_idx", "op_idx", "tag", "runtime", "thread_id"];
+    const filterKeys: (keyof ModelEventArgs)[] = ["subgraph_idx", "op_idx", "tag", "runtime", "thread_id", "tag_len"];
     const eventAdditionalInfo = Object.entries(frameArgs.begin).filter(
         ([key, _]: [keyof ModelEventArgs, any]) => !filterKeys.includes(key),
     );
@@ -102,7 +102,7 @@ export default function ModelInfoPanel({frameArgs}: ModelInfoPanelProps): JSX.El
     const event = EventInfo({frameArgs});
     const layer = LayerInfo({frameArgs});
     return (
-        <PanelTemplate title={`${frameArgs.begin.runtime} model info`}>
+        <PanelTemplate>
             <div className={styles["model-event-section"]}>
                 {event}
                 {layer}

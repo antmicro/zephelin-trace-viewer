@@ -72,8 +72,16 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
             v.index === k && v.subgraph_idx === frameArgs.begin.subgraph_idx
         ));
         if (tensor === undefined) {return;}
+
+        const name = tensor.name
+            .split('/')
+            .map((chunk, i, chunks) =>
+                i === chunks.length - 1
+                    ? chunk
+                    : <>{chunk}/<wbr /></>);
+
         return (
-            <li> {tensor.name}: [{tensor.shape.join(', ')}] of {tensor.dtype} </li>
+            <li> {name}: [{tensor.shape.join(', ')}] of {tensor.dtype} </li>
         );
     };
 

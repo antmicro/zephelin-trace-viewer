@@ -39,5 +39,14 @@
     li {
         padding: 0.2rem 0.3rem;
         margin-left: 0.5rem;
+
+        .item-name {
+            font-weight: bold;
+        }
+
+        ol {
+            list-style-type: disc;
+            margin-left: 1rem;
+        }
     }
 }

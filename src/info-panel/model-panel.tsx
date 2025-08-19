@@ -10,7 +10,7 @@
  * The module implementing panel with model, layer and inference information.
  */
 
-import { JSX } from 'preact';
+import { ComponentChildren, JSX } from 'preact';
 import { useState } from 'preact/hooks';
 
 import styles from "@styles/model-panel.module.scss";
@@ -81,23 +81,41 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
 
     const opData = modelData.ops.find((v) => v.index === frameArgs.begin.op_idx);
     if (!opData) {return;}
+
+    const InfoItem = (props: {children: ComponentChildren}) => <span className={styles["item-name"]}>{props.children}</span>;
+
+    const parameters = Object.entries(opData.parameters ?? {})
+        .map(([name, value]) =>
+            typeof value === "string"
+                ? [name, value]
+                : [name, JSON.stringify(value)])
+        .map(([name, value]) => <li>{name}: {value}</li>);
+
     return (
         <div className={styles["model-layer-section"]}>
             <h3> Layer info </h3>
             <ul>
                 <li> Operation type: {opData.op_name} </li>
                 <li>
-                    Inputs:
+                    <InfoItem>Inputs</InfoItem>:
                     <ol>
                         {opData.inputs.map(getTensor)}
                     </ol>
                 </li>
                 <li>
-                    Outputs:
+                    <InfoItem>Outputs</InfoItem>:
                     <ol>
                         {opData.outputs.map(getTensor)}
                     </ol>
                 </li>
+                {parameters.length > 0 &&
+                    <li>
+                        <InfoItem>Parameters</InfoItem>:
+                        <ol>
+                            {parameters}
+                        </ol>
+                    </li>
+                }
             </ul>
         </div>
     );

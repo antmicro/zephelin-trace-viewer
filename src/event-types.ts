@@ -166,6 +166,9 @@ export interface ModelOpsType {
     flatten?: boolean,
     data_layout?: string,
     kernel_layout?: string,
+
+    // TFLM specific options
+    parameters?: Record<string, any>,
 }
 
 export interface MetadataModelArgs {

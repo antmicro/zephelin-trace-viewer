@@ -131,6 +131,9 @@ const Speedscope = memo((): JSX.Element => {
 }, (_prevProps, _nextProps) => true);
 
 export default tilingComponent(Speedscope, "Flamegraph", {
-    minHeight: 400,
-    minWidth: 400,
+    additionalProps: {
+        minHeight: 400,
+        minWidth: 400,
+        enableClose: false,
+    },
 })!;

@@ -24,7 +24,9 @@ const DieTempPanel = memo(({fullData}: DieTempPanelProps) => {
 
 export default tilingComponent(DieTempPanel, "DIE temperature", {
     dataProvider: getDieTempData,
-    contentClassName: CSS_ENABLING_OVERFLOW,
-    minHeight: 150,
-    minWidth: 150,
+    additionalProps: {
+        contentClassName: CSS_ENABLING_OVERFLOW,
+        minHeight: 150,
+        minWidth: 150,
+    },
 })!;

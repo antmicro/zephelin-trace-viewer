@@ -25,7 +25,9 @@ const CPULoadPanel = memo(({fullData}: CPULoadPanelProps) => {
 
 export default tilingComponent(CPULoadPanel, "CPU Load", {
     dataProvider: getCPULoadData,
-    contentClassName: CSS_ENABLING_OVERFLOW,
-    minWidth: 150,
-    minHeight: 150,
+    additionalProps: {
+        contentClassName: CSS_ENABLING_OVERFLOW,
+        minWidth: 150,
+        minHeight: 150,
+    },
 })!;

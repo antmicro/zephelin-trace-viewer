@@ -65,7 +65,9 @@ const MemoryPanel = memo(({fullData, plotData, threadNameData, memorySymbols, ad
 
 export default tilingComponent(MemoryPanel, "Memory usage", {
     dataProvider: getMemoryData,
-    contentClassName: CSS_ENABLING_OVERFLOW,
-    minHeight: 200,
-    minWidth: 200,
+    additionalProps: {
+        contentClassName: CSS_ENABLING_OVERFLOW,
+        minHeight: 200,
+        minWidth: 300,
+    },
 })!;

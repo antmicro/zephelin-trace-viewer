@@ -8,14 +8,14 @@ import { useTheme } from '@speedscope/views/themes/theme';
 import { appRefAtom } from '@speedscope/app-state';
 
 import style from '@styles/app.module.scss';
-import TilingLayout from './tiling-layout';
+import TilingLayout, { TilingLayoutProps } from './tiling-layout';
 
 
 /**
  * The wrapper for tiling layout, implemening drag&drop feature,
  * as well as managing pointer-events values.
  */
-export default memo(() => {
+export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">) => {
     const ref = useRef<HTMLDivElement>(null);
     const borderRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
@@ -75,7 +75,7 @@ export default memo(() => {
             onDrop={drop}
             onDragLeave={dragLeave}
         >
-            <TilingLayout />
+            <TilingLayout tilingRef={tilingRef} />
             <div
                 ref={borderRef}
                 style={{pointerEvents: 'none', zIndex: 11}}

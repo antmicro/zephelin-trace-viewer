@@ -42,7 +42,8 @@ body {
             min-height: $top-bar-min-height;
             background-color: var(--bg-muted);
             border-bottom: 1px solid var(--borderGray-default);
-            z-index: 11;
+            // Set to be above the d3-svg.plot-area
+            z-index: 10001;
 
             display: flex;
             justify-content: center;
@@ -142,6 +143,12 @@ body {
                     .gap-filler {
                         display: inline-block;
                     }
+                }
+
+                .panel-button > div {
+                    width: 100%;
+                    height: 100%;
+                    text-align: left;
                 }
             }
         }

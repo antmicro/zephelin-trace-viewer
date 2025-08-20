@@ -2,20 +2,70 @@
  * The module with utilities for titling layout components.
  */
 
+import { metadataAtom } from "@speedscope/app-state";
+import { Atom } from "@speedscope/lib/atom";
 import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
 
-export type TilingComponent<T> = FunctionalComponent<T> & {
-    /** The title (unique for component type) of tile where the component is displayed */
-    title: string,
-    /** The function producing properties for the component */
-    dataProvider?: () => (T | undefined | null),
-    /** Properties of FlexLayout tab, omitting ones that are set automatically */
-    additionalProps: Omit<ITabAttributes, "name" | "component" | "config" | "enableClose">
-};
 
-/** The map storing all registered components */
-const REGISTERED_COMPONENTS = new Map<string, TilingComponent<any>>();
+export class TilingComponent<T> {
+
+    /** The data used to initialize the component, calculated one when the trace is loaded */
+    private data?: T | undefined = undefined;
+
+    constructor(
+        /** The title (unique for component type) of tile where the component is displayed */
+        public title: string,
+        /** The function creating JSX element with component */
+        public component: FunctionalComponent<T>,
+        /** The atomic state representing whether the component is available */
+        public available: Atom<boolean>,
+        /** The atomic number of created instances of this component */
+        public instances: Atom<number>,
+        /** The max number of instance for this component */
+        public maxInstances = 1,
+        /** Properties of FlexLayout tab, omitting ones that are set automatically */
+        public additionalProps: Omit<ITabAttributes, "name" | "component" | "config">,
+        /** The function producing properties for the component */
+        public dataProvider?: () => (T | undefined | null),
+    ) {}
+
+    /** Increases the number of the component's instances */
+    incrInstances() {
+        this.instances.set(this.instances.get() + 1);
+    }
+    /** Decreases the number of the component's instances */
+    decrInstances() {
+        this.instances.set(this.instances.get() - 1);
+    }
+
+    /**
+     * Calculates new data (if dataProvider is available) and sets availability accordingly.
+     */
+    calculateData() {
+        if (!this.dataProvider) {return;}
+        this.data = this.dataProvider() ?? undefined;
+        this.available.set(Boolean(this.data));
+    }
+
+    /**
+     * Creates JSON representation of the component.
+     */
+    createJSONNode(): IJsonTabNode {
+        return {
+            type: "tab",
+            name: this.title,
+            component: this.title,
+            config: this.data,
+            ...this.additionalProps,
+        };
+    }
+
+}
+
+/** The object storing all registered components */
+const REGISTERED_COMPONENTS: Record<string, TilingComponent<any>> = {};
+
 
 /** The name of CSS class which enables overflow for tiles, used for overflowing annotations */
 export const CSS_ENABLING_OVERFLOW = "enable-overflow";
@@ -29,60 +79,57 @@ export const CSS_ENABLING_OVERFLOW = "enable-overflow";
  */
 export default <T extends object>(
     component: FunctionalComponent<T>,
-    title: string, additionalProps: TilingComponent<T>["additionalProps"] & Pick<TilingComponent<T>, "dataProvider"> = {},
+    title: string, options: Partial<Omit<TilingComponent<T>, "title" | "component" | "available" | "instances" | "data">> = {},
 ): TilingComponent<T> | undefined => {
     // Make sure the title is unique
-    if (REGISTERED_COMPONENTS.has(title)) {
+    if (title in REGISTERED_COMPONENTS) {
         console.error(`Title '${title}' already used - it has to be unique`);
         return;
     }
 
     // Set defaults
-    additionalProps.minWidth ??= 100;
-    additionalProps.minHeight ??= 100;
+    options.additionalProps ??= {};
+    options.additionalProps.minWidth ??= 100;
+    options.additionalProps.minHeight ??= 100;
+    options.additionalProps.enableClose ??= true;
+    const _available = (options.dataProvider === undefined);
 
-    const handler = {
-        get(target: FunctionalComponent<T>, prop: string) {
-            if (prop === "title") {
-                return title;
-            }
-            if (prop === "dataProvider") {
-                return additionalProps.dataProvider;
-            }
-            if (prop === "additionalProps") {
-                return additionalProps;
-            }
+    const tilingComponent = new TilingComponent<T>(
+        title,
+        component,
+        new Atom(_available, `${title}_available`),
+        new Atom(0, `${title}_instances`),
+        options.maxInstances ?? 1,
+        options.additionalProps,
+        options.dataProvider,
+    );
 
-            /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
-            return prop in target ? target[prop] : undefined;
-        },
-    };
-    const proxy = new Proxy(component, handler) as TilingComponent<T>;
-    REGISTERED_COMPONENTS.set(title, proxy);
-    return proxy;
+    metadataAtom.subscribe(() => {
+        /*
+         * Metadata are changed when new trace is loaded,
+         * therefore trigger calculation of the component's data.
+         */
+        tilingComponent.calculateData();
+    });
+
+    // Register component
+    REGISTERED_COMPONENTS[title] = tilingComponent;
+
+    return tilingComponent;
+    // return wrappedCompoenent;
 };
-
-
-/**
- * Creates JSON representation of a tile.
- * @param component The component that will be embedded into tile.
- * @param [data=undefined] Additional data used to initialize the component.
- */
-export function createJSONNode<T>(component: TilingComponent<T>, data: T | undefined = undefined): IJsonTabNode {
-    return {
-        type: "tab",
-        name: component.title,
-        enableClose: false,
-        component: component.title,
-        config: data,
-        ...component.additionalProps,
-    };
-}
 
 
 /**
  * Returns registered component with given title.
  */
-export function getTilingComponent(title: string) {
-    return REGISTERED_COMPONENTS.get(title);
+export function getTilingComponent(title: string): TilingComponent<any> | undefined {
+    return REGISTERED_COMPONENTS[title];
+}
+
+/**
+ * Returns all registered component.
+ */
+export function getAllComponents() {
+    return Object.values(REGISTERED_COMPONENTS);
 }

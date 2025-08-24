@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2025 Analog Devices, Inc.
+ * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 import { memo } from "preact/compat";
 import PanelTemplate from "./common";
 import { getDieTempData } from "@/utils/dietemp";

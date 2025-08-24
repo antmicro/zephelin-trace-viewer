@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2025 Analog Devices, Inc.
+ * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 /**
  * The Speedscope component with adjustments like default dark theme and custom welcome message.
  */

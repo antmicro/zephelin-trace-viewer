@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2025 Analog Devices, Inc.
+ * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 import { useState } from "preact/hooks";
 import { FrameInfo } from '@speedscope/lib/profile';
 import { profileGroupAtom, viewModeAtom } from '@speedscope/app-state';

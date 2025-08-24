@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2025 Analog Devices, Inc.
+ * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 import { JSX } from 'preact/jsx-runtime';
 import * as fc from 'd3fc';
 import { Selection } from 'd3-selection';

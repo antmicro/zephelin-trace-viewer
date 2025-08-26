@@ -83,12 +83,6 @@ function WelcomeMessage(divClass: string, pClass: string, aClass: string, browse
 }
 
 
-// Zephyr-based variants of purple color
-export const DEEP_PURPLE = "#7929d2";
-export const PURPLE = "#9454db";
-export const PALE_PURPLE = "#af7fe4";
-
-
 /** Element representing Speedscope app */
 const Speedscope = memo((): JSX.Element => {
     // Remove title and additional buttons from Speedscope toolbar
@@ -96,10 +90,10 @@ const Speedscope = memo((): JSX.Element => {
         title: '', dragImport: false,
     });
     // Adjust Speedscope theme colors
-    darkTheme.selectionPrimaryColor = DEEP_PURPLE;
-    darkTheme.selectionSecondaryColor = PURPLE;
-    lightTheme.selectionPrimaryColor = PURPLE;
-    lightTheme.selectionSecondaryColor = PALE_PURPLE;
+    darkTheme.selectionPrimaryColor = "#7929d2";  // --deep-purple
+    darkTheme.selectionSecondaryColor = "#9454db";  // --purple
+    lightTheme.selectionPrimaryColor = "#9454db";  // --purple
+    lightTheme.selectionSecondaryColor = "#af7fe4";  // --pale-purple
     // Set custom welcome message
     const customMsg = customWelcomeMessagesAtom.get();
     if (customMsg.default === undefined) {

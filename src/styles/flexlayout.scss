@@ -17,6 +17,7 @@
     --color-background: transparent;
     --color-1: transparent;
     --color-popup-unselected-background: var(--bg-secondary);
+    --color-tabset-background-maximized: var(--bg-secondary);
     --color-tab-selected-background: var(--gray-750);
     // Override font-family
     --font-family: "Source Code Pro", Courier, monospace;
@@ -44,7 +45,7 @@
         border-top: none;
         padding-left: 0;
 
-        .flexlayout__tab_button.flexlayout__tab_button_top.flexlayout__tab_button--selected {
+        .flexlayout__tab_button.flexlayout__tab_button_top {
             // TODO: add border radius on whole panels
             border-radius: 4px 4px 0 0;
             padding: 3px 0.6em;

@@ -18,12 +18,14 @@ import { useAtom } from "@speedscope/lib/atom";
 import { appRefAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from '@styles/app.module.scss';
+import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
 import { TilingComponentButton } from "./tiling-component-button";
 import { ButtonsContainer } from "./buttons-container";
 import ImportIcon from "@/icons/import";
 import ExportIcon from "@/icons/export";
 import { getAllComponents } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
+import CirclePlusIcon from "@/icons/circle-plus";
 
 
 /** The top bar of the application */
@@ -36,26 +38,34 @@ export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">): JSX.Ele
         setTraceLoadedSt((profileGroupAtom.get()?.profiles.length ?? 0) > 0);
     });
 
-    const buttons = (
-        <div className={style['category-container']}>
-            <ButtonsContainer name="File">
-                <button onClick={appRefSt?.current?.browseForFile}>
-                    <ImportIcon /><p>Import trace</p>
-                </button>
-                {traceLoadedSt ? <button onClick={appRefSt?.current?.saveFile}>
-                    <ExportIcon /><p>Export trace</p>
-                </button> : null}
-            </ButtonsContainer>
-            {traceLoadedSt ? <ButtonsContainer name="Panels">
-                {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} />)}
-            </ButtonsContainer> : null }
+    const [titleActiveSt, setTitleActiveSt] = useState<boolean>(false);
+    const titleDiv = (
+        <div id={style['title-button']} onClick={() => setTitleActiveSt(true)}>
+            <div id={style.title}>Zephelin <span>Trace Viewer</span></div>
+            <div><ChevronDownIcon up={titleActiveSt} /></div>
         </div>
+    );
+    const panelsDiv = (
+        <div id={style.panels}><CirclePlusIcon /> <h2>Panels</h2></div>
     );
 
     return (
         <div id={style['top-bar']}>
-            <h1>Zephelin Trace Viewer</h1>
-            {appRefSt?.current && buttons}
+            <div>
+                <ButtonsContainer name={titleDiv} left={true} onClickAwayCallback={() => setTitleActiveSt(false)}>
+                    <button onClick={appRefSt?.current?.browseForFile}>
+                        <ImportIcon /><p>Import trace</p>
+                    </button>
+                    {traceLoadedSt ? <button onClick={appRefSt?.current?.saveFile}>
+                        <ExportIcon /><p>Export trace</p>
+                    </button> : null}
+                </ButtonsContainer>
+            </div>
+            <div>
+                {(appRefSt?.current && traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
+                    {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} />)}
+                </ButtonsContainer> : null }
+            </div>
         </div>
     );
 });

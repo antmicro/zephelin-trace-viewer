@@ -12,8 +12,8 @@
 
 import { render } from 'preact';
 
-import '@styles/flexlayout.scss';
 import style from '@styles/app.module.scss';
+import '@styles/flexlayout.scss';
 import { useRef } from 'preact/hooks';
 import TopBar from "./top-bar";
 import DragDropLayout from './drag-drop-layout';

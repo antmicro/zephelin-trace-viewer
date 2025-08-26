@@ -10,11 +10,14 @@
 ///
 
 @use "flexlayout-react/style/dark.css";
+@use "./colors";
 
 .flexlayout__layout {
     // Disable these colors to make Speedscope's canvas visible
     --color-background: transparent;
     --color-1: transparent;
+    // Override font-family
+    --font-family: "Source Code Pro", Courier, monospace;
 }
 
 // Enable overflow for plots annotations
@@ -29,4 +32,11 @@
 // Make sure Speedscope in fullscreen mode does not overlap the nav bar
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top.flexlayout__tabset-selected.flexlayout__tabset-maximized {
     z-index: 11;
+}
+
+.flexlayout__tabset-selected {
+    background-image: none;
+    .flexlayout__tab_button_content {
+        font-weight: 600;
+    }
 }

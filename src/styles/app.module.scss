@@ -10,9 +10,15 @@
 ///
 
 @use "./colors";
+@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
+
+// Reset browsers' default CSS
+button {
+    font: inherit;
+}
 
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: "Source Code Pro", Courier, monospace;
     line-height: 1.5;
     font-weight: 400;
 
@@ -55,11 +61,11 @@ body {
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: "Source Code Pro", Courier, monospace;
+            font-family: inherit;
 
             h1 {
                 font-size: $top-bar-min-font;
-                font-weight: 1000;
+                font-weight: 600;
             }
 
             position: relative;
@@ -198,9 +204,7 @@ body {
 
             .welcome-message-code {
                 border-radius: 0.1rem;
-                font-family:
-                    Rooto Mono,
-                    monospace;
+                font-family: inherit;
                 padding: 0 0.25rem;
             }
         }

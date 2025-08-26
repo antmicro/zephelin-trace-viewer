@@ -16,6 +16,8 @@
     // Disable these colors to make Speedscope's canvas visible
     --color-background: transparent;
     --color-1: transparent;
+    --color-popup-unselected-background: var(--bg-secondary);
+    --color-tab-selected-background: var(--gray-750);
     // Override font-family
     --font-family: "Source Code Pro", Courier, monospace;
 }
@@ -29,14 +31,38 @@
     }
 }
 
-// Make sure Speedscope in fullscreen mode does not overlap the nav bar
-.flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top.flexlayout__tabset-selected.flexlayout__tabset-maximized {
-    z-index: 11;
+.panel-icon {
+    width: 16px;
+    height: 16px;
 }
 
-.flexlayout__tabset-selected {
-    background-image: none;
+.flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top {
+    height: 30px;
+    padding-left: 0;
+
+    .flexlayout__tabset_tabbar_inner_tab_container.flexlayout__tabset_tabbar_inner_tab_container_top {
+        border-top: none;
+        padding-left: 0;
+
+        .flexlayout__tab_button.flexlayout__tab_button_top.flexlayout__tab_button--selected {
+            // TODO: add border radius on whole panels
+            border-radius: 4px 4px 0 0;
+            padding: 3px 0.6em;
+            gap: 0.6em;
+        }
+    }
+
+    // Make sure Speedscope in fullscreen mode does not overlap the nav bar
+    &.flexlayout__tabset-selected {
+        background-image: none;
+
+        &.flexlayout__tabset-maximized {
+            z-index: 11;
+        }
+    }
+
     .flexlayout__tab_button_content {
         font-weight: 600;
+        line-height: 18px;
     }
 }

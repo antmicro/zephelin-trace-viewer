@@ -12,7 +12,7 @@
 
 import { ComponentChild, RefObject } from "preact";
 import { memo, useImperativeHandle } from "preact/compat";
-import { Action, Actions, DockLocation, IJsonModel, Layout, Model, Node, Orientation, TabNode } from "flexlayout-react";
+import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode } from "flexlayout-react";
 import { metadataAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
@@ -21,6 +21,7 @@ import Speedscope from "./speedscope";
 import * as panels from "./info-panel";
 import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/tiling-component";
 import { getDraggedButtonTitle } from "./top-bar/tiling-component-button";
+import PanelIcon from "./icons/panel-icon";
 
 
 const InfoPanel = panels.InfoPanel;
@@ -201,6 +202,10 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         return a;
     };
 
+    const onRenderTab = (_node: TabNode, renderValues: ITabRenderValues) => {
+        renderValues.leading = <PanelIcon />;
+    };
+
     return (
         <div id={style['tiling-layout']}>
             <Layout
@@ -210,6 +215,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
                 realtimeResize={true}
                 onExternalDrag={onExternalDrag}
                 onAction={onAction}
+                onRenderTab={onRenderTab}
             />
         </div>
     );

@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import Icon from "./base-icon";
+
 
 interface ExportIconProps {
     /** The size (both width and height) of the icon */
@@ -14,12 +16,12 @@ interface ExportIconProps {
 }
 
 /** The icon representing exporting */
-export default function ExportIcon({size="16", color="#9F9FA3"}: ExportIconProps) {
+export default function ExportIcon({size="14", color="#9F9FA3"}: ExportIconProps) {
     return (
-        <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 6.5H12.5C12.6326 6.5 12.7598 6.55268 12.8536 6.64645C12.9473 6.74021 13 6.86739 13 7V13C13 13.1326 12.9473 13.2598 12.8536 13.3536C12.7598 13.4473 12.6326 13.5 12.5 13.5H3.5C3.36739 13.5 3.24021 13.4473 3.14645 13.3536C3.05268 13.2598 3 13.1326 3 13V7C3 6.86739 3.05268 6.74021 3.14645 6.64645C3.24021 6.55268 3.36739 6.5 3.5 6.5H5" stroke={color} stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M5.5 4L8 1.5L10.5 4" stroke={color} stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M8 1.5V8.5" stroke={color} stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <Icon>
+            <svg width={size} height={size} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.33333 6.99999L2.33333 11.6667C2.33333 11.9761 2.45624 12.2728 2.67504 12.4916C2.89383 12.7104 3.19058 12.8333 3.49999 12.8333L10.5 12.8333C10.8094 12.8333 11.1062 12.7104 11.325 12.4916C11.5437 12.2728 11.6667 11.9761 11.6667 11.6667V6.99999M9.33333 3.49999L6.99999 1.16666M6.99999 1.16666L4.66666 3.49999M6.99999 1.16666L6.99999 8.74999" stroke={color} stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </Icon>
     );
 }

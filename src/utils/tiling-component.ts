@@ -100,6 +100,7 @@ export default <T extends object>(
     options.additionalProps.minWidth ??= 100;
     options.additionalProps.minHeight ??= 100;
     options.additionalProps.enableClose ??= true;
+    options.additionalProps.enableRename ??= false;
     const _available = (options.dataProvider === undefined);
 
     const tilingComponent = new TilingComponent<T>(

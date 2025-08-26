@@ -50,4 +50,4 @@ function InfoPanel() {
     return <GenericInfo info="For more info, choose an event" />;
 }
 
-export default tilingComponent(InfoPanel, "Additional Info", {additionalProps: {enablePopout: true}})!;
+export default tilingComponent(InfoPanel, "Additional Info")!;

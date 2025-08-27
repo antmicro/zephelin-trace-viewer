@@ -15,8 +15,10 @@ import { JSX } from "preact";
 import styles from '@styles/memory-panel.module.scss';
 import { useEffect, useRef, useState } from "preact/hooks";
 import * as d3 from 'd3';
-import { CommonPlotProps } from ".";
+import PanelTemplate from "../common";
+import { CommonPlotProps, dataProvider } from ".";
 import { MemoryUsagePlot } from "@/plots/memory-plot";
+import tilingComponent, { CSS_ENABLING_OVERFLOW } from "@/utils/tiling-component";
 
 
 /**
@@ -33,7 +35,7 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
 /**
  * Memory usage (in percent) plot with legend.
  */
-export default function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName }: CommonPlotProps): JSX.Element |undefined {
+function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
     const plotLegendRef = useRef<HTMLDivElement | null>(null);
     const [legendEntries, setLegendEntries] = useState<JSX.Element[]>();
@@ -58,13 +60,24 @@ export default function MemoryUsageGraph({ data, assignedMemory, addrToRange, pl
     }, [plotRef]);
 
     return (
-        <div className={styles['memory-usage-content']}>
-            {/* Skip first two elements of plotData used for area plot (RAM overview) */}
-            <MemoryUsagePlot ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} />
-            <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
-                {legendEntries}
+        <PanelTemplate>
+            <div className={styles['memory-usage-content']}>
+                {/* Skip first two elements of plotData used for area plot (RAM overview) */}
+                <MemoryUsagePlot ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} />
+                <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
+                    {legendEntries}
+                </div>
             </div>
-        </div>
+        </PanelTemplate>
     );
 }
 
+
+export default tilingComponent(MemoryUsageGraph, "Memory usage", {
+    dataProvider: dataProvider,
+    additionalProps: {
+        contentClassName: CSS_ENABLING_OVERFLOW,
+        minHeight: 200,
+        minWidth: 300,
+    },
+})!;

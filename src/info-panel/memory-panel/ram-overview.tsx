@@ -10,18 +10,20 @@
  * The module with RAM overview plot with additional buttons used for zooming on the selected memory region.
  */
 
-import { JSX } from "preact" ;
-
+import { memo } from "preact/compat";
 import { useRef, useEffect, useState } from "preact/hooks";
+
 import styles from '@styles/memory-panel.module.scss';
-import { CommonPlotProps } from ".";
+import PanelTemplate from "../common";
+import { CommonPlotProps, dataProvider } from ".";
 import { TotalMemoryPlot } from "@/plots/memory-plot";
+import tilingComponent, { CSS_ENABLING_OVERFLOW } from "@/utils/tiling-component";
 
 
 /**
  * The component with plot representing RAM and button to zoom on the selected region.
  */
-export default function RAMOverview({ data, assignedMemory, addrToRange, plotData, totalMemory, memoryRegionName }: CommonPlotProps): JSX.Element |undefined {
+const RAMOverview = memo(({ data, assignedMemory, addrToRange, plotData, totalMemory, memoryRegionName }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot | undefined>();
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,14 +60,26 @@ export default function RAMOverview({ data, assignedMemory, addrToRange, plotDat
     }, []);
 
     return (
-        <div className={styles['ram-overview-content']}>
-            <TotalMemoryPlot ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={resetSelectedButton} />
-            <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
-                {addresses.map((addr, i) => <button onClick={(e) => {zoomOn(addr); selectButton(e);}}>{buttonTextsSt[i]}</button>)}
-                <button onClick={() => {plotRef.current?.setScale(plotRef.current?.originalDomain() ?? {}); resetSelectedButton();}}>
-                    Reset
-                </button>
+        <PanelTemplate>
+            <div className={styles['ram-overview-content']}>
+                <TotalMemoryPlot ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={resetSelectedButton} />
+                <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
+                    {addresses.map((addr, i) => <button onClick={(e) => {zoomOn(addr); selectButton(e);}}>{buttonTextsSt[i]}</button>)}
+                    <button onClick={() => {plotRef.current?.setScale(plotRef.current?.originalDomain() ?? {}); resetSelectedButton();}}>
+                        Reset
+                    </button>
+                </div>
             </div>
-        </div>
+        </PanelTemplate>
     );
-}
+});
+
+
+export default tilingComponent(RAMOverview, "RAM Overview", {
+    dataProvider: dataProvider,
+    additionalProps: {
+        contentClassName: CSS_ENABLING_OVERFLOW,
+        minHeight: 200,
+        minWidth: 300,
+    },
+})!;

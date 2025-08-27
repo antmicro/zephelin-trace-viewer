@@ -7,21 +7,16 @@
 
 
 /**
- * The module implementing panel with model, layer and inference information.
+ * The module providing memory panels definitions and implementing data provider for these panels.
  */
 
-import { JSX } from 'preact';
-import { useState } from 'preact/hooks';
-import { memo } from 'preact/compat';
-
-import styles from '@styles/memory-panel.module.scss';
-import PanelTemplate from '../common';
+import { Metadata } from '@speedscope/app-state/profile-group';
+import { metadataAtom } from '@speedscope/app-state';
 import RAMOverview from './ram-overview';
 import MemoryUsageGraph from './memory-usage';
 import { MemoryEventType } from '@/event-types';
 import { MemoryPlotData, memoryRegionName, getMemoryData } from '@/utils/memory';
 import { TotalMemoryPlotProps } from '@/plots/memory-plot';
-import tilingComponent, { CSS_ENABLING_OVERFLOW } from '@/utils/tiling-component';
 
 
 /**
@@ -51,31 +46,38 @@ export interface MemoryPanelProps {
     readonly totalMemory: number,
 }
 
-/** Panel with either memory usage plot or RAM overview */
-const MemoryPanel = memo(({fullData, plotData, threadNameData, memorySymbols, addrToRange, staticallyAssignedMem, totalMemory}: MemoryPanelProps): JSX.Element | undefined => {
-    const [totalMemorySelectedSt, setTotalMemorySelectedSt] = useState<boolean>(true);
+let CURRENT_MERADATA: Metadata[] | null = null;
+let CALCULATED_DATA: CommonPlotProps | undefined | null = null;
 
+/** Calculates data for memory plots and caches the results */
+export function dataProvider(): CommonPlotProps | undefined {
+    if (CALCULATED_DATA !== null && CURRENT_MERADATA !== null) {
+        if (metadataAtom.get() === CURRENT_MERADATA) {
+            console.debug("Returning cached data for memory plots");
+            return CALCULATED_DATA;
+        }
+    }
+    CURRENT_MERADATA = metadataAtom.get();
+
+    const memoryData = getMemoryData();
+    if (!memoryData) {
+        CALCULATED_DATA = undefined;
+        return CALCULATED_DATA;
+    }
+
+    const {fullData, plotData, threadNameData, memorySymbols, addrToRange, staticallyAssignedMem, totalMemory} = memoryData;
     const memNameFunc = (addr: number, withAddr = true, ramPercentage = true) => memoryRegionName(addr, fullData, threadNameData ?? {}, memorySymbols, addrToRange, withAddr, ramPercentage);
 
-    const GraphComponent = (totalMemorySelectedSt) ? RAMOverview : MemoryUsageGraph;
-    return (
-        <PanelTemplate>
-            <div className={styles.switch}>
-                <form>
-                    <label for="radio-ram-overview"><input type="radio" name="plot-type" id="radio-ram-overview" checked={totalMemorySelectedSt} onChange={() => setTotalMemorySelectedSt(true)} /> RAM overview</label>
-                    <label for="radio-mem-usage"><input type="radio" name="plot-type" id="radio-mem-usage" onChange={() => setTotalMemorySelectedSt(false)} /> Percentage usage</label>
-                </form>
-            </div>
-            <GraphComponent data={fullData} plotData={plotData} assignedMemory={staticallyAssignedMem} addrToRange={addrToRange} totalMemory={totalMemory} memoryRegionName={memNameFunc} />
-        </PanelTemplate>
-    );
-});
+    CALCULATED_DATA = {
+        data: fullData,
+        plotData,
+        assignedMemory: staticallyAssignedMem,
+        addrToRange,
+        totalMemory,
+        memoryRegionName: memNameFunc,
+    };
+    return CALCULATED_DATA;
+}
 
-export default tilingComponent(MemoryPanel, "Memory usage", {
-    dataProvider: getMemoryData,
-    additionalProps: {
-        contentClassName: CSS_ENABLING_OVERFLOW,
-        minHeight: 200,
-        minWidth: 300,
-    },
-})!;
+
+export { RAMOverview, MemoryUsageGraph };

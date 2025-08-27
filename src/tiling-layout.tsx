@@ -171,7 +171,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
 
         // On each metadata update, create available panels
-        [panels.MemoryPanel, panels.CPULoadPanel, panels.DieTempPanel].filter(v => v.available.get()).forEach(addNode);
+        getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>) && v.available.get()).forEach(addNode);
 
     });
 

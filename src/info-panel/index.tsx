@@ -11,8 +11,8 @@
  */
 
 import InfoPanel from "./info-panel";
-import MemoryPanel from "./memory-panel";
 import CPULoadPanel from "./cpu-load-panel";
 import DieTempPanel from "./die-temp-panel";
 
-export {InfoPanel, MemoryPanel, CPULoadPanel, DieTempPanel};
+export {InfoPanel, CPULoadPanel, DieTempPanel};
+export * from "./memory-panel";

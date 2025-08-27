@@ -98,7 +98,7 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
                     .value(_ => color)
                     .data(data)(program);
             });
-        return this.props.plotData.map((_, idx) => createSeries(this.getColor(idx)));
+        return this.props.plotData.map((_, idx) => createSeries(this.getWebglColorByIdx(idx)));
         /* eslint-enable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,

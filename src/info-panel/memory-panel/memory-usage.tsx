@@ -47,7 +47,7 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
             return defaultColor;
         }
 
-        const [r, g, b, _] = plot.getColor(idx);
+        const [r, g, b, _] = plot.getWebglColorByIdx(idx);
         return d3.rgb(r * 255, g * 255, b * 255, 1).formatHex();
     };
 

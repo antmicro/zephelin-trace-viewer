@@ -118,42 +118,12 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     });
 
 
-    /**
-     * Returns value of color defined in CSS variable.
-     * @param name The name of the CSS variable defining color.
-     */
-    getCSSColor(name: string): d3.RGBColor | undefined {
-        if (Plot.cssColors === undefined) {return;}
-        return d3.color(Plot.cssColors.getPropertyValue(name))?.rgb() ?? undefined;
-    }
-
-    /**
-     * Returns tuple representing color defined in CSS variable.
-     * The values in tuple are from range [0, 1].
-     * @param color The name of the CSS variable defining color or d3 RGB color object.
-     */
-    getWebGLColor(color: string | d3.RGBColor): [number, number, number, number] | undefined {
-        const c = (typeof(color) === "string") ? this.getCSSColor(color) : color;
-        if (c === undefined) {return;}
-        return [c.r / 255, c.g / 255, c.b / 255, c.opacity];
-    }
-
-    /**
-     * Get a color for the plot at the given index
-     * @param i Index of the line to color
-     */
-    getColor(i: number): number[] {
-        const defaultColor = [1, 0, 0, 1];
-
-        if (this.props.plotData === undefined) {
-            return defaultColor;
-        }
-
+    getCSSColorByIdx(i: number): string {
         const N = this.props.plotData.length;
         let cssColor: string;
         if (N <= 8) {
             cssColor = [
-                "#00E58D",  // gree500
+                "#00E58D",  // green500
                 "#0093E5",  // blue500
                 "#E56000",  // orange500
                 "#007F8C",  // teal500
@@ -170,6 +140,41 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             cssColor = d3.interpolateTurbo(t);
         }
 
+        return cssColor;
+    }
+
+    /**
+     * Returns value of color defined in CSS variable.
+     * @param name The name of the CSS variable defining color.
+     */
+    getWebglColorFromCSS(name: string): d3.RGBColor | undefined {
+        if (Plot.cssColors === undefined) {return;}
+        return d3.color(Plot.cssColors.getPropertyValue(name))?.rgb() ?? undefined;
+    }
+
+    /**
+     * Returns tuple representing color defined in CSS variable.
+     * The values in tuple are from range [0, 1].
+     * @param color The name of the CSS variable defining color or d3 RGB color object.
+     */
+    getWebGLColor(color: string | d3.RGBColor): [number, number, number, number] | undefined {
+        const c = (typeof(color) === "string") ? this.getWebglColorFromCSS(color) : color;
+        if (c === undefined) {return;}
+        return [c.r / 255, c.g / 255, c.b / 255, c.opacity];
+    }
+
+    /**
+     * Get a color for the plot at the given index
+     * @param i Index of the line to color
+     */
+    getWebglColorByIdx(i: number): number[] {
+        const defaultColor = [1, 0, 0, 1];
+
+        if (this.props.plotData === undefined) {
+            return defaultColor;
+        }
+
+        const cssColor = this.getCSSColorByIdx(i);
         return this.getWebGLColor(d3.rgb(cssColor)) ?? defaultColor;
     }
 

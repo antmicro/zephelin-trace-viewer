@@ -16,9 +16,9 @@
     // Disable these colors to make Speedscope's canvas visible
     --color-background: transparent;
     --color-1: transparent;
-    --color-popup-unselected-background: var(--bg-secondary);
-    --color-tabset-background-maximized: var(--bg-secondary);
-    --color-tab-selected-background: var(--gray-750);
+    --color-popup-unselected-background: var(--colors-gray-bg);
+    --color-tabset-background-maximized: var(--colors-gray-bg);
+    --color-tab-selected-background: var(--colors-gray-2);
     // Override font-family
     --font-family: "Source Code Pro", Courier, monospace;
 }
@@ -46,7 +46,6 @@
         padding-left: 0;
 
         .flexlayout__tab_button.flexlayout__tab_button_top {
-            // TODO: add border radius on whole panels
             border-radius: 4px 4px 0 0;
             padding: 3px 0.6em;
             gap: 0.6em;
@@ -63,6 +62,7 @@
     }
 
     .flexlayout__tab_button_content {
+        font-size: 14px;
         font-weight: 600;
         line-height: 18px;
     }

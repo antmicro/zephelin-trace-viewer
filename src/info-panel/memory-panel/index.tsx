@@ -27,6 +27,8 @@ export interface CommonPlotProps extends Omit<TotalMemoryPlotProps, "onZoomEnd" 
     data: MemoryEventType[],
     /** The function returning region name based on its address */
     memoryRegionName: (addr: number, withAddr?: boolean, ramPercentage?: boolean) => string,
+    /** The mapping of address to memory properties */
+    addrToProps: Record<number, {range?: [number, number], threadName?: string, symbol?: string, ramPercent?: number, region?: string}>,
 }
 
 export interface MemoryPanelProps {
@@ -67,13 +69,27 @@ export function dataProvider(): CommonPlotProps | undefined {
 
     const {fullData, plotData, threadNameData, memorySymbols, addrToRange, staticallyAssignedMem, totalMemory} = memoryData;
     const memNameFunc = (addr: number, withAddr = true, ramPercentage = true) => memoryRegionName(addr, fullData, threadNameData ?? {}, memorySymbols, addrToRange, withAddr, ramPercentage);
+    const addresses = Array.from(new Set(fullData.map(v => v.memory_addr))).sort().reverse();
+    const addrToProps = {};
+    addresses.forEach((a) => {
+        const firstData = fullData.find(v => v.memory_addr === a);
+        const threadId = firstData?.for_thread_id;
+        addrToProps[a] = {
+            range: (a in addrToRange) ? addrToRange[a] : undefined,
+            threadName: (threadNameData && threadId) ? threadNameData[threadId] : undefined,
+            symbol: memorySymbols[a],
+            ramPercent: (a in addrToRange) ? (addrToRange[a][1] - addrToRange[a][0]) : undefined,
+            region: firstData?.memory_region,
+        };
+    });
 
     CALCULATED_DATA = {
         data: fullData,
         plotData,
         assignedMemory: staticallyAssignedMem,
-        addrToRange,
+        addrToProps,
         totalMemory,
+        addrToRange,
         memoryRegionName: memNameFunc,
     };
     return CALCULATED_DATA;

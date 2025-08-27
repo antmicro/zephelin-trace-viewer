@@ -12,8 +12,8 @@
 
 @use "./colors";
 
-$axis-color: var(--color-gray-900);
-$annotation-color: var(--color-gray-900);
+$axis-color: var(--colors-gray-4);
+$annotation-color: var(--colors-gray-5);
 
 d3fc-group {
     overflow: visible !important;
@@ -32,6 +32,8 @@ d3fc-group {
     .x-label,
     .y-label {
         color: $axis-color;
+        font-weight: 600;
+        font-size: 14px;
     }
 
     d3fc-svg {
@@ -42,6 +44,8 @@ d3fc-group {
         }
 
         g.annotation {
+            pointer-events: none;
+
             path {
                 stroke: $annotation-color;
             }

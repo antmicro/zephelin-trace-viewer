@@ -16,6 +16,7 @@
 // Reset browsers' default CSS
 button {
     font: inherit;
+    border: none;
 }
 
 :root {
@@ -24,7 +25,6 @@ button {
     font-weight: 400;
 
     color: var(--textPrimary);
-    background-color: var(--bg-primary);
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -41,16 +41,15 @@ body {
     #app {
         width: 100vw;
         height: 100vh;
-
-        display: flex;
-        flex-direction: column;
+        font-size: 12px;
 
         $top-bar-height: 3vh;
         $top-bar-min-font: 2rem;
         $top-bar-min-height: calc($top-bar-min-font + 0.4rem);
 
+        $top-bar-resolved-height: max($top-bar-height, $top-bar-min-height);
+
         #top-bar {
-            flex-shrink: 0;
             width: 100%;
             height: $top-bar-height;
             min-height: $top-bar-min-height;
@@ -99,7 +98,7 @@ body {
                 h2 {
                     font-weight: 600;
                     line-height: 18px;
-                    color: var(--gray-400);
+                    color: var(--colors-gray-4);
                 }
             }
 
@@ -126,12 +125,6 @@ body {
                     cursor: pointer;
                 }
 
-                /* &:hover, */
-                /* &.clicked { */
-                /* background-color: var(--gray-850); */
-                /* border-radius: 0.3rem; */
-                /* } */
-
                 .dropdown {
                     display: none;
                     background-color: var(--bg-primary);
@@ -141,7 +134,7 @@ body {
                     top: max($top-bar-height, $top-bar-min-height);
                     width: max-content;
                     min-width: 170px;
-                    border: 1px solid var(--gray-850);
+                    border: 1px solid var(--colors-gray-1);
                     border-radius: 6px;
 
                     &.left {
@@ -167,7 +160,7 @@ body {
                         cursor: pointer;
 
                         &:hover {
-                            background-color: var(--gray-850);
+                            background-color: var(--colors-gray-1);
                         }
 
                         p {
@@ -193,7 +186,7 @@ body {
 
         #layout-container {
             position: relative;
-            flex: 1 0 0;
+            height: calc(100% - $top-bar-resolved-height - 1px);
 
             #tiling-layout {
                 width: 100%;

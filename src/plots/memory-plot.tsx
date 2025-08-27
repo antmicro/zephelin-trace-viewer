@@ -138,11 +138,11 @@ export class TotalMemoryPlot extends TimeBasedPlot<MemoryPlotData, TotalMemoryPl
             });
 
         const bgColors = {
-            0: "--color-green-500",
-            1: "--color-orange-500",
+            0: "--colors-lime",
+            1: "--colors-orange",
         };
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument */
-        return this.props.plotData.map((_v, i) => createSeries((i in bgColors) ? bgColors[i] : "--color-red-500")).concat(Object.values(this.props.addrToRange).map(_ => createLine("--color-gray-50")));
+        return this.props.plotData.map((_v, i) => createSeries((i in bgColors) ? bgColors[i] : "--colors-red")).concat(Object.values(this.props.addrToRange).map(_ => createLine("--colors-black")));
     }
 
     protected override _findClosestPoint(x: number, y: number): MemoryPlotData | null | undefined {

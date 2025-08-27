@@ -10,7 +10,7 @@
  * The module with the template for d3-based plot.
  */
 
-import { Component, createRef, JSX } from 'preact';
+import { createRef, JSX } from 'preact';
 import { useEffect } from 'preact/hooks';
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
@@ -18,6 +18,7 @@ import { annotationXYThreshold } from 'd3-svg-annotation';
 import { CartesianChart, WebglPlotAreaComponent, SvgPlotAreaComponent } from '@d3fc/d3fc-chart/src/cartesian';
 import { Selection } from 'd3-selection';
 
+import { StatelessComponent } from '@speedscope/lib/preact-helpers';
 import seriesSvgAnnotation from './series-annotation';
 import axisLabelHide from './axis-label-hide';
 import "@styles/plots.scss";
@@ -86,7 +87,7 @@ interface PlotAnnotationData {
  * @template T The type of the component properties
  * @extends {Component<RenderableProps<T>>}
  */
-export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends Component<T> {
+export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends StatelessComponent<T> {
     /** The reference to div containing whole plot */
     containerRef = createRef<HTMLDivElement>();
     /** The colors defined in CSS, in :root element */

@@ -11,19 +11,19 @@
 
 @use "./colors";
 
-$select-height: 3rem;
-
 .ram-overview-content {
-    flex: 9 0;
+    flex: 1 0;
+    max-height: calc(100% - 0.1rem - 2px);
     width: 100%;
-    max-height: calc(100% - $select-height - 0.1rem - 2px);
+    height: 100%;
 
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
 
     .ram-overview-selectors {
-        flex: 0 1 auto;
+        flex: 1 1 auto;
+        min-width: 8rem;
 
         $ver-margin: 1rem;
         height: calc(100% - $ver-margin);
@@ -33,29 +33,64 @@ $select-height: 3rem;
 
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
 
-        button {
-            flex: 1 0;
-            border-radius: 0.2rem;
+        button.range-selector {
+            margin-left: 2px;
+            padding-left: 10px;
+            padding-bottom: 6px;
+            padding-top: 6px;
             background-color: transparent;
+            border-left: 1px solid var(--colors-gray-4);
+            color: var(--colors-gray-5);
+            text-align: left;
+            font-size: 10px;
+            // Allow to break really long names
+            overflow-wrap: anywhere;
+
+            display: flex;
+            flex-direction: column;
+
+            .title {
+                font-weight: 600;
+                font-size: 12px;
+            }
 
             &:hover {
-                background-color: var(--color-gray-500);
+                background-color: var(--colors-gray-3);
             }
 
             &.selected {
-                color: var(--color-green-900);
-                border-color: var(--color-green-900);
+                color: var(--colors-gray-6);
+                border-left: 3px solid var(--colors-white);
+                padding-left: 8px;
             }
         }
+    }
+}
+
+.legend {
+    padding: 0.7rem 0;
+    color: var(--colors-gray-5);
+    font-size: 10px;
+
+    &,
+    span {
+        display: flex;
+        flex-direction: row;
+        align-items: first baseline;
+        gap: 10px;
+    }
+
+    .square {
+        width: 8px;
+        height: 8px;
     }
 }
 
 .memory-usage-content {
     flex: 9 0;
     width: 100%;
-    max-height: calc(100% - $select-height - 0.1rem - 2px);
+    max-height: calc(100% - 0.1rem - 2px);
 
     display: flex;
     flex-direction: row;
@@ -66,6 +101,8 @@ $select-height: 3rem;
         margin: auto 0.5rem;
         padding: $ver-padding 0;
         overflow: auto;
+        color: var(--colors-gray-6);
+        font-size: 12px;
 
         p {
             padding-bottom: 0.5rem;
@@ -85,29 +122,8 @@ $select-height: 3rem;
     }
 }
 
-.switch > form {
-    max-height: $select-height;
-    flex: 1 0;
-    position: relative;
-    display: flex;
-    flex-direction: row;
-
-    border: var(--color-gray-500) 1px solid;
-    border-radius: 0.5rem;
-    padding: 0.1rem;
-
-    input {
-        display: none;
-    }
-
-    & > label {
-        padding: 0.3rem;
-        margin: 0.2rem;
-        border-radius: 0.3rem;
-        background-color: transparent;
-
-        &:has(input:checked) {
-            background-color: var(--color-green-500);
-        }
-    }
+.divider {
+    margin: 6px 0;
+    width: 100%;
+    border-top: 1px solid var(--colors-gray-3);
 }

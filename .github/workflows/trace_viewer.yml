@@ -1,6 +1,12 @@
 name: zephelin_trace_viewer
 run-name: Zephelin Trace Viewer
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
   Lint:
     runs-on: ubuntu-latest
@@ -16,6 +22,7 @@ jobs:
         run: |
           yarn lint
           git diff --exit-code
+
   Build:
     runs-on: ubuntu-latest
     steps:

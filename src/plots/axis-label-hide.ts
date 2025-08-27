@@ -35,13 +35,20 @@ export default (adaptee: any) => {
         const { maxHeight, maxWidth, labelCount } = measureLabels(adaptee)(selection);
         const vertical = isVertical();
         const range = adaptee.scale().range()[vertical ? 0 : 1];
+        const domain = adaptee.scale().domain();
 
         // Calculate how many levels are needed to fit all labels
         const offsetLevels = Math.floor(((vertical ? maxHeight : maxWidth) * labelCount) / range) + 1;
 
-        // Display labels only at the first level
+        // Display labels only at the first level and in domain
         selection.select('text')
-            .attr('visibility', (_, i) => ((i % offsetLevels) === 0) ? 'visible' : 'hidden');
+            .attr('visibility', (x, i) => {
+                const inDomain = x >= domain[0] && x <= domain[1];
+                const firstLevel = ((i % offsetLevels) === 0);
+                return inDomain && firstLevel ? 'visible' : 'hidden';
+            });
+        selection.select('path')
+            .attr('visibility', (x) => x >= domain[0] && x <= domain[1] ? 'visible' : 'hidden');
         if (series && vertical) {
             // Increase width of Y axis - max width of label + tick + padding
             series.yAxisWidth(`max(${Math.ceil(maxWidth as number) + 10 + 2}px, 3rem)`);

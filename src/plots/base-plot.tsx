@@ -217,8 +217,8 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
      * @param _index The index of series that will receive the data.
      * @param _series The array with objects creating chart.
      */
-    protected _svgMapping(data: { data: (D[])[], annotations: ThresholdAnnotationProps[] }, _index: number, _series: object[]): ThresholdAnnotationProps[] {
-        return data.annotations;
+    protected _svgMapping(data: { data: (D[])[], annotations: ThresholdAnnotationProps[] }, index: number, _series: object[], isAnnotation: boolean): ThresholdAnnotationProps[] | D[] {
+        return isAnnotation ? data.annotations : data.data[index];
     }
 
     /**
@@ -474,12 +474,16 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             );
         }
 
-        const svgSeries = this._createSvgSeries().concat(this._createAnnotations());
-        if (svgSeries.length > 0) {
+        const svgSeries = this._createSvgSeries();
+        const annotations = this._createAnnotations();
+        const svgSeriesWithAnnotations = svgSeries.concat(annotations);
+        if (svgSeriesWithAnnotations.length > 0) {
             this.series.svgPlotArea(
                 fc.seriesSvgMulti()
-                    .series(svgSeries)
-                    .mapping(this._svgMapping.bind(this)) as SvgPlotAreaComponent,
+                    .series(svgSeriesWithAnnotations)
+                    .mapping((data: { data: D[][], annotations: ThresholdAnnotationProps[] }, index: number, series: object[]) => {
+                        return this._svgMapping(data, index, series, index >= svgSeries.length);
+                    }) as SvgPlotAreaComponent,
             );
         }
     }

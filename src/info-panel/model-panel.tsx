@@ -14,6 +14,7 @@ import { ComponentChildren, JSX } from 'preact';
 import { useState } from 'preact/hooks';
 
 import styles from "@styles/model-panel.module.scss";
+import panelStyles from "@styles/info-panel.module.scss";
 import { metadataAtom } from '@speedscope/app-state';
 import { MetadataModelArgs, ModelEventArgs, ModelEventName, SpeedscopeFrameArgs } from '../event-types';
 import PanelTemplate from './common';
@@ -103,21 +104,21 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
         <div className={styles["model-layer-section"]}>
             <h3> Layer info </h3>
             <ul>
-                <li> Operation type: {opData.op_name} </li>
-                <li>
+                <li className={styles.major}> Operation type: {opData.op_name} </li>
+                <li className={styles.major}>
                     <InfoItem>Inputs</InfoItem>:
                     <ol>
                         {opData.inputs.map(getTensor)}
                     </ol>
                 </li>
-                <li>
+                <li className={styles.major}>
                     <InfoItem>Outputs</InfoItem>:
                     <ol>
                         {opData.outputs.map(getTensor)}
                     </ol>
                 </li>
                 {parameters.length > 0 &&
-                    <li>
+                    <li className={styles.major}>
                         <InfoItem>Parameters</InfoItem>:
                         <ol>
                             {parameters}
@@ -136,7 +137,7 @@ export default function ModelInfoPanel({frameArgs}: ModelInfoPanelProps): JSX.El
     const event = EventInfo({frameArgs});
     const layer = LayerInfo({frameArgs});
     return (
-        <PanelTemplate>
+        <PanelTemplate additionalContentClass={panelStyles['no-padding']}>
             <div className={styles["model-event-section"]}>
                 {event}
                 {layer}

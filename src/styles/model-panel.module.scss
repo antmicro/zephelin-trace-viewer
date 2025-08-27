@@ -13,17 +13,36 @@
 
 .model-event-section {
     table {
-        thead {
-            border-bottom: 1px solid var(--borderGray-default);
+        $border: 1px solid var(--colors-gray-2);
+        $margin: 10px;
+        width: calc(100% - 2 * $margin);
+        margin: $margin;
+
+        thead,
+        tbody {
+            border: $border;
+
+            th {
+                padding: 0.2rem 0.3rem;
+                text-align: right;
+
+                &.key {
+                    text-align: left;
+                }
+
+                &:not(:first-child) {
+                    border-left: 1px solid var(--colors-gray-3);
+                }
+            }
         }
 
-        th {
-            padding: 0.2rem 0.3rem;
-            text-align: right;
+        thead {
+            border-bottom: 1px solid var(--colors-gray-3);
+            font-weight: 600;
+        }
 
-            &.key {
-                text-align: left;
-            }
+        tbody {
+            border-top: 1px solid var(--colors-gray-3);
         }
     }
 }
@@ -32,21 +51,35 @@
     margin-top: 1rem;
 
     h3 {
-        border-bottom: 1px solid var(--borderGray-default);
+        padding-left: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--colors-gray-3);
         margin: 0.5rem 0;
+        font-weight: 600;
+        font-size: 14px;
     }
 
     li {
         padding: 0.2rem 0.3rem;
-        margin-left: 0.5rem;
+
+        &.major {
+            margin-bottom: 10px;
+            margin-left: 0.5rem;
+
+            &:first-child {
+                font-size: 12px;
+            }
+        }
 
         .item-name {
-            font-weight: bold;
+            font-size: 14px;
+            font-weight: 600;
         }
 
         ol {
-            list-style-type: disc;
-            margin-left: 1rem;
+            padding: 6px 0;
+            margin-left: 0.7rem;
+            font-size: 12px;
         }
     }
 }

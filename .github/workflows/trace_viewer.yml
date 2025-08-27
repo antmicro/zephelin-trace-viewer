@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 jobs:
-  Lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
           yarn lint
           git diff --exit-code
 
-  Build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +40,16 @@ jobs:
         with:
           name: zephelin-trace-viewer
           path: dist
+      - name: Deploy to Github Pages
+        if: github.event_name == 'push' && github.repository == 'antmicro/zephelin-trace-viewer'
+        run: |
+          cd dist
+          touch .nojekyll
+          git init
+          cp ../.git/config ./.git/config
+          git add .
+          git config --local user.email "push@gha"
+          git config --local user.name "GHA"
+          git commit -am "update ${{ github.sha }}"
+          git push -u origin +HEAD:gh-pages
+          rm -rf .git

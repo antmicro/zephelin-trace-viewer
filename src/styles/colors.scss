@@ -10,24 +10,11 @@
 ///
 
 :root {
-    --white: #ffffff;
     --bg-primary: #000000;
     --bg-secondary: #0a0a0a;
 
     --fill-hover: #41a3fd;
     --fill-pressed: #024583;
-
-    --gray-100: #f2f2f7;
-    --gray-200: #d1d1d6;
-    --gray-300: #aeaeb2;
-    --gray-400: #8e8e93;
-    --gray-500: #636366;
-    --gray-600: #48484a;
-    --gray-700: #3a3a3c;
-    --gray-750: #2d2d2d;
-    --gray-800: #2c2c2e;
-    --gray-850: #242424;
-    --gray-900: #1c1c1e;
 
     --fill-default: #037ded;
     --accent-primary: #0a84ff;
@@ -40,9 +27,6 @@
     --success: #67ce66;
     --warning: #ec9d3e;
     --error: #eb5843;
-
-    /* HOTFIX: Sometimes this variable is not defined and it causes the terminal text to be black and unreadable */
-    --hterm-foreground-color: 240, 240, 240;
 
     --bg-default: #000000;
     --bg-muted: #0a0a0a;
@@ -80,76 +64,29 @@
     --textError: #ff565f;
     --textWarning: #ff9400;
 
-    --color-gray-50: hsla(240, 3%, 5%, 1);
-    --color-gray-100: hsla(240, 3%, 8%, 1);
-    --color-gray-200: hsla(240, 3%, 12%, 1);
-    --color-gray-300: hsla(240, 3%, 14%, 1);
-    --color-gray-400: hsla(240, 3%, 20%, 1);
-    --color-gray-500: hsla(240, 3%, 25%, 1);
-    --color-gray-600: hsla(240, 3%, 30%, 1);
-    --color-gray-700: hsla(240, 3%, 35%, 1);
-    --color-gray-800: hsla(240, 3%, 50%, 1);
-    --color-gray-900: hsla(240, 2%, 60%, 1);
-    --color-gray-950: hsla(240, 6%, 75%, 1);
-    --color-gray-1000: hsla(240, 24%, 96%, 1);
-
-    --color-blue-100: hsla(218, 81%, 11%, 1);
-    --color-blue-200: hsla(213, 95%, 15%, 1);
-    --color-blue-300: hsla(211, 98%, 19%, 1);
-    --color-blue-400: hsla(212, 100%, 23%, 1);
-    --color-blue-500: hsla(212, 100%, 27%, 1);
-    --color-blue-600: hsla(206, 100%, 50%, 1);
-    --color-blue-700: hsla(214, 100%, 50%, 1);
-    --color-blue-800: hsla(216, 100%, 45%, 1);
-    --color-blue-900: hsla(208, 100%, 64%, 1);
-
-    --color-red-100: hsla(353, 56%, 12%, 1);
-    --color-red-200: hsla(357, 55%, 16%, 1);
-    --color-red-300: hsla(358, 57%, 21%, 1);
-    --color-red-400: hsla(358, 58%, 25%, 1);
-    --color-red-500: hsla(0, 56%, 31%, 1);
-    --color-red-600: hsla(0, 71%, 57%, 1);
-    --color-red-700: hsla(1, 69%, 57%, 1);
-    --color-red-800: hsla(2, 62%, 50%, 1);
-    --color-red-900: hsla(357, 100%, 67%, 1);
-
-    --color-orange-100: hsla(37, 100%, 8%, 1);
-    --color-orange-200: hsla(32, 100%, 10%, 1);
-    --color-orange-300: hsla(34, 100%, 15%, 1);
-    --color-orange-400: hsla(36, 100%, 16%, 1);
-    --color-orange-500: hsla(37, 100%, 21%, 1);
-    --color-orange-600: hsla(41, 85%, 47%, 1);
-    --color-orange-700: hsla(43, 100%, 49%, 1);
-    --color-orange-800: hsla(37, 100%, 49%, 1);
-    --color-orange-900: hsla(37, 100%, 49%, 1);
-
-    --color-teal-100: hsla(168, 100%, 7%, 1);
-    --color-teal-200: hsla(170, 100%, 8%, 1);
-    --color-teal-300: hsla(172, 97%, 12%, 1);
-    --color-teal-400: hsla(171, 85%, 13%, 1);
-    --color-teal-500: hsla(172, 96%, 19%, 1);
-    --color-teal-600: hsla(172, 95%, 31%, 1);
-    --color-teal-700: hsla(172, 56%, 42%, 1);
-    --color-teal-800: hsla(173, 93%, 29%, 1);
-    --color-teal-900: hsla(173, 79%, 45%, 1);
-
-    --color-green-100: hsla(128, 68%, 9%, 1);
-    --color-green-200: hsla(133, 75%, 11%, 1);
-    --color-green-300: hsla(129, 65%, 14%, 1);
-    --color-green-400: hsla(124, 48%, 18%, 1);
-    --color-green-500: hsla(123, 53%, 26%, 1);
-    --color-green-600: hsla(119, 43%, 40%, 1);
-    --color-green-700: hsla(122, 42%, 47%, 1);
-    --color-green-800: hsla(123, 43%, 40%, 1);
-    --color-green-900: hsla(125, 50%, 56%, 1);
-
-    --color-purple-100: hsla(282, 58%, 12%, 1);
-    --color-purple-200: hsla(279, 54%, 16%, 1);
-    --color-purple-300: hsla(278, 54%, 23%, 1);
-    --color-purple-400: hsla(275, 60%, 28%, 1);
-    --color-purple-500: hsla(273, 58%, 35%, 1);
-    --color-purple-600: hsla(271, 59%, 54%, 1);
-    --color-purple-700: hsla(271, 59%, 54%, 1);
-    --color-purple-800: hsla(272, 58%, 45%, 1);
-    --color-purple-900: hsla(273, 86%, 71%, 1);
+    --colors-black: #000000ff;
+    --colors-gray-bg: #1a1a1aff;
+    --colors-gray-1: #242424ff;
+    --colors-gray-2: #2d2d2dff;
+    --colors-gray-3: #404040ff;
+    --colors-gray-4: #797979ff;
+    --colors-gray-5: #97979bff;
+    --colors-gray-6: #d5d5d5ff;
+    --colors-green: #6dca8eff;
+    --colors-green-2: #84d6a6ff;
+    --colors-green-3: #9fdebcff;
+    --colors-blue: #3471bfff;
+    --colors-blue-2: #4f8dcbff;
+    --colors-blue-3: #78a7d8ff;
+    --colors-light-blue: #94d0f3ff;
+    --colors-light-blue-2: #a8d9f4ff;
+    --colors-light-blue-3: #bce2f7ff;
+    --colors-teal: #006c77ff;
+    --colors-orange: #e59700ff;
+    --colors-lime: #127f00ff;
+    --colors-red: #bd0e2dff;
+    --colors-purple: #6e32caff;
+    --colors-purple-2: #8a59d5ff;
+    --colors-purple-3: #a781ddff;
+    --colors-white: #ffffffff;
 }

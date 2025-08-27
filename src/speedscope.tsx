@@ -93,7 +93,7 @@ export const PALE_PURPLE = "#af7fe4";
 const Speedscope = memo((): JSX.Element => {
     // Remove title and additional buttons from Speedscope toolbar
     toolbarConfigAtom.set({
-        title: '', importButton: false, exportButton: false, themeButton: false, dragImport: false, helpButton: false,
+        title: '', dragImport: false,
     });
     // Adjust Speedscope theme colors
     darkTheme.selectionPrimaryColor = DEEP_PURPLE;
@@ -141,7 +141,7 @@ const Speedscope = memo((): JSX.Element => {
 export default tilingComponent(Speedscope, "Flamegraph", {
     additionalProps: {
         minHeight: 400,
-        minWidth: 400,
+        minWidth: 540,
         enableClose: false,
     },
 })!;

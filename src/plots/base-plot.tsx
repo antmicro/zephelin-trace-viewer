@@ -185,6 +185,20 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         d3.select(this.containerRef.current).datum({annotations: this.annotations, data: this.props.plotData}).call(this.series);
         // Set round corners for annotation background
         d3.select(this.containerRef.current).select("rect.annotation-note-bg").attr("rx", 2).attr("ry", 2);
+
+        // Disable overflow for non-annotation SVG elements
+        const svg = d3.select(this.containerRef.current).select(".svg-plot-area svg");
+        const clipPathSelector = svg.select("clipPath");
+        if (clipPathSelector.empty()) {
+            const clipPathId = crypto.randomUUID();
+            svg.append("clipPath")
+                .attr("id", clipPathId)
+                .html('<rect x="0" y="0" width="100%" height="100%" />');
+        } else {
+            const id = clipPathSelector.attr("id");
+            svg.select("g.multi > g:not(g .annotation)").attr("clip-path", `url(#${id})`);
+            svg.select("g.multi > g:has(g .annotation)").attr("clip-path", null);
+        }
     }
 
     /**

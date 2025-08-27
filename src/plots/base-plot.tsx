@@ -44,8 +44,11 @@ export interface ThresholdAnnotationProps {
     },
     /** The coordinates of the threshold on Y-axis */
     subject: {
+        x1: number,
+        x2: number,
+    } | {
         y1: number,
-        y2: number
+        y2: number,
     },
 }
 
@@ -238,7 +241,9 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     /**
      * Creates objects drawing WebGL charts.
      */
-    protected abstract _createWebglSeries(): object[];
+    protected _createWebglSeries(): object[] {
+        return [];
+    };
 
     /**
      * Creates additional objects drawing SVG charts.
@@ -261,6 +266,10 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         return null;
     }
 
+    protected _annotationOrientation(): 'horizontal' | 'vertical' {
+        return 'vertical';
+    }
+
     /**
      * Adds annotation based on provided datapoint.
      */
@@ -281,7 +290,9 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
         const xDomain = this.xScale.domain();
         const yDomain = this.yScale.domain();
-        const yRange = this.yScale.range() as [number, number];
+        const subject = this._annotationOrientation() === 'vertical'
+            ? { y1: this.yScale.range()[0] as number, y2: this.yScale.range()[1] as number }
+            : { x1: this.xScale.range()[0] as number, x2: this.xScale.range()[1] as number };
 
         const annotationX = Math.max(Math.min(annotationData.x, xDomain[1]), xDomain[0]);
         const xMult = (annotationX < (xDomain[1] + xDomain[0]) / 2) ? 1 : -1;
@@ -299,10 +310,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
                     wrapSplitter: "\n",
                     bgPadding: 5,
                 },
-                subject: {
-                    y1: yRange[0],
-                    y2: yRange[1],
-                },
+                subject,
             },
         );
 
@@ -438,6 +446,22 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         return null;
     }
 
+    protected _xTickValues(): (string | number)[] | null {
+        return null;
+    }
+
+    protected _yTickValues(): (string | number)[] | null {
+        return null;
+    }
+
+    protected _xTickFormat(): ((i: number) => any) | null {
+        return i => i;
+    }
+
+    protected _yTickFormat(): ((i: number) => any) | null {
+        return null;
+    }
+
     /**
      * Creates the plot representation with zoom and annotations.
      */
@@ -456,7 +480,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
                 yAxis: {left: scale => axisLabelHide(fc.axisLeft(scale)).series(this.series)},
             },
         ).yOrient("left")
-            .xTickFormat((d: number) => d)
+            .xTickFormat(this._xTickFormat())
             .decorate((sel: Selection<d3.BaseType, any, any, any>) => {
                 const s = sel.enter()
                     .select("d3fc-svg.plot-area")
@@ -474,6 +498,13 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
                 }
             });
 
+
+        const xTickValues = this._xTickValues();
+        if (xTickValues) { this.series.xTickValues(xTickValues); }
+        const yTickValues = this._yTickValues();
+        if (yTickValues) { this.series.yTickValues(yTickValues); }
+        const yTickFormat = this._yTickFormat();
+        if (yTickFormat) { this.series.yTickFormat(yTickFormat); }
         const xLabel = this._xLabel();
         if (xLabel) { this.series.xLabel(xLabel); }
         const yLabel = this._yLabel();

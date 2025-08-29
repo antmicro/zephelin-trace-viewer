@@ -161,13 +161,6 @@ export interface ModelOpsType {
     outputs_types: string[],
     inputs_shapes: Record<number, number[]>
     outputs_shapes: Record<number, number[]>
-
-    // TVM specific options
-    flatten?: boolean,
-    data_layout?: string,
-    kernel_layout?: string,
-
-    // TFLM specific options
     parameters?: Record<string, any>,
 }
 

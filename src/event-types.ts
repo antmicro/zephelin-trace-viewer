@@ -13,6 +13,7 @@
  */
 
 import { Metadata } from "@speedscope/app-state/profile-group";
+import { FrameInfo } from "@speedscope/lib/profile";
 
 
 /**
@@ -203,4 +204,8 @@ export interface SpeedscopeFrameArgs<T, K = T> {
     begin: T,
     /** arguments from event ending the selected frame */
     end: K,
+}
+
+export interface FrameInfoT<T> extends FrameInfo {
+    args: SpeedscopeFrameArgs<T>
 }

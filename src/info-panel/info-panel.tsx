@@ -16,8 +16,8 @@ import styles from "@styles/info-panel.module.scss";
 import PanelTemplate from './common';
 import ModelInfoPanel from './model-panel';
 import { useFrameProvider } from '@/utils/frame-provider';
-import { ModelEventArgs, ModelEventName, SpeedscopeFrameArgs } from '@/event-types';
 import tilingComponent from '@/utils/tiling-component';
+import { isOpFrame } from "@/utils/model";
 
 
 interface GenericInfoProps {
@@ -41,8 +41,8 @@ function GenericInfo({info}: GenericInfoProps) {
 function InfoPanel() {
     const { frameSt } = useFrameProvider();
 
-    if (typeof(frameSt?.key) === "string" && frameSt?.key?.startsWith(`${ModelEventName}::`)) {
-        return <ModelInfoPanel frameArgs={frameSt.args as SpeedscopeFrameArgs<ModelEventArgs>} />;
+    if (isOpFrame(frameSt)) {
+        return <ModelInfoPanel frameArgs={frameSt.args} />;
     } else if (frameSt) {
         return <GenericInfo info="The chosen event does not contain additional information" />;
     }

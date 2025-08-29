@@ -173,7 +173,6 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
 
         // On each metadata update, create available panels
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>) && v.available.get()).forEach(addNode);
-
     });
 
     /** External drag callback, that spawns new panel if a button associated with a component is dragged */

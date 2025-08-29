@@ -13,7 +13,7 @@
 import { ComponentChild, RefObject } from "preact";
 import { memo, useImperativeHandle } from "preact/compat";
 import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode } from "flexlayout-react";
-import { metadataAtom } from "@speedscope/app-state";
+import { loadingAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
 import Speedscope from "./speedscope";
@@ -166,7 +166,8 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
     };
 
     // Actions when new trace is loaded
-    metadataAtom.subscribe(() => {
+    loadingAtom.subscribe(() => {
+        if (loadingAtom.get()) { return; }
         // Delete all panels apart from Speedscope and info panel
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
 

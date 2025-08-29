@@ -10,7 +10,7 @@
  * The module with utilities for titling layout components.
  */
 
-import { metadataAtom } from "@speedscope/app-state";
+import { loadingAtom } from "@speedscope/app-state";
 import { Atom } from "@speedscope/lib/atom";
 import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
@@ -113,11 +113,8 @@ export default <T extends object>(
         options.dataProvider,
     );
 
-    metadataAtom.subscribe(() => {
-        /*
-         * Metadata are changed when new trace is loaded,
-         * therefore trigger calculation of the component's data.
-         */
+    loadingAtom.subscribe(() => {
+        if (loadingAtom.get()) { return; }
         tilingComponent.calculateData();
     });
 

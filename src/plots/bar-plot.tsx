@@ -25,7 +25,7 @@ const getOppositeAxis = (axis: Axis) => Object.values(Axis).find((a) => a !== ax
 type Order = 'ascending' | 'descending';
 type Orient = 'vertical' | 'horizontal';
 
-interface BarPlotProps<D> extends PlotBaseProps<D> {
+export interface BarPlotProps<D> extends PlotBaseProps<D> {
     order?: Order,
     orient?: Orient,
 }
@@ -190,6 +190,12 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return this.props.orient ?? super._annotationOrientation();
     }
 
+    protected _decorateSvgSeries(plotDataColor: string) {
+        return (selection: d3.Selection<d3.BaseType, any, any, any>) => {
+            selection.select('path').attr('fill', plotDataColor);
+        };
+    }
+
     protected override _createSvgSeries() {
         /* eslint-disable
             @typescript-eslint/no-unsafe-call,
@@ -203,11 +209,8 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
             .crossValue((e: D) => this._access(e, plotData, getOppositeAxis(this._mainAxis)))
             .mainValue((e: D) => this._access(e, plotData, this._mainAxis))
             .defined(() => this.xScale.range().some(Boolean) && this.yScale.range().some(Boolean))
-            .decorate((selection: d3.Selection<d3.BaseType, any, any, any>, _: D[]) => {
-                selection
-                    .select('path')
-                    .attr('fill', color);
-            });
+            .decorate(this._decorateSvgSeries(color));
+
         return this.plotData.map((plotData, idx) => createSeries(plotData, this.getCSSColorByIdx(idx)));
         /* eslint-enable
             @typescript-eslint/no-unsafe-call,

@@ -22,6 +22,10 @@ type OpInstance = string
 // Describes execution times of an operator type grouped by an instance
 type OpTypeExecutionTimes = Map<OpInstance, number[]>;
 
+export function normalizeOpName(name: string) {
+    return name.replace(new RegExp(`${ModelEventName}::`), '');
+}
+
 function getOpExecutionTimes() {
     const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
     if (!activeProfile) { return null; };
@@ -31,7 +35,8 @@ function getOpExecutionTimes() {
         (callNode) => {
             const { frame } = callNode;
             if (!isOpFrame(frame)) { return; }
-            const { name: opInstance, args: { begin: { tag: opType } } } = frame;
+            const { name, args: { begin: { tag: opType } } } = frame;
+            const opInstance = normalizeOpName(name);
             const duration = callNode.getSelfWeight();
 
             if (!opTypes.has(opType)) { opTypes.set(opType, new Map()); }

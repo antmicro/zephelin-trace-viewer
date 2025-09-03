@@ -7,16 +7,16 @@
 
 
 /**
- * The module with Operator Execution Time plot definition.
+ * The module with Operator Type Execution Time plot definition.
  */
 
 
 import { TimeFormatter } from '@speedscope/lib/value-formatters';
 import { OpExecutionEvent } from '../event-types';
-import { Axis, BarPlot } from './bar-plot';
+import { Axis, BarPlot, BarPlotProps } from './bar-plot';
 
 
-export class OpTypeExecutionTimePlot extends BarPlot<OpExecutionEvent> {
+export class OpTypeExecutionTimePlot<D extends OpExecutionEvent = OpExecutionEvent, T extends BarPlotProps<D> = BarPlotProps<D>> extends BarPlot<D, T> {
     formatter = new TimeFormatter('microseconds');
 
     protected override _accessValue(e: OpExecutionEvent, axis: Axis) {

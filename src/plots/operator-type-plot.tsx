@@ -16,7 +16,7 @@ import { OpExecutionEvent } from '../event-types';
 import { Axis, BarPlot } from './bar-plot';
 
 
-export class OpExecutionTimePlot extends BarPlot<OpExecutionEvent> {
+export class OpTypeExecutionTimePlot extends BarPlot<OpExecutionEvent> {
     formatter = new TimeFormatter('microseconds');
 
     protected override _accessValue(e: OpExecutionEvent, axis: Axis) {

@@ -11,7 +11,7 @@
  */
 
 import { Fragment, JSX, VNode } from 'preact';
-import { ThemeProvider, useTheme } from '@speedscope/views/themes/theme';
+import { useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
 import { ApplicationContainer } from '@speedscope/views/application-container';
 import { customWelcomeMessagesAtom, toolbarConfigAtom } from '@speedscope/app-state';
@@ -124,9 +124,7 @@ const Speedscope = memo((): JSX.Element => {
 
     return (
         <div id={style['speedscope-container']} ref={divRef}>
-            <ThemeProvider>
-                <ApplicationContainer />
-            </ThemeProvider>
+            <ApplicationContainer />
         </div>
     );
 // Override comparison function to hardly ever reload the Speedscope

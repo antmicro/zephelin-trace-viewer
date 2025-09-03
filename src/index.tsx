@@ -15,6 +15,7 @@ import { render } from 'preact';
 import style from '@styles/app.module.scss';
 import '@styles/flexlayout.scss';
 import { useRef } from 'preact/hooks';
+import { ThemeProvider } from '@speedscope/views/themes/theme';
 import TopBar from "./top-bar";
 import DragDropLayout from './drag-drop-layout';
 
@@ -28,8 +29,10 @@ export function App() {
 
     return (
         <div id={style.app}>
-            <TopBar tilingRef={tilingRef} />
-            <DragDropLayout tilingRef={tilingRef} />
+            <ThemeProvider>
+                <TopBar tilingRef={tilingRef} />
+                <DragDropLayout tilingRef={tilingRef} />
+            </ThemeProvider>
         </div>
     );
 }

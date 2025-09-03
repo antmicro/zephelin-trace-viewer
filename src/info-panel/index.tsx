@@ -13,7 +13,8 @@
 import InfoPanel from "./info-panel";
 import CPULoadPanel from "./cpu-load-panel";
 import DieTempPanel from "./die-temp-panel";
+import OperatorPanel from "./operator-panel";
 import OperatorTypePanel from "./operator-type-panel";
 
-export {InfoPanel, CPULoadPanel, DieTempPanel, OperatorTypePanel};
+export {InfoPanel, CPULoadPanel, DieTempPanel, OperatorTypePanel, OperatorPanel};
 export * from "./memory-panel";

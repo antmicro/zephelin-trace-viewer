@@ -55,6 +55,22 @@ export function getOpData(): { plotData: OpExecutionEvent[][] } | null {
     const opExecutionTimes = getOpExecutionTimes();
     if (!opExecutionTimes) {return null;}
 
+    const plotData = Array.from(opExecutionTimes.values())
+        .flatMap((opTypeExecutionTimes) => Array.from(opTypeExecutionTimes.entries()))
+        .map(([name, durations]) => {
+            const total = durations.reduce((a, b) => a + b, 0);
+            return { name, duration: { total, average: total / durations.length } };
+        });
+
+    if (!plotData.length) { return null; }
+    return { plotData: [plotData] };
+
+}
+
+export function getOpTypeData(): { plotData: OpExecutionEvent[][] } | null {
+    const opExecutionTimes = getOpExecutionTimes();
+    if (!opExecutionTimes) {return null;}
+
     const plotData = Array.from(opExecutionTimes.entries())
         .map(([opType, opTypeExecutionTimes]) => {
             const { count, total } = Array.from(opTypeExecutionTimes.values())

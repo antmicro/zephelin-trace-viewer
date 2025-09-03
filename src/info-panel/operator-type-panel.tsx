@@ -7,12 +7,12 @@
 
 
 /**
- * The module with panel containing operator execution time plot.
+ * The module with panel containing operator type execution time plot.
  */
 
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from '@/utils/tiling-component';
-import { getOpData } from '@/utils/model';
+import { getOpTypeData } from '@/utils/model';
 import { OpExecutionEvent } from '@/event-types';
 import { OpTypeExecutionTimePlot } from '@/plots/operator-type-plot';
 
@@ -27,7 +27,7 @@ function OperatorTypeExecutionPanel({ plotData }: { plotData: OpExecutionEvent[]
 };
 
 export default tilingComponent(OperatorTypeExecutionPanel, "Operator Type Execution Time", {
-    dataProvider: getOpData,
+    dataProvider: getOpTypeData,
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,
         minHeight: 200,

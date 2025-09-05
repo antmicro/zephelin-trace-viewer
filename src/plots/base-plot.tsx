@@ -576,7 +576,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     }
 
     componentDidUpdate(): void {
-        this.createChart();
+        this.redraw();
     }
 
     componentWillUnmount(): void {

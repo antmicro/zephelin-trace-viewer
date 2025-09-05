@@ -4,6 +4,12 @@ Copyright (c) 2025 [Analog Devices, Inc.](https://www.analog.com/en/index.html)
 
 Copyright (c) 2025 [Antmicro](https://www.antmicro.com)
 
+<picture>
+  <source srcset="imgs/zephelin_trace_viewer_logotype_light.png" media="(prefers-color-scheme: light)"/>
+  <source srcset="imgs/zephelin_trace_viewer_logotype_dark.png" media="(prefers-color-scheme: dark)"/>
+  <img src="imgs/zephelin_trace_viewer_logotype_light.png"/>
+</picture>
+
 Zephelin Trace Viewer is a visualization tool for analyzing performance of Zephyr RTOS applications.
 
 It visualizes traces, sensor readings and AI-related performance statistics collected by the Zephelin tool.

@@ -202,7 +202,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
             .orient(this.orient)
             .crossValue((e: D) => this._access(e, plotData, getOppositeAxis(this._mainAxis)))
             .mainValue((e: D) => this._access(e, plotData, this._mainAxis))
-            .defined(() => true)
+            .defined(() => this.xScale.range().some(Boolean) && this.yScale.range().some(Boolean))
             .decorate((selection: d3.Selection<d3.BaseType, any, any, any>, _: D[]) => {
                 selection
                     .select('path')

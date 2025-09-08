@@ -162,6 +162,13 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             return;
         }
 
+        node.setEventListener('visibility', () => {
+            if (node.isVisible()) {
+                const event = new Event('resize', { bubbles: true });
+                node.getMoveableElement()?.dispatchEvent(event);
+            }
+        });
+
         return <ComponentType {...(node.getConfig() ?? {})} />;
     };
 

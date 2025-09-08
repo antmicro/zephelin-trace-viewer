@@ -116,8 +116,11 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     annotations: ThresholdAnnotationProps[] = [];
 
     /** The callback executed when the plot container is resized */
-    protected resizeOserver = new ResizeObserver((_) => {
-        this.redraw();
+    protected resizeObserver = new ResizeObserver((entries) => {
+        const [event] = entries;
+        if (event.contentRect.width && event.contentRect.height) {
+            this.redraw();
+        }
     });
 
 
@@ -587,10 +590,10 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         // Register resize observer which redraws the plot
         useEffect(() => {
             if (this.containerRef.current !== null) {
-                this.resizeOserver.observe(this.containerRef.current);
+                this.resizeObserver.observe(this.containerRef.current);
             }
             // Disconnect all elements on cleanup
-            return () => this.resizeOserver.disconnect();
+            return () => this.resizeObserver.disconnect();
         }, []);
 
         const fullStyle = {

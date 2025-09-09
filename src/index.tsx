@@ -11,27 +11,43 @@
  */
 
 import { render } from 'preact';
+import { lazy, Suspense } from 'preact/compat';
 
 import style from '@styles/app.module.scss';
 import '@styles/flexlayout.scss';
-import { useRef } from 'preact/hooks';
 import { ThemeProvider } from '@speedscope/views/themes/theme';
+import { isImmediatelyLoading } from '@speedscope/app-state';
+import { useRef, useState } from 'preact/hooks';
 import TopBar from "./top-bar";
 import DragDropLayout from './drag-drop-layout';
+import WelcomeScreen from './welcome-screen';
+import LoadingScreen from './loading-screen';
+import { configureSpeedscope } from './speedscope';
+const LazyTilingLayout = lazy(() => import("@/tiling-layout"));
 
+
+// Configure Speedscope - only once before application starts
+configureSpeedscope();
 
 /**
  * The entrypoint of the application, defining top bar,
- * Speedscope and the panel with additional information.
+ * tiling layout and welcome screen.
  */
 export function App() {
     const tilingRef = useRef(null);
+    const [welcomeSt, setWelcomeSt] = useState<boolean>(!isImmediatelyLoading);
 
     return (
         <div id={style.app}>
             <ThemeProvider>
-                <TopBar tilingRef={tilingRef} />
-                <DragDropLayout tilingRef={tilingRef} />
+                <TopBar tilingRef={tilingRef} displayTitle={!welcomeSt} />
+                <DragDropLayout id={style["tiling-container"]} enabled={!welcomeSt}>
+                    <Suspense fallback={<LoadingScreen />}>
+                        <LazyTilingLayout tilingRef={tilingRef} />
+                    </Suspense>
+                </DragDropLayout>
+                {/* Overlay welcome screen on top of lazy loaded application to have access to Speedscope state */}
+                {welcomeSt ? <WelcomeScreen setWelcomeScreenSt={setWelcomeSt} /> : null }
             </ThemeProvider>
         </div>
     );

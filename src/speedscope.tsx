@@ -83,8 +83,11 @@ function WelcomeMessage(divClass: string, pClass: string, aClass: string, browse
 }
 
 
-/** Element representing Speedscope app */
-const Speedscope = memo((): JSX.Element => {
+/**
+ * Setups Speedscope theme to dark, customizes colors and toolbar.
+ * It should be executed before Speedscope is rendered.
+ */
+export function configureSpeedscope() {
     // Remove title and additional buttons from Speedscope toolbar
     toolbarConfigAtom.set({
         title: '', dragImport: false,
@@ -103,7 +106,11 @@ const Speedscope = memo((): JSX.Element => {
     if (colorSchemeAtom.get() === ColorScheme.SYSTEM) {
         colorSchemeAtom.set(ColorScheme.DARK);
     }
+}
 
+
+/** Element representing Speedscope app */
+const Speedscope = memo((): JSX.Element => {
     /*
      * Create resize observer for Speedscope container
      * which sends window resize event in order to redraw webGL context

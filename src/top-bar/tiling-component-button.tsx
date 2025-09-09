@@ -13,7 +13,7 @@
 import { memo } from "preact/compat";
 import { useAtom } from "@speedscope/lib/atom";
 
-import style from "@styles/app.module.scss";
+import style from "@styles/top-bar.module.scss";
 import { TilingComponent } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
 

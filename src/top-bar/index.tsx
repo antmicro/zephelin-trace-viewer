@@ -17,7 +17,7 @@ import { memo } from "preact/compat";
 import { useAtom } from "@speedscope/lib/atom";
 import { appRefAtom, profileGroupAtom } from "@speedscope/app-state";
 
-import style from '@styles/app.module.scss';
+import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
 import iconstyle from "@styles/icons.module.scss";
 import { TilingComponentButton } from "./tiling-component-button";

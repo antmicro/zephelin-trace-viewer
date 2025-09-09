@@ -14,7 +14,7 @@ import { VNode } from "preact";
 import { memo, useEffect, useRef } from "preact/compat";
 import ClickAwayListener from "react-click-away-listener";
 
-import style from "@styles/app.module.scss";
+import style from "@styles/top-bar.module.scss";
 
 
 interface ButtonsContainerProps {

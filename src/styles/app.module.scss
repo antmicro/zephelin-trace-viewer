@@ -10,8 +10,8 @@
 ///
 
 @use "./colors";
+@use "./variables" as v;
 @import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
-@import url("https://fonts.cdnfonts.com/css/clear-sans");
 
 // Reset browsers' default CSS
 button {
@@ -36,156 +36,29 @@ button {
 body {
     margin: 0;
     min-height: 100vh;
+    max-height: 100vh;
     width: 100vw;
+    background-color: var(--colors-gray-bg);
 
     #app {
         width: 100vw;
         height: 100vh;
         font-size: 12px;
 
-        $top-bar-height: 3vh;
-        $top-bar-min-font: 2rem;
-        $top-bar-min-height: calc($top-bar-min-font + 0.4rem);
+        position: relative;
 
-        $top-bar-resolved-height: max($top-bar-height, $top-bar-min-height);
-
-        #top-bar {
-            width: 100%;
-            height: $top-bar-height;
-            min-height: $top-bar-min-height;
-            background-color: var(--bg-muted);
-            border-bottom: 1px solid var(--borderGray-default);
-            padding: 0 12px;
-            box-sizing: border-box;
-            // Set to be above the d3-svg.plot-area
-            z-index: 10001;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: inherit;
-
-            #title-button {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-
-                #title {
-                    width: 35px;
-                    font-family:
-                        Clear Sans,
-                        sans-serif;
-                    font-weight: 700;
-                    font-size: 11.79px;
-                    line-height: 8.52px;
-                    letter-spacing: 0px;
-                    vertical-align: middle;
-                    text-transform: uppercase;
-
-                    span {
-                        font-size: 7.86px;
-                    }
-                }
-            }
-
-            #panels {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 0.4rem;
-
-                h2 {
-                    font-weight: 600;
-                    line-height: 18px;
-                    color: var(--colors-gray-4);
-                }
-            }
-
+        .layout-container {
             position: relative;
-
-            .category-container {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 0.5rem;
+            &#tiling-container {
+                position: absolute;
+                top: calc(v.$top-bar-resolved-height - 1px);
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: calc(100% - v.$top-bar-resolved-height - 1px);
             }
 
-            .category {
-                $horizontal-padding: 6px;
-
-                position: relative;
-
-                button {
-                    background-color: transparent;
-                    border: none;
-                    padding: 0.1rem 0;
-                    width: 100%;
-                    height: 100%;
-                    cursor: pointer;
-                }
-
-                .dropdown {
-                    display: none;
-                    background-color: var(--bg-primary);
-
-                    position: fixed;
-                    padding: 4px 0;
-                    top: max($top-bar-height, $top-bar-min-height);
-                    width: max-content;
-                    min-width: 170px;
-                    border: 1px solid var(--colors-gray-1);
-                    border-radius: 6px;
-
-                    &.left {
-                        border-top-left-radius: 0;
-                        left: 0;
-                    }
-
-                    &.right {
-                        border-top-right-radius: 0;
-                        right: 0;
-                    }
-
-                    button {
-                        display: flex;
-                        flex-direction: row;
-                        flex-wrap: nowrap;
-                        align-content: center;
-                        gap: 0.5rem;
-                        $internal-padding: 0.5rem;
-                        padding: $internal-padding;
-                        border-radius: 0.1rem;
-                        border-width: 0;
-                        cursor: pointer;
-
-                        &:hover {
-                            background-color: var(--colors-gray-1);
-                        }
-
-                        p {
-                            margin: auto 0;
-                        }
-                    }
-                }
-
-                &.clicked {
-                    .dropdown,
-                    .gap-filler {
-                        display: inline-block;
-                    }
-                }
-
-                .panel-button > div {
-                    width: 100%;
-                    height: 100%;
-                    text-align: left;
-                }
-            }
-        }
-
-        #layout-container {
-            position: relative;
-            height: calc(100% - $top-bar-resolved-height - 1px);
+            height: 100%;
 
             #tiling-layout {
                 width: 100%;
@@ -245,5 +118,33 @@ body {
                 cursor: row-resize;
             }
         }
+    }
+
+    .loading-icon {
+        animation: spin 2s cubic-bezier(0.46, 0.03, 0.52, 0.96) infinite;
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
+    .loading-screen {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        background-color: #060606;
+    }
+
+    *[hidden] {
+        display: none !important;
     }
 }

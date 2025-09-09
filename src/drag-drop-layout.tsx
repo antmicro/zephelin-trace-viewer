@@ -12,18 +12,31 @@
 
 import { useRef } from 'preact/hooks';
 import { memo } from 'preact/compat';
+import { VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
 import { appRefAtom } from '@speedscope/app-state';
 
 import style from '@styles/app.module.scss';
-import TilingLayout, { TilingLayoutProps } from './tiling-layout';
 
+
+interface DragDropLayoutProps {
+    /** Whether pointer events should be enabled */
+    enabled?: boolean,
+    /** ID of drag&drop section */
+    id?: string,
+    /** The callback triggered at the beginning of drop */
+    onDropStart?: () => void,
+    /** The callback triggered at the end of drop */
+    onDropEnd?: () => void,
+    /** The children rendered inside the layout */
+    children: VNode,
+}
 
 /**
  * The wrapper for tiling layout, implemening drag&drop feature,
  * as well as managing pointer-events values.
  */
-export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">) => {
+export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragDropLayoutProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const borderRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
@@ -65,6 +78,7 @@ export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">) => {
         e.stopImmediatePropagation();
     };
     const drop = (e: DragEvent) => {
+        if (onDropStart) {onDropStart();}
         unsetDrag();
         e.preventDefault();
         e.stopPropagation();
@@ -74,20 +88,23 @@ export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">) => {
             return;
         }
         appRef.current.loadDropFile(e);
+        if (onDropEnd) {onDropEnd();}
     };
 
     return (
         <div
-            id={style['layout-container']} ref={ref}
+            id={id}
+            className={style['layout-container']} ref={ref}
+            style={enabled ? {} : {pointerEvents: "none"}}
             onDragOver={dragOver}
             onDrop={drop}
             onDragLeave={dragLeave}
         >
-            <TilingLayout tilingRef={tilingRef} />
+            {children}
             <div
                 ref={borderRef}
                 style={{pointerEvents: 'none', zIndex: 11}}
             />
         </div>
     );
-}, (_prev, _new) => true);
+});

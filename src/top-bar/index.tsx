@@ -31,7 +31,7 @@ import LogoIcon from "@/icons/logo";
 
 
 /** The top bar of the application */
-export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "tilingRef"> & {displayTitle?: boolean}): JSX.Element => {
     const appRefSt = useAtom(appRefAtom);
     // const components = useAtom(availableComponentsAtom);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
@@ -55,13 +55,16 @@ export default memo(({tilingRef}: Pick<TilingLayoutProps, "tilingRef">): JSX.Ele
         <div id={style['top-bar']}>
             <div>
                 <ButtonsContainer name={titleDiv} left={true} onClickAwayCallback={() => setTitleActiveSt(false)}>
-                    <button onClick={appRefSt?.current?.browseForFile}>
+                    <button onClick={() => appRefSt?.current?.browseForFile()}>
                         <ImportIcon /><p>Import trace</p>
                     </button>
                     {traceLoadedSt ? <button onClick={appRefSt?.current?.saveFile}>
                         <ExportIcon /><p>Export trace</p>
                     </button> : null}
                 </ButtonsContainer>
+            </div>
+            <div id={style["top-title"]} hidden={!displayTitle}>
+                Zephelin Trace Viewer
             </div>
             <div>
                 {(appRefSt?.current && traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>

@@ -42,7 +42,9 @@ export interface TilingLayoutProps {
 
 /** The schema of initial layout */
 const initLayout: IJsonModel = {
-    global: {},
+    global: {
+        splitterSize: 4,
+    },
     borders: [],
     layout: {
         // horizontal row

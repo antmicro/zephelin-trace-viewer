@@ -81,7 +81,7 @@
 
         .dropdown {
             display: none;
-            background-color: var(--bg-primary);
+            background-color: var(--colors-black);
 
             position: fixed;
             padding: 4px 0;
@@ -90,6 +90,7 @@
             min-width: 170px;
             border: 1px solid var(--colors-gray-1);
             border-radius: 6px;
+            box-shadow: 0px 4px 10px 0px #00000080;
 
             &.left {
                 border-top-left-radius: 0;

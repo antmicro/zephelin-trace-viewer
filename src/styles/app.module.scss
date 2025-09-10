@@ -38,7 +38,7 @@ body {
     min-height: 100vh;
     max-height: 100vh;
     width: 100vw;
-    background-color: var(--colors-gray-bg);
+    background-color: var(--colors-black);
 
     #app {
         width: 100vw;
@@ -55,7 +55,16 @@ body {
                 bottom: 0;
                 left: 0;
                 right: 0;
-                height: calc(100% - v.$top-bar-resolved-height - 1px);
+
+                $tiling-margin: 4px;
+                margin: $tiling-margin;
+                height: calc(
+                    100% - v.$top-bar-resolved-height - 1px - $tiling-margin
+                );
+                max-height: calc(
+                    100vh - v.$top-bar-resolved-height - 1px - $tiling-margin
+                );
+                max-width: calc(100vw - 2 * $tiling-margin);
             }
 
             height: 100%;
@@ -141,7 +150,7 @@ body {
         align-items: center;
         justify-content: center;
 
-        background-color: #060606;
+        background-color: var(--colors-gray-bg);
     }
 
     *[hidden] {

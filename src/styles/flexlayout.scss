@@ -15,6 +15,11 @@
 .flexlayout__layout {
     // Disable these colors to make Speedscope's canvas visible
     --color-background: transparent;
+    --color-splitter: var(--colors-black);
+    --color-splitter-hover: var(--colors-gray-1);
+    --color-splitter-drag: var(--colors-gray-3);
+    --color-tabset-background: var(--colors-gray-bg);
+    --color-tabset-divider-line: var(--colors-gray-3);
     --color-1: transparent;
     --color-popup-unselected-background: var(--colors-gray-bg);
     --color-tabset-background-maximized: var(--colors-gray-bg);
@@ -35,6 +40,10 @@
 .panel-icon {
     width: 16px;
     height: 16px;
+}
+
+.flexlayout__tabset_container {
+    border-radius: 4px;
 }
 
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top {

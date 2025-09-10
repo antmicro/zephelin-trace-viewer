@@ -36,8 +36,17 @@ d3fc-group {
         font-size: 14px;
     }
 
+    .plot-area {
+        background-color: var(--colors-black);
+
+        & ~ .plot-area {
+            background-color: transparent;
+        }
+    }
+
     d3fc-svg {
         &.svg-plot-area.plot-area {
+            /* background-color: var(--colors-black); */
             // Allow annotations to overflow, so they are readable for small plots
             overflow: visible !important;
             z-index: 10000;
@@ -56,7 +65,7 @@ d3fc-group {
 
             rect {
                 fill-opacity: 1;
-                fill: var(--bgGray-hover);
+                fill: var(--colors-black);
                 transform: translateY(-3.5px);
             }
         }

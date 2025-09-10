@@ -93,10 +93,18 @@ export function configureSpeedscope() {
         title: '', dragImport: false,
     });
     // Adjust Speedscope theme colors
-    darkTheme.selectionPrimaryColor = "#7929d2";  // --deep-purple
-    darkTheme.selectionSecondaryColor = "#9454db";  // --purple
-    lightTheme.selectionPrimaryColor = "#9454db";  // --purple
-    lightTheme.selectionSecondaryColor = "#af7fe4";  // --pale-purple
+    darkTheme.selectionPrimaryColor = "#6e32ca";  // --colors-purple
+    darkTheme.selectionSecondaryColor = "#8a59d5";  // --colors-purple-2
+    darkTheme.bgCanvas = "#00000000";  // transparent
+    darkTheme.bgSecondaryColor = "#242424";  // --colors-gray-1
+    darkTheme.altBgPrimaryColor = "#1a1a1a"; // --colors-gray-bg
+    darkTheme.altBgSecondaryColor = "#1a1a1a"; // --colors-gray-bg
+    lightTheme.selectionPrimaryColor = "#8a59d5";  // --colors-purple-2
+    lightTheme.selectionSecondaryColor = "#a781dd";  // --colors-purple-3
+    lightTheme.bgCanvas = "#00000000";  // transparent
+    lightTheme.bgSecondaryColor = "#242424";  // --colors-gray-1
+    lightTheme.altBgPrimaryColor = "#1a1a1a"; // --colors-gray-bg
+    lightTheme.altBgSecondaryColor = "#1a1a1a"; // --colors-gray-bg
     // Set custom welcome message
     const customMsg = customWelcomeMessagesAtom.get();
     if (customMsg.default === undefined) {

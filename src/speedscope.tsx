@@ -14,7 +14,7 @@ import { Fragment, JSX, VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
 import { ApplicationContainer } from '@speedscope/views/application-container';
-import { customWelcomeMessagesAtom, toolbarConfigAtom } from '@speedscope/app-state';
+import { appRefAtom, customWelcomeMessagesAtom, toolbarConfigAtom } from '@speedscope/app-state';
 import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
@@ -111,22 +111,33 @@ export function configureSpeedscope() {
 
 /** Element representing Speedscope app */
 const Speedscope = memo((): JSX.Element => {
+    const redrawCanvas = () => {
+        const appRef = appRefAtom.get()?.current;
+        if (appRef === undefined) {
+            console.warn("Reference to Speedscope is not present, cannot redraw canvas");
+            return;
+        }
+        appRef.redrawCanvas();
+    };
+
     /*
-     * Create resize observer for Speedscope container
+     * Create resize and scroll observer for Speedscope container
      * which sends window resize event in order to redraw webGL context
      */
     const divRef = useRef<HTMLDivElement>(null);
-    const resizeOserver = new ResizeObserver((_) => {
-        window.dispatchEvent(new Event('resize'));
-    });
+    const resizeOserver = new ResizeObserver((_) => redrawCanvas());
     // Register observer after div is rendered
     useEffect(() => {
         if (divRef.current !== null) {
             resizeOserver.observe(divRef.current);
         }
+        document.body.addEventListener("scroll", redrawCanvas);
 
         // Disconnect all elements on cleanup
-        return () => resizeOserver.disconnect();
+        return () => {
+            resizeOserver.disconnect();
+            document.body.removeEventListener("scroll", redrawCanvas);
+        };
     }, []);
 
     return (

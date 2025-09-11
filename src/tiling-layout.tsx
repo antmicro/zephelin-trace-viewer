@@ -21,7 +21,7 @@ import Speedscope from "./speedscope";
 import * as panels from "./info-panel";
 import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/tiling-component";
 import { getDraggedButtonTitle } from "./top-bar/tiling-component-button";
-import PanelIcon from "./icons/panel-icon";
+import { PanelIcon, MaximizeIcon, CloseIcon } from "@/icons";
 
 
 const InfoPanel = panels.InfoPanel;
@@ -44,6 +44,7 @@ export interface TilingLayoutProps {
 const initLayout: IJsonModel = {
     global: {
         splitterSize: 4,
+        tabEnableRename: false,
     },
     borders: [],
     layout: {
@@ -218,6 +219,10 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
     return (
         <div id={style['tiling-layout']}>
             <Layout
+                icons={{
+                    close: <CloseIcon />,
+                    maximize: <MaximizeIcon />,
+                }}
                 model={model}
                 factory={factory}
                 popoutWindowName="Zephelin Trace Viewer"

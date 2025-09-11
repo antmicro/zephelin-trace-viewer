@@ -43,6 +43,11 @@ export const ButtonsContainer = memo(({name, left, right, children, onClickAwayC
             ch.addEventListener('click', hideDropdown);
         }
     });
+
+    const onClick = () => {
+        ref.current?.classList.contains(style.clicked) ? hideDropdown() : ref.current?.classList.add(style.clicked);
+    };
+
     const dropdownClassNames = [style.dropdown];
     if (left) {
         dropdownClassNames.push(style.left);
@@ -54,7 +59,7 @@ export const ButtonsContainer = memo(({name, left, right, children, onClickAwayC
         <ClickAwayListener onClickAway={hideDropdown}>
             <div ref={ref} className={style.category}>
                 <button
-                    onClick={() => ref.current?.classList.add(style.clicked)}
+                    onClick={onClick}
                 >{name}</button>
                 <div ref={dropdownRef} className={dropdownClassNames.join(" ")}>
                     {children}

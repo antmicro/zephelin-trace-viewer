@@ -36,7 +36,6 @@
     &:focus,
     &.focus {
         background: var(--colors-gray-bg);
-        border: 1px solid var(--textAccent);
     }
 
     &:disabled {

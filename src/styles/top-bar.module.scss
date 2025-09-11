@@ -16,8 +16,8 @@
     width: 100%;
     height: v.$top-bar-height;
     min-height: v.$top-bar-min-height;
-    background-color: var(--bg-muted);
-    border-bottom: 1px solid var(--borderGray-default);
+    background-color: var(--colors-black);
+    border-bottom: 1px solid var(--colors-gray-3);
     padding: 0 12px;
     box-sizing: border-box;
     // Set to be above the d3-svg.plot-area

@@ -12,7 +12,7 @@
 
 import { ComponentChild, RefObject } from "preact";
 import { memo, useImperativeHandle } from "preact/compat";
-import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode } from "flexlayout-react";
+import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode, TabSetNode } from "flexlayout-react";
 import { loadingAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
@@ -207,6 +207,15 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             const tilingComponent = getTilingComponent(n?.getAttr("component") as string);
             if (tilingComponent) {
                 tilingComponent.decrInstances();
+            }
+        } else if (a.type === Actions.MAXIMIZE_TOGGLE) {
+            // Only TabSet can be maximized
+            const n = model.getNodeById(a.data.node as string) as TabSetNode;
+            if (n === undefined) { return a; }
+            if (!n.isMaximized()) {  // TabSet is being maximized
+                n.updateAttrs({enableDrag: false});
+            } else {
+                n.updateAttrs({enableDrag: true});
             }
         }
         return a;

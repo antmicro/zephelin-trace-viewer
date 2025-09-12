@@ -90,7 +90,7 @@ function WelcomeMessage(divClass: string, pClass: string, aClass: string, browse
 export function configureSpeedscope() {
     // Remove title and additional buttons from Speedscope toolbar
     toolbarConfigAtom.set({
-        title: '', dragImport: false,
+        title: '', dragImport: false, changeDocumentTile: false,
     });
     // Adjust Speedscope theme colors
     darkTheme.selectionPrimaryColor = "#6e32ca";  // --colors-purple

@@ -14,3 +14,5 @@ $top-bar-min-font: 2rem;
 $top-bar-min-height: calc($top-bar-min-font + 0.4rem);
 
 $top-bar-resolved-height: max($top-bar-height, $top-bar-min-height);
+
+$annotation-z-index: 10000;

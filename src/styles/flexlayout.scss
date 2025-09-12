@@ -11,6 +11,7 @@
 
 @use "flexlayout-react/style/dark.css";
 @use "./colors";
+@use "./variables" as v;
 
 .flexlayout__layout {
     // Disable these colors to make Speedscope's canvas visible
@@ -44,6 +45,10 @@
 
 .flexlayout__tabset_container {
     border-radius: 4px;
+}
+
+.flexlayout__outline_rect {
+    z-index: calc(v.$annotation-z-index + 1) !important;
 }
 
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top {

@@ -11,6 +11,7 @@
 ///
 
 @use "./colors";
+@use "./variables" as v;
 
 $axis-color: var(--colors-gray-4);
 $annotation-color: var(--colors-gray-5);
@@ -48,10 +49,9 @@ d3fc-group {
 
     d3fc-svg {
         &.svg-plot-area.plot-area {
-            /* background-color: var(--colors-black); */
             // Allow annotations to overflow, so they are readable for small plots
             overflow: visible !important;
-            z-index: 10000;
+            z-index: v.$annotation-z-index;
         }
 
         g.annotation {

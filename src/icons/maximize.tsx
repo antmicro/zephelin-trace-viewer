@@ -10,7 +10,7 @@
  */
 
 import { memo } from 'preact/compat';
-import style from "@styles/icons.module.scss";
+import style from "@styles/app.module.scss";
 
 
 export default memo(() => {

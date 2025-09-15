@@ -12,10 +12,12 @@
 
 import { memo } from "preact/compat";
 import { useAtom } from "@speedscope/lib/atom";
+import CheckIcon from "@speedscope/views/icons/check";
 
 import style from "@styles/top-bar.module.scss";
 import { TilingComponent } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
+import { cssOptions } from "@/utils/css";
 
 
 /** Stores information about currently dragged button (represented by panel title) */
@@ -43,23 +45,22 @@ export const TilingComponentButton = memo(({component, tilingRef}: TilingCompone
         }
         tilingRef.current.addNode(component);
     };
+    const checkSize = "12px";
     const maxInstanceCountReached = instancesSt >= component.maxInstances;
     return (
-        <button
-            className={style["panel-button"]}
+        <div
+            onDragStart={() => DRAGGED_BUTTON = component.title}
+            onDragEnd={() => DRAGGED_BUTTON = undefined}
+            draggable={!maxInstanceCountReached}
+            className={cssOptions({[style["panel-button"]]: true, [style.disabled]: maxInstanceCountReached})}
             style={availableSt ? {} : {display: "none"}}
-            disabled={maxInstanceCountReached}
-            onClick={onClick}
+            onClick={!maxInstanceCountReached ? onClick : undefined}
         >
-            {/* Draggable div (instead of simple text) required to make the whole button grabbable */}
-            <div
-                onDragStart={() => DRAGGED_BUTTON = component.title}
-                onDragEnd={() => DRAGGED_BUTTON = undefined}
-                draggable={!maxInstanceCountReached}
-            >
-                {component.title}
-            </div>
-        </button>
+            <div>{component.title}</div>
+            {maxInstanceCountReached ?
+                <CheckIcon color="var(--colors-gray-6)" size={checkSize} /> :
+                <div style={{width: checkSize, height: checkSize}} />}
+        </div>
     );
 });
 

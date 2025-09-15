@@ -19,15 +19,13 @@ import { appRefAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
-import iconstyle from "@styles/icons.module.scss";
 import { TilingComponentButton } from "./tiling-component-button";
 import { ButtonsContainer } from "./buttons-container";
-import ImportIcon from "@/icons/import";
-import ExportIcon from "@/icons/export";
 import { getAllComponents } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
 import CirclePlusIcon from "@/icons/circle-plus";
 import LogoIcon from "@/icons/logo";
+import { DocsIcon, GitIcon, ImportIcon, ExportIcon } from "@/icons";
 
 
 /** The top bar of the application */
@@ -42,8 +40,8 @@ export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "ti
 
     const [titleActiveSt, setTitleActiveSt] = useState<boolean>(false);
     const titleDiv = (
-        <div id={style['title-button']} class={iconstyle.icon} onClick={() => setTitleActiveSt(true)}>
-            <div id={style.title}><LogoIcon /></div>
+        <div className={style["left-button"]} onClick={() => setTitleActiveSt(true)}>
+            <div><LogoIcon /></div>
             <div><ChevronDownIcon up={titleActiveSt} /></div>
         </div>
     );
@@ -52,21 +50,28 @@ export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "ti
     );
 
     return (
-        <div id={style['top-bar']}>
-            <div>
-                <ButtonsContainer name={titleDiv} left={true} onClickAwayCallback={() => setTitleActiveSt(false)}>
+        <div id={style["top-bar"]}>
+            <div id={style["left-buttons"]}>
+                <ButtonsContainer name={titleDiv} onClickAwayCallback={() => setTitleActiveSt(false)}>
                     <button onClick={() => appRefSt?.current?.browseForFile()}>
                         <ImportIcon /><p>Import trace</p>
                     </button>
                     {traceLoadedSt ? <button onClick={appRefSt?.current?.saveFile}>
                         <ExportIcon /><p>Export trace</p>
                     </button> : null}
+                    <hr />
+                    <a href="https://github.com/antmicro/zephelin-trace-viewer">
+                        <GitIcon /><p>Repository</p>
+                    </a>
+                    <a href="https://antmicro.github.io/zephelin/">
+                        <DocsIcon /><p>Documentation</p>
+                    </a>
                 </ButtonsContainer>
             </div>
             <div id={style["top-title"]} hidden={!displayTitle}>
                 Zephelin Trace Viewer
             </div>
-            <div>
+            <div id={style["right-buttons"]}>
                 {(appRefSt?.current && traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
                     {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} />)}
                 </ButtonsContainer> : null }

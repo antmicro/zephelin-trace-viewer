@@ -15,6 +15,7 @@ import { memo, useEffect, useRef } from "preact/compat";
 import ClickAwayListener from "react-click-away-listener";
 
 import style from "@styles/top-bar.module.scss";
+import { cssOptions } from "@/utils/css";
 
 
 interface ButtonsContainerProps {
@@ -48,20 +49,17 @@ export const ButtonsContainer = memo(({name, left, right, children, onClickAwayC
         ref.current?.classList.contains(style.clicked) ? hideDropdown() : ref.current?.classList.add(style.clicked);
     };
 
-    const dropdownClassNames = [style.dropdown];
-    if (left) {
-        dropdownClassNames.push(style.left);
-    }
-    if (right) {
-        dropdownClassNames.push(style.right);
-    }
     return (
         <ClickAwayListener onClickAway={hideDropdown}>
             <div ref={ref} className={style.category}>
                 <button
                     onClick={onClick}
                 >{name}</button>
-                <div ref={dropdownRef} className={dropdownClassNames.join(" ")}>
+                <div ref={dropdownRef} className={cssOptions({
+                    [style.dropdown]: true,
+                    [style.left]: left ?? false,
+                    [style.right]: right ?? false,
+                })}>
                     {children}
                 </div>
             </div>

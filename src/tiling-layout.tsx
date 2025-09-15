@@ -104,6 +104,8 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         else if (comp === Speedscope.title) {(speedscopeTab = n);}
     });
 
+    let lastTabIdBeforeOverflow: string | null = null;
+
     /**
      * Adds node to the parent of InfoPanel.
      * If there is no data for new node, it will not be created.
@@ -138,6 +140,11 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
 
         if (!addedNode) {
             console.error(`Node ${type_.title} has not been added`);
+            return;
+        }
+        // Retrieve the ID of last tab before overflow
+        if (tooManyNodes && lastTabIdBeforeOverflow === null) {
+            lastTabIdBeforeOverflow = addedNode.getParent()?.getChildren()[0].getId() ?? null;
         }
     };
     /** Removes all panel with the given type */
@@ -180,9 +187,14 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         if (loadingAtom.get()) { return; }
         // Delete all panels apart from Speedscope and info panel
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
+        lastTabIdBeforeOverflow = null;
 
         // On each metadata update, create available panels
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>) && v.available.get()).forEach(addNode);
+        if (lastTabIdBeforeOverflow) {
+            // Select last tab before overflow
+            model.doAction(Actions.selectTab(lastTabIdBeforeOverflow));
+        }
     });
 
     /** External drag callback, that spawns new panel if a button associated with a component is dragged */

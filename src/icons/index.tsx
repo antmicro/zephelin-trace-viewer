@@ -19,6 +19,8 @@ import ExportIcon from "./export";
 import LogoIcon from "./logo";
 import LargeLogoIcon from "./large-logo";
 import PanelIcon from "./panel-icon";
+import GitIcon from "./git";
+import DocsIcon from "./docs";
 
 export {
     CloseIcon,
@@ -30,4 +32,6 @@ export {
     LogoIcon,
     LargeLogoIcon,
     PanelIcon,
+    GitIcon,
+    DocsIcon,
 };

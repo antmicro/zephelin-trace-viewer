@@ -22,6 +22,7 @@ import * as panels from "./info-panel";
 import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/tiling-component";
 import { getDraggedButtonTitle } from "./top-bar/tiling-component-button";
 import { PanelIcon, MaximizeIcon, CloseIcon } from "@/icons";
+import TilingPanel from "@/utils/tiling-panel";
 
 
 const InfoPanel = panels.InfoPanel;
@@ -179,7 +180,11 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             }
         });
 
-        return <ComponentType {...(node.getConfig() ?? {})} />;
+        return (
+            <TilingPanel>
+                <ComponentType {...(node.getConfig() ?? {})} />
+            </TilingPanel>
+        );
     };
 
     // Actions when new trace is loaded

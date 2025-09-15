@@ -49,6 +49,7 @@ export function App() {
                 {/* Overlay welcome screen on top of lazy loaded application to have access to Speedscope state */}
                 {welcomeSt ? <WelcomeScreen setWelcomeScreenSt={setWelcomeSt} /> : null }
             </ThemeProvider>
+            <div id={style.background} />
         </div>
     );
 }

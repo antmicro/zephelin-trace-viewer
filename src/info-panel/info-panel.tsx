@@ -26,7 +26,7 @@ interface GenericInfoProps {
 }
 
 /** The basic information panel with simple text */
-function GenericInfo({info}: GenericInfoProps) {
+export function GenericInfo({info}: GenericInfoProps) {
     return (
         <PanelTemplate>
             <p className={styles["generic-info"]}>{info}</p>

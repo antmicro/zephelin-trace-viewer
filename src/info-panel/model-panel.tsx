@@ -18,6 +18,7 @@ import panelStyles from "@styles/info-panel.module.scss";
 import { metadataAtom } from '@speedscope/app-state';
 import { MetadataModelArgs, ModelEventArgs, ModelEventName, SpeedscopeFrameArgs } from '../event-types';
 import PanelTemplate from './common';
+import { GenericInfo } from './info-panel';
 
 
 interface ModelInfoPanelProps {
@@ -136,12 +137,14 @@ export default function ModelInfoPanel({frameArgs}: ModelInfoPanelProps): JSX.El
     // Call as function instead of VNodes to check whether object undefined is returned
     const event = EventInfo({frameArgs});
     const layer = LayerInfo({frameArgs});
+    if (!event && !layer) {
+        return <GenericInfo info="The event does not contain information to display" />;
+    }
     return (
         <PanelTemplate additionalContentClass={panelStyles['no-padding']}>
             <div className={styles["model-event-section"]}>
                 {event}
                 {layer}
-                {(!event && !layer) ? <div><p>The event does not contain information to display</p></div> : ""}
             </div>
         </PanelTemplate>
     );

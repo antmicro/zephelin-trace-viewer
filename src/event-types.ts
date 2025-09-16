@@ -147,8 +147,9 @@ export interface ModelIOType {
 }
 
 /** Data available for model's tensors */
-export interface ModelTensorType extends ModelIOType {
+export interface ModelTensorType extends Omit<ModelIOType, 'name_long'> {
     index: number,
+    size?: number,
     subgraph_idx?: number,
 }
 
@@ -216,4 +217,9 @@ export interface OpExecutionData {
         total: number,
         average: number,
     },
+}
+
+export interface OpSizeData {
+    name: string,
+    size: number,
 }

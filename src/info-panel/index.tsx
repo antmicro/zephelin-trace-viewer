@@ -15,6 +15,7 @@ import CPULoadPanel from "./cpu-load-panel";
 import DieTempPanel from "./die-temp-panel";
 import OpExecutionTimePanel from "./operator-execution-panel";
 import OpTypeExecutionTimePanel from "./operator-type-execution-panel";
+import OpSizePanel from "./operator-size-panel";
 
-export {InfoPanel, CPULoadPanel, DieTempPanel, OpTypeExecutionTimePanel, OpExecutionTimePanel};
+export {InfoPanel, CPULoadPanel, DieTempPanel, OpTypeExecutionTimePanel, OpExecutionTimePanel, OpSizePanel};
 export * from "./memory-panel";

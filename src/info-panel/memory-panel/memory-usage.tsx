@@ -19,6 +19,7 @@ import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
 import { MemoryUsagePlot } from "@/plots/memory-plot";
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from "@/utils/tiling-component";
+import { useTimestampCallbacks } from "@/utils/time-sync";
 
 
 /**
@@ -63,7 +64,7 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
         <PanelTemplate>
             <div className={styles['memory-usage-content']}>
                 {/* Skip first two elements of plotData used for area plot (RAM overview) */}
-                <MemoryUsagePlot ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} />
+                <MemoryUsagePlot ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} {...useTimestampCallbacks(plotRef)} />
                 <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
                     {legendEntries}
                 </div>

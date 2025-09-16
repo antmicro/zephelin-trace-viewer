@@ -18,6 +18,7 @@ import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
 import { TotalMemoryPlot } from "@/plots/memory-plot";
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from "@/utils/tiling-component";
+import { useTimestampCallbacks } from "@/utils/time-sync";
 
 
 function toHex(n: number) {
@@ -50,7 +51,7 @@ const ZoomButton = memo((props: ZoomButton) => {
  * The component with plot representing RAM and button to zoom on the selected region.
  */
 const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName }: CommonPlotProps) => {
-    const plotRef = useRef<TotalMemoryPlot | undefined>();
+    const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
     if (assignedMemory === 0) { console.info("Size of statically assigned memory is missing"); }
@@ -78,7 +79,7 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
     return (
         <PanelTemplate>
             <div className={styles['ram-overview-content']}>
-                <TotalMemoryPlot ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} />
+                <TotalMemoryPlot ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} {...useTimestampCallbacks(plotRef)} />
                 <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
                     <ZoomButton
                         name="whole graph" percent={100}

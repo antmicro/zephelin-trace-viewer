@@ -19,6 +19,7 @@ import { CartesianChart, WebglPlotAreaComponent, SvgPlotAreaComponent } from '@d
 import { Selection } from 'd3-selection';
 
 import { StatelessComponent } from '@speedscope/lib/preact-helpers';
+import { hoveredAtom, profileGroupAtom, selectedAtom, timestampHoveredAtom } from '@speedscope/app-state';
 import seriesSvgAnnotation from './series-annotation';
 import axisLabelHide from './axis-label-hide';
 import "@styles/plots.scss";
@@ -66,6 +67,12 @@ export interface PlotBaseProps<D> {
     plotData: (D[])[],
     /** The optional callback run at the end of zoom logic */
     onZoomEnd?: () => void,
+    onPoint?: ([coord]: {x: number, y: number}[]) => void,
+    onTimestampHover?: () => void;
+    onFrameHover?: () => void,
+    onFrameSelect?: () => void
+    onProfileChange?: () => void,
+    useClick?: () => ((point: D) => void) | undefined,
 }
 
 interface PlotAnnotationData {
@@ -123,9 +130,12 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         }
     });
 
+    public get plotData() {
+        return this.props.plotData;
+    }
 
     getCSSColorByIdx(i: number): string {
-        const N = this.props.plotData.length;
+        const N = this.plotData.length;
         let cssColor: string;
         if (N <= 8) {
             cssColor = [
@@ -176,7 +186,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     getWebglColorByIdx(i: number): number[] {
         const defaultColor = [1, 0, 0, 1];
 
-        if (this.props.plotData === undefined) {
+        if (this.plotData === undefined) {
             return defaultColor;
         }
 
@@ -188,7 +198,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
      * Redraws the plot.
      */
     redraw() {
-        d3.select(this.containerRef.current).datum({annotations: this.annotations, data: this.props.plotData}).call(this.series);
+        d3.select(this.containerRef.current).datum({annotations: this.annotations, data: this.plotData}).call(this.series);
         // Set round corners for annotation background
         d3.select(this.containerRef.current).select("rect.annotation-note-bg").attr("rx", 2).attr("ry", 2);
 
@@ -204,6 +214,20 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             const id = clipPathSelector.attr("id");
             svg.select("g.multi > g:not(g .annotation)").attr("clip-path", `url(#${id})`);
             svg.select("g.multi > g:has(g .annotation)").attr("clip-path", null);
+        }
+
+        const { useClick } = this.props;
+        if (useClick) {
+            const onClick = useClick();
+            if (onClick) {
+                svg.on('click', () => {
+                    const [annotation] = this.annotations;
+                    if (!annotation) {return;}
+                    const { x, y } = annotation;
+                    const point = this._findClosestPoint(x, y);
+                    if (point) {onClick(point);}
+                });
+            }
         }
     }
 
@@ -258,7 +282,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     /**
      * Finds the closest point to the provided coordinates.
      */
-    protected _findClosestPoint(_x: number, _y: number): D | null | undefined {
+    public _findClosestPoint(_x: number, _y: number): D | null | undefined {
         return null;
     }
 
@@ -276,7 +300,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     /**
      * Adds annotation based on provided datapoint.
      */
-    protected _addAnnotation(d: D | null | undefined) {
+    public _addAnnotation(d: D | null | undefined) {
         if (!d) {
             console.debug("Cannot find the closest point");
             this.redraw();
@@ -328,8 +352,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
      * @see {@link Plot._annotationData}
      */
     protected _createPointer(): ((s: Selection<d3.BaseType, any, any, any>) => void) | null {
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
-        return fc.pointer().on("point", ([coord]: {x: number, y: number}[]) => {
+        const onPoint = this.props.onPoint ?? (([coord]: {x: number, y: number}[]) => {
             this.annotations.pop();
 
             if (!coord) {
@@ -345,6 +368,9 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
             this._addAnnotation(d);
         });
+
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
+        return fc.pointer().on("point", onPoint);
     }
 
     /**
@@ -576,6 +602,12 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
                 break;
             }
         }
+        const { onTimestampHover, onFrameHover, onFrameSelect, onProfileChange } = this.props;
+        if (onTimestampHover) {timestampHoveredAtom.subscribe(onTimestampHover);}
+        if (onFrameHover) {hoveredAtom.subscribe(onFrameHover);}
+        if (onFrameSelect) {selectedAtom.subscribe(onFrameSelect);}
+        if (onProfileChange) {profileGroupAtom.subscribe(onProfileChange);}
+        // Register resize observer which redraws the plot
     }
 
     componentDidUpdate(): void {
@@ -584,10 +616,14 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
     componentWillUnmount(): void {
         this.containerRef.current?.remove();
+        const { onTimestampHover, onFrameHover, onFrameSelect, onProfileChange } = this.props;
+        if (onTimestampHover) {timestampHoveredAtom.unsubscribe(onTimestampHover);}
+        if (onFrameHover) {hoveredAtom.unsubscribe(onFrameHover);}
+        if (onFrameSelect) {selectedAtom.unsubscribe(onFrameSelect);}
+        if (onProfileChange) {profileGroupAtom.unsubscribe(onProfileChange);}
     }
 
     render(): JSX.Element {
-        // Register resize observer which redraws the plot
         useEffect(() => {
             if (this.containerRef.current !== null) {
                 this.resizeObserver.observe(this.containerRef.current);

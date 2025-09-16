@@ -6,13 +6,18 @@
  */
 
 
-import { FrameInfo } from "@speedscope/lib/profile";
+import { CallTreeNode, FrameInfo } from "@speedscope/lib/profile";
 import { profileGroupAtom } from "@speedscope/app-state";
-import { FrameInfoT, ModelEventArgs, ModelEventName, OpExecutionEvent } from "@/event-types";
+import { Metadata } from "@speedscope/app-state/profile-group";
+import { FrameInfoT, MetadataModelType, ModelEventArgs, ModelEventName, OpExecutionEvent } from "@/event-types";
 
 
 export function isOpFrame(maybeOpFrame?: FrameInfo): maybeOpFrame is FrameInfoT<ModelEventArgs> {
     return typeof(maybeOpFrame?.key) === "string" && maybeOpFrame?.key?.startsWith(`${ModelEventName}::`);
+}
+
+export function isModelMetadata(maybeModelMetadata?: Metadata): maybeModelMetadata is MetadataModelType {
+    return maybeModelMetadata?.name === ModelEventName;
 }
 
 type OpType = string;
@@ -26,12 +31,19 @@ export function normalizeOpName(name: string) {
     return name.replace(new RegExp(`${ModelEventName}::`), '');
 }
 
+function getCallTreeNodes() {
+    const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
+    const callTreeNodes: CallTreeNode[] = [];
+    activeProfile?.forEachCall((callNode) => {callTreeNodes.push(callNode);}, () => {});
+    return callTreeNodes;
+}
+
 function getOpExecutionTimes() {
     const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
     if (!activeProfile) { return null; };
 
     const opTypes = new Map<OpType, OpTypeExecutionTimes>();
-    activeProfile.forEachCall(
+    getCallTreeNodes()?.forEach(
         (callNode) => {
             const { frame } = callNode;
             if (!isOpFrame(frame)) { return; }
@@ -45,13 +57,12 @@ function getOpExecutionTimes() {
             const opInstancesDurations = opTypeMapping.get(opInstance)!;
             opInstancesDurations.push(duration);
         },
-        () => {},
     );
 
     return opTypes;
 }
 
-export function getOpData(): { plotData: OpExecutionEvent[][] } | null {
+export function getOpExecutionData(): { plotData: OpExecutionEvent[][] } | null {
     const opExecutionTimes = getOpExecutionTimes();
     if (!opExecutionTimes) {return null;}
 
@@ -67,7 +78,7 @@ export function getOpData(): { plotData: OpExecutionEvent[][] } | null {
 
 }
 
-export function getOpTypeData(): { plotData: OpExecutionEvent[][] } | null {
+export function getOpTypeExecutionData(): { plotData: OpExecutionEvent[][] } | null {
     const opExecutionTimes = getOpExecutionTimes();
     if (!opExecutionTimes) {return null;}
 

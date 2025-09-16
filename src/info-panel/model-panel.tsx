@@ -16,9 +16,10 @@ import { useState } from 'preact/hooks';
 import styles from "@styles/model-panel.module.scss";
 import panelStyles from "@styles/info-panel.module.scss";
 import { metadataAtom } from '@speedscope/app-state';
-import { MetadataModelArgs, ModelEventArgs, ModelEventName, SpeedscopeFrameArgs } from '../event-types';
+import { ModelEventArgs, SpeedscopeFrameArgs } from '../event-types';
 import PanelTemplate from './common';
 import { GenericInfo } from './info-panel';
+import { isModelMetadata } from '@/utils/model';
 
 
 interface ModelInfoPanelProps {
@@ -68,7 +69,7 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
         setMetadataRef(metadataAtom.get());
     });
 
-    const modelData = ((metadataRef ?? []).find((v) => v.name === ModelEventName)?.args) as MetadataModelArgs | undefined;
+    const modelData = (metadataRef ?? []).find(isModelMetadata)?.args;
     const getTensor = (k: number) => {
         const tensor = modelData?.tensors.find((v) => (
             v.index === k && v.subgraph_idx === frameArgs.begin.subgraph_idx

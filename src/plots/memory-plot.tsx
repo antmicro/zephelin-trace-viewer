@@ -15,7 +15,6 @@ import * as fc from 'd3fc';
 
 import { PlotBaseProps, ThresholdAnnotationProps } from './base-plot';
 import { LinePlot } from './line-plot';
-import TimeBasedPlot from './time-based-plot';
 import { MemoryPlotData } from '@/utils/memory';
 
 
@@ -78,7 +77,7 @@ export interface TotalMemoryPlotProps extends MemoryUsagePlotProps {
 /**
  * The component with plot showing an overview of the whole memory.
  */
-export class TotalMemoryPlot extends TimeBasedPlot<MemoryPlotData, TotalMemoryPlotProps> {
+export class TotalMemoryPlot extends LinePlot<MemoryPlotData, TotalMemoryPlotProps> {
     protected _createXScale() {
         return d3.scaleLinear().domain(
             fc.extentLinear().include([0]).accessors([(d: MemoryPlotData) => d.ts])(this.props.plotData.flat()) as Iterable<d3.NumberValue>,
@@ -145,7 +144,7 @@ export class TotalMemoryPlot extends TimeBasedPlot<MemoryPlotData, TotalMemoryPl
         return this.props.plotData.map((_v, i) => createSeries((i in bgColors) ? bgColors[i] : "--colors-red")).concat(Object.values(this.props.addrToRange).map(_ => createLine("--colors-black")));
     }
 
-    protected override _findClosestPoint(x: number, y: number): MemoryPlotData | null | undefined {
+    public override _findClosestPoint(x: number, y: number): MemoryPlotData | null | undefined {
         // Find hovered memory region
         let jY = -1;
         if (y < this.props.assignedMemory / this.props.totalMemory * 100) { jY = 1; }

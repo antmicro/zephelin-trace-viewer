@@ -6,13 +6,14 @@
  */
 
 
-import { memo } from "preact/compat";
+import { memo, useRef } from "preact/compat";
 
 import PanelTemplate from "./common";
 import { getCPULoadData } from "@/utils/cpuload";
 import { CPULoadPlot } from "@/plots/load-plot";
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from "@/utils/tiling-component";
 import { CPULoadEventType } from "@/event-types";
+import { useTimestampCallbacks } from "@/utils/time-sync";
 
 export interface CPULoadPanelProps {
     /** The data for CPU load plot */
@@ -24,9 +25,10 @@ export interface CPULoadPanelProps {
  * it's created directly from the tiling layout only when metadata changes.
  */
 const CPULoadPanel = memo(({fullData}: CPULoadPanelProps) => {
+    const plotRef = useRef<CPULoadPlot>(null);
     return (
         <PanelTemplate>
-            <CPULoadPlot plotData={[fullData]} />
+            <CPULoadPlot ref={plotRef} plotData={[fullData]} {...useTimestampCallbacks(plotRef)} />
         </PanelTemplate>
     );
 });

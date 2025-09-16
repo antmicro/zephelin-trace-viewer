@@ -13,8 +13,7 @@
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
 
-import { PlotBaseProps } from './base-plot';
-import TimeBasedPlot from './time-based-plot';
+import Plot, { PlotBaseProps } from './base-plot';
 
 /**
  * The definition of Component for drawing simple line plots.
@@ -22,7 +21,7 @@ import TimeBasedPlot from './time-based-plot';
  * @abstract
  * @extends {Plot<D,T>}
  */
-export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends TimeBasedPlot<D, T> {
+export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends Plot<D, T> {
     quadtree: d3.Quadtree<D> | undefined;
 
     /** Extract x-axis data from an event */
@@ -54,7 +53,7 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
         );
     }
 
-    protected override _findClosestPoint(x: number, y: number): D | null | undefined {
+    public override _findClosestPoint(x: number, y: number): D | null | undefined {
         // Find closest datapoints to X on each plot
         const closestX = this.props.plotData.map(v => d3.least(v, (a) => Math.abs(this._xAccess(a) - x))).filter(Boolean) as D[];
 

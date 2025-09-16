@@ -28,6 +28,7 @@ type Orient = 'vertical' | 'horizontal';
 export interface BarPlotProps<D> extends PlotBaseProps<D> {
     order?: Order,
     orient?: Orient,
+    decorateSvgSeries?: (defaultColor: string) => (selection: d3.Selection<d3.BaseType, any, any, any>) => void;
 }
 
 /**
@@ -43,7 +44,11 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         [Axis.X]: this._getAxisType(Axis.X),
         [Axis.Y]: this._getAxisType(Axis.Y),
     };
-    protected readonly plotData = this._sortPlotData();
+    public readonly _plotData = this._sortPlotData();
+
+    public override get plotData() {
+        return this._plotData;
+    }
 
     protected abstract _accessValue(e: D, axis: Axis): string | number;
     protected abstract _getLabel(axis: Axis): string | null;
@@ -162,7 +167,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
     protected override _createXScale() { return this._createScale(Axis.X); }
     protected override _createYScale() { return this._createScale(Axis.Y); }
 
-    protected override _findClosestPoint(x: number, y: number) {
+    public override _findClosestPoint(x: number, y: number) {
         const [value, axis] = this.orient === 'vertical'
             ? [x, Axis.X]
             : [y, Axis.Y];
@@ -190,18 +195,17 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return this.props.orient ?? super._annotationOrientation();
     }
 
-    protected _decorateSvgSeries(plotDataColor: string) {
-        return (selection: d3.Selection<d3.BaseType, any, any, any>) => {
-            selection.select('path').attr('fill', plotDataColor);
-        };
-    }
-
     protected override _createSvgSeries() {
         /* eslint-disable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,
             @typescript-eslint/no-unsafe-return
         */
+        const decorateSvgSeries = this.props.decorateSvgSeries
+            ?? ((defaultColor: string) => (selection: d3.Selection<d3.BaseType, any, any, any>) => {
+                selection.select('path').attr('fill', defaultColor);
+            });
+
         const createSeries = (plotData: D[], color: string) => fc
             .autoBandwidth(fc.seriesSvgBar())
             .xScale(this.xScale).yScale(this.yScale)
@@ -209,7 +213,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
             .crossValue((e: D) => this._access(e, plotData, getOppositeAxis(this._mainAxis)))
             .mainValue((e: D) => this._access(e, plotData, this._mainAxis))
             .defined(() => this.xScale.range().some(Boolean) && this.yScale.range().some(Boolean))
-            .decorate(this._decorateSvgSeries(color));
+            .decorate(decorateSvgSeries(color));
 
         return this.plotData.map((plotData, idx) => createSeries(plotData, this.getCSSColorByIdx(idx)));
         /* eslint-enable

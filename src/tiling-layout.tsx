@@ -11,11 +11,12 @@
  */
 
 import { ComponentChild, RefObject } from "preact";
-import { memo, useImperativeHandle } from "preact/compat";
+import { memo, useImperativeHandle, useRef } from "preact/compat";
 import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode, TabSetNode } from "flexlayout-react";
 import { loadingAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
+import { MutableRef } from "preact/hooks";
 import Speedscope from "./speedscope";
 // Import all panels to make sure they are registered
 import * as panels from "./info-panel";
@@ -33,6 +34,8 @@ export interface TilingRef {
     addNode: (type_: TilingComponent<any>) => void,
     /** Removes all panel with a given type */
     removeNode: (type_: TilingComponent<any>) => void,
+    /** Returns reference to tiling layout element */
+    getRef: () => MutableRef<Layout | undefined>,
 }
 
 
@@ -91,9 +94,11 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         return {
             addNode,
             removeNode,
+            getRef: () => ref,
         };
     }, []);
 
+    const ref = useRef<Layout>();
     const model = Model.fromJson(initLayout);
     // Retrieve node with InfoPanel and speedscope
     let infoPanelTab: TabNode;
@@ -245,6 +250,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
     return (
         <div id={style['tiling-layout']}>
             <Layout
+                ref={ref}
                 icons={{
                     close: <CloseIcon />,
                     maximize: <MaximizeIcon />,

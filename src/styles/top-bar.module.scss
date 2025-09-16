@@ -103,6 +103,41 @@
         gap: 0.5rem;
     }
 
+    @mixin panel-button-custom-styles {
+        text-align: left;
+        width: 100%;
+        height: fit-content;
+        box-sizing: border-box;
+
+        justify-content: space-between;
+
+        &.disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+    }
+
+    @mixin panel-button-common-styles {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+        gap: 0.5rem;
+        padding: 9px 8px;
+        border-radius: 0.1rem;
+        border-width: 0;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--colors-gray-1);
+        }
+
+        p {
+            color: var(--colors-gray-6);
+            margin: auto 0;
+        }
+    }
+
     .category {
         $horizontal-padding: 6px;
 
@@ -157,40 +192,13 @@
             }
 
             .panel-button {
-                text-align: left;
-                width: 100%;
-                height: fit-content;
-                box-sizing: border-box;
-
-                justify-content: space-between;
-
-                &.disabled {
-                    opacity: 0.5;
-                    cursor: default;
-                }
+                @include panel-button-custom-styles;
             }
 
             button,
             a,
             .panel-button {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                align-content: center;
-                gap: 0.5rem;
-                padding: 9px 8px;
-                border-radius: 0.1rem;
-                border-width: 0;
-                cursor: pointer;
-
-                &:hover {
-                    background-color: var(--colors-gray-1);
-                }
-
-                p {
-                    color: var(--colors-gray-6);
-                    margin: auto 0;
-                }
+                @include panel-button-common-styles;
             }
         }
 
@@ -199,6 +207,22 @@
             .gap-filler {
                 display: inline-block;
             }
+        }
+    }
+
+    .drag-tooltip {
+        display: block;
+        position: fixed;
+        width: max-content;
+        height: fit-content;
+        background-color: var(--colors-black);
+        opacity: 0.5;
+        z-index: 10000;
+        pointer-events: none;
+
+        .panel-button {
+            @include panel-button-custom-styles;
+            @include panel-button-common-styles;
         }
     }
 }

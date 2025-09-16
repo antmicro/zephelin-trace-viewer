@@ -19,7 +19,7 @@ import { appRefAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
-import { TilingComponentButton } from "./tiling-component-button";
+import { DragTooltip, TilingComponentButton } from "./tiling-component-button";
 import { ButtonsContainer } from "./buttons-container";
 import { getAllComponents } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
@@ -31,7 +31,7 @@ import { DocsIcon, GitIcon, ImportIcon, ExportIcon } from "@/icons";
 /** The top bar of the application */
 export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "tilingRef"> & {displayTitle?: boolean}): JSX.Element => {
     const appRefSt = useAtom(appRefAtom);
-    // const components = useAtom(availableComponentsAtom);
+    const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
 
     profileGroupAtom.subscribe(() => {
@@ -73,8 +73,9 @@ export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "ti
             </div>
             <div id={style["right-buttons"]}>
                 {(appRefSt?.current && traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
-                    {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} />)}
+                    {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} setCustomDraggingSt={setCustomDraggingSt} />)}
                 </ButtonsContainer> : null }
+                {customDraggingSt ? <DragTooltip draggedElement={customDraggingSt} /> : null}
             </div>
         </div>
     );

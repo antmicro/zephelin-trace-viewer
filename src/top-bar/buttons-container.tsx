@@ -11,7 +11,7 @@
  */
 
 import { VNode } from "preact";
-import { memo, useEffect, useRef } from "preact/compat";
+import { memo, useRef } from "preact/compat";
 import ClickAwayListener from "react-click-away-listener";
 
 import style from "@styles/top-bar.module.scss";
@@ -34,27 +34,26 @@ export const ButtonsContainer = memo(({name, left, right, children, onClickAwayC
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const hideDropdown = () => {
+        if (!ref.current?.classList.contains(style.clicked)) { return; }
         ref.current?.classList.remove(style.clicked);
         if (onClickAwayCallback) { onClickAwayCallback(); }
     };
 
-    useEffect(() => {
-        for (const ch of dropdownRef.current?.childNodes ?? []) {
-            if (!(ch instanceof HTMLButtonElement)) {continue;}
-            ch.addEventListener('click', hideDropdown);
-        }
-    });
-
-    const onClick = () => {
-        ref.current?.classList.contains(style.clicked) ? hideDropdown() : ref.current?.classList.add(style.clicked);
+    const onClickButton = (e: MouseEvent) => {
+        if (ref.current?.classList.contains(style.clicked)) { return; }
+        ref.current?.classList.add(style.clicked);
+        e.stopImmediatePropagation();
+    };
+    const onClickContainer = (e: MouseEvent) => {
+        if (!ref.current?.classList.contains(style.clicked)) { return; }
+        hideDropdown();
+        e.stopPropagation();
     };
 
     return (
         <ClickAwayListener onClickAway={hideDropdown}>
-            <div ref={ref} className={style.category}>
-                <button
-                    onClick={onClick}
-                >{name}</button>
+            <div ref={ref} className={style.category} onClick={onClickContainer}>
+                <button onClick={onClickButton}>{name}</button>
                 <div ref={dropdownRef} className={cssOptions({
                     [style.dropdown]: true,
                     [style.left]: left ?? false,

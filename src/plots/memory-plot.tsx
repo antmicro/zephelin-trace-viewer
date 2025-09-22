@@ -49,10 +49,10 @@ export class MemoryUsagePlot extends LinePlot<MemoryPlotData, MemoryUsagePlotPro
     protected override _annotationNote(d: MemoryPlotData): { title: string; note: string; } {
         return {
             title: this.props.memoryNameFunc(d.address, false, false),
-            note: `Timestamp: ${d.ts.toFixed(2)} ms\n`
-                + `Used: ${d.used} B (${d.percentage.toFixed(2)}%)\n`
-                + `Unused: ${d.unused} B\n`
-                + `Size: ${d.used + d.unused} B`,
+            note: `Timestamp: ${d.ts.toFixed(2)}ms\n`
+                + `Used: ${d.used}B (${d.percentage.toFixed(2)}%)\n`
+                + `Unused: ${d.unused}B\n`
+                + `Size: ${d.used + d.unused}B`,
         };
     }
 
@@ -173,10 +173,10 @@ export class TotalMemoryPlot extends LinePlot<MemoryPlotData, TotalMemoryPlotPro
             x: d.ts,
             y: (d.base + d.used) / this.props.totalMemory * 100,
             title: (d.address !== -1) ? this.props.memoryNameFunc(d.address, false, false) : "Statically allocated memory",
-            note: ((d.address !== -1) ? `Timestamp: ${d.ts.toFixed(2)} ms\n`
-                + `Used: ${d.used} B (${d.percentage.toFixed(2)}%)\n`
-                + `Unused: ${d.unused} B\n` : '')
-                + `Size: ${d.used + d.unused} B`,
+            note: ((d.address !== -1) ? `Timestamp: ${d.ts.toFixed(2)}ms\n`
+                + `Used: ${d.used}B (${d.percentage.toFixed(2)}%)\n`
+                + `Unused: ${d.unused}B\n` : '')
+                + `Size: ${d.used + d.unused}B`,
         };
     }
 

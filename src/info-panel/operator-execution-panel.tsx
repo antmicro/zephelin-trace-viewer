@@ -39,7 +39,7 @@ function OpExecutionTimePanel({ plotData }: { plotData: OpExecutionData[][] }) {
     );
 };
 
-export default tilingComponent(OpExecutionTimePanel, "Operator Execution Time", {
+export default tilingComponent(OpExecutionTimePanel, "OP Execution Time", {
     dataProvider: getOpExecutionData,
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,

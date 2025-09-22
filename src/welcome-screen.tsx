@@ -67,9 +67,9 @@ export default memo(({setWelcomeScreenSt}: {setWelcomeScreenSt: Dispatch<StateUp
                     <div className={styles.info}>
                         <div>
                             <div>
-                                <svg width="26" height="29" viewBox="0 0 26 29" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line x1="13.5" y1="1.46777" x2="13.5" y2="28.499" stroke="var(--colors-gray-6)" stroke-linecap="round" />
-                                    <line x1="25.5" y1="15.6865" x2="0.5" y2="15.6865" stroke="var(--colors-gray-6)" stroke-linecap="round" />
+                                <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <line x1="13" y1="0.5" x2="13" y2="25.5" stroke="var(--colors-gray-6)" stroke-linecap="round" />
+                                    <line x1="25.5" y1="13" x2="0.5" y2="13" stroke="var(--colors-gray-6)" stroke-linecap="round" />
                                 </svg>
                             </div>
                             <div className={styles['drag-drop-description']}>

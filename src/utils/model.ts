@@ -9,7 +9,7 @@
 import { CallTreeNode, FrameInfo } from "@speedscope/lib/profile";
 import { profileGroupAtom } from "@speedscope/app-state";
 import { Metadata } from "@speedscope/app-state/profile-group";
-import { FrameInfoT, MetadataModelType, ModelEventArgs, ModelEventName, OpExecutionEvent } from "@/event-types";
+import { FrameInfoT, MetadataModelType, ModelEventArgs, ModelEventName, OpExecutionData } from "@/event-types";
 
 
 export function isOpFrame(maybeOpFrame?: FrameInfo): maybeOpFrame is FrameInfoT<ModelEventArgs> {
@@ -62,7 +62,7 @@ function getOpExecutionTimes() {
     return opTypes;
 }
 
-export function getOpExecutionData(): { plotData: OpExecutionEvent[][] } | null {
+export function getOpExecutionData(): { plotData: OpExecutionData[][] } | null {
     const opExecutionTimes = getOpExecutionTimes();
     if (!opExecutionTimes) {return null;}
 
@@ -78,7 +78,7 @@ export function getOpExecutionData(): { plotData: OpExecutionEvent[][] } | null 
 
 }
 
-export function getOpTypeExecutionData(): { plotData: OpExecutionEvent[][] } | null {
+export function getOpTypeExecutionData(): { plotData: OpExecutionData[][] } | null {
     const opExecutionTimes = getOpExecutionTimes();
     if (!opExecutionTimes) {return null;}
 

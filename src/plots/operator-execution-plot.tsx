@@ -12,13 +12,13 @@
 
 
 import { TimeFormatter } from '@speedscope/lib/value-formatters';
-import { OpExecutionEvent } from '../event-types';
+import { OpExecutionData } from '../event-types';
 import { Axis, BarPlot, BarPlotProps } from './bar-plot';
 
-export class OpExecutionTimePlot<D extends OpExecutionEvent = OpExecutionEvent, T extends BarPlotProps<D> = BarPlotProps<D>> extends BarPlot<D, T> {
+export class OpExecutionTimePlot<D extends OpExecutionData = OpExecutionData, T extends BarPlotProps<D> = BarPlotProps<D>> extends BarPlot<D, T> {
     formatter = new TimeFormatter('microseconds');
 
-    protected override _accessValue(e: OpExecutionEvent, axis: Axis) {
+    protected override _accessValue(e: OpExecutionData, axis: Axis) {
         return axis === this._mainAxis ? e.duration.average / 1e3 : e.name;
     }
 
@@ -27,7 +27,7 @@ export class OpExecutionTimePlot<D extends OpExecutionEvent = OpExecutionEvent, 
     }
 
     /** Create annotation title and note from an event */
-    protected override _annotationNote(d: OpExecutionEvent) {
+    protected override _annotationNote(d: OpExecutionData) {
         const name = d.name;
         const total = this.formatter.format(d.duration.total);
         const average = this.formatter.format(d.duration.average);

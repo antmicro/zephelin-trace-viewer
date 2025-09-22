@@ -15,15 +15,15 @@ import { useRef } from 'preact/compat';
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from '@/utils/tiling-component';
 import { getOpExecutionData } from '@/utils/model';
-import { OpExecutionEvent } from '@/event-types';
+import { OpExecutionData } from '@/event-types';
 import { useFrameCallbacks } from '@/utils/frame-provider';
 import { OpExecutionTimePlot } from '@/plots/operator-execution-plot';
 import { BarPlotProps } from '@/plots/bar-plot';
 
 /** Panel with Operator Execution Time plot */
-function OpExecutionTimePanel({ plotData }: { plotData: OpExecutionEvent[][] }) {
+function OpExecutionTimePanel({ plotData }: { plotData: OpExecutionData[][] }) {
     const theme = useTheme();
-    const plotRef = useRef<OpExecutionTimePlot<OpExecutionEvent, BarPlotProps<OpExecutionEvent> & { theme: Theme }>>(null);
+    const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
 
     return (
         <PanelTemplate>

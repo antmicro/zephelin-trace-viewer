@@ -210,7 +210,7 @@ export interface FrameInfoT<T> extends FrameInfo {
     args: SpeedscopeFrameArgs<T>
 }
 
-export interface OpExecutionEvent {
+export interface OpExecutionData {
     name: string,
     duration: {
         total: number,

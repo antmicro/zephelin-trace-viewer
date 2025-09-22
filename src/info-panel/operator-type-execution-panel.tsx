@@ -13,12 +13,12 @@
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW } from '@/utils/tiling-component';
 import { getOpTypeExecutionData } from '@/utils/model';
-import { OpExecutionEvent } from '@/event-types';
+import { OpExecutionData } from '@/event-types';
 import { OpExecutionTimePlot } from '@/plots/operator-execution-plot';
 
 
 /** Panel with Operator Type Execution Time plot */
-function OpTypeExecutionTimePanel({ plotData }: { plotData: OpExecutionEvent[][] }) {
+function OpTypeExecutionTimePanel({ plotData }: { plotData: OpExecutionData[][] }) {
     return (
         <PanelTemplate>
             <OpExecutionTimePlot plotData={plotData} orient='horizontal' order='ascending' />

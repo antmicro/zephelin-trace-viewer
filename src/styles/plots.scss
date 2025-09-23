@@ -17,7 +17,9 @@ $axis-color: var(--colors-gray-4);
 $annotation-color: var(--colors-gray-5);
 
 d3fc-group {
-    overflow: visible !important;
+    &:has(.annotation-plot-area.plot-area) {
+        overflow: visible !important;
+    }
 
     d3fc-svg.x-axis,
     d3fc-svg.y-axis {
@@ -39,7 +41,7 @@ d3fc-group {
         width: fit-content !important;
     }
 
-    .plot-area {
+    .plot-area:not(.annotation-plot-area) {
         background-color: var(--colors-black);
 
         & ~ .plot-area {
@@ -48,10 +50,11 @@ d3fc-group {
     }
 
     d3fc-svg {
-        &.svg-plot-area.plot-area {
+        &.annotation-plot-area.plot-area {
             // Allow annotations to overflow, so they are readable for small plots
             overflow: visible !important;
             z-index: v.$annotation-z-index;
+            pointer-events: none;
         }
 
         g.annotation {

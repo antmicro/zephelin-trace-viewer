@@ -47,8 +47,9 @@
     border-radius: 4px;
 }
 
-.flexlayout__outline_rect {
-    z-index: calc(v.$annotation-z-index + 1) !important;
+.flexlayout__outline_rect,
+.flexlayout__popup_menu_container {
+    z-index: v.$annotation-z-index + 1 !important;
 }
 
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top {

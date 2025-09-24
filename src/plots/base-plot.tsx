@@ -501,6 +501,10 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         const zoom = this._createZoom();
         const pointer = this._createPointer();
 
+        const webglSeries = this._createWebglSeries();
+        const svgSeries = this._createSvgSeries();
+        const annotations = this._createAnnotations();
+
         /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
         this.series = fc.chartCartesian(
             {
@@ -512,7 +516,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             .xTickFormat(this._xTickFormat())
             .decorate((sel: Selection<d3.BaseType, any, any, any>) => {
                 const s = sel.enter()
-                    .select("d3fc-svg.plot-area")
+                    .select(svgSeries.length > 0 ? "d3fc-svg.plot-area" : "d3fc-canvas.plot-area")
                     .on("measure.range", (event: {detail: {width: number, height: number}}) => {
                         this.xScaleBase.range([0, event.detail.width]);
                         this.yScaleBase.range([event.detail.height, 0]);
@@ -539,7 +543,6 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         const yLabel = this._yLabel();
         if (yLabel) { this.series.yLabel(yLabel); }
 
-        const webglSeries = this._createWebglSeries();
         if (webglSeries.length > 0) {
             this.series.webglPlotArea(
                 fc.seriesWebglMulti()
@@ -548,18 +551,25 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             );
         }
 
-        const svgSeries = this._createSvgSeries();
-        const annotations = this._createAnnotations();
-        const svgSeriesWithAnnotations = svgSeries.concat(annotations);
-        if (svgSeriesWithAnnotations.length > 0) {
+        if (svgSeries.length > 0) {
             this.series.svgPlotArea(
                 fc.seriesSvgMulti()
-                    .series(svgSeriesWithAnnotations)
+                    .series(svgSeries)
                     .mapping((data: { data: D[][], annotations: ThresholdAnnotationProps[] }, index: number, series: object[]) => {
                         return this._svgMapping(data, index, series, index >= svgSeries.length);
                     }) as SvgPlotAreaComponent,
             );
         }
+
+        if (annotations) {
+            this.series.svgAnnotationPlotArea(
+                fc.seriesSvgMulti().series([annotations])
+                    .mapping(
+                        (data: { data: D[][], annotations: ThresholdAnnotationProps[] }) => data.annotations,
+                    ) as SvgPlotAreaComponent,
+            );
+        }
+
     }
 
     /**

@@ -49,7 +49,7 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
     protected _createYScale() {
         return d3.scaleLinear().domain(
             /* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-            fc.extentLinear().accessors([(e: D) => this._yAccess(e)])(this.props.plotData.flat()) as Iterable<d3.NumberValue>,
+            fc.extentLinear().pad([0.5, 0.5]).accessors([(e: D) => this._yAccess(e)])(this.props.plotData.flat()) as Iterable<d3.NumberValue>,
         );
     }
 

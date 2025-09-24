@@ -154,6 +154,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
                 .domain(fc
                     .extentLinear()
                     .include([0])
+                    .pad([0, 0.05])
                     .accessors(
                         [(e: D) => this._accessValue(e, axis)],
                     )(this.plotData.flat()) as Iterable<d3.NumberValue>);

@@ -14,9 +14,10 @@
 	},
 	"dependencies": {
 		"@bokeh/bokehjs": "^3.7.3",
+		"@d3fc/d3fc-chart": "patch:@d3fc/d3fc-chart@npm%3A5.1.9#~/.yarn/patches/@d3fc-d3fc-chart-npm-5.1.9-43f8ce229d.patch",
 		"d3": "^7.9.0",
 		"d3-svg-annotation": "^2.5.1",
-		"d3fc": "^15.2.13",
+		"d3fc": "patch:d3fc@npm%3A15.2.13#~/.yarn/patches/d3fc-npm-15.2.13-99863f16a4.patch",
 		"flexlayout-react": "^0.8.17",
 		"preact": "^10.25.3",
 		"react-click-away-listener": "^2.4.0",
@@ -48,5 +49,8 @@
 	"eslintConfig": {
 		"extends": "preact"
 	},
-	"packageManager": "yarn@4.9.2"
+	"packageManager": "yarn@4.9.2",
+	"resolutions": {
+		"@d3fc/d3fc-chart@npm:^5.1.9": "patch:@d3fc/d3fc-chart@npm%3A5.1.9#~/.yarn/patches/@d3fc-d3fc-chart-npm-5.1.9-43f8ce229d.patch"
+	}
 }

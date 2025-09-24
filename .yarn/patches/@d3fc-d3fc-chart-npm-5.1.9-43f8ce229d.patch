@@ -1,0 +1,134 @@
+diff --git a/build/d3fc-chart.js b/build/d3fc-chart.js
+index 3d88af62faa1df3b8e0b85320f77ffcbee819874..4775fdd2d6d0a9345b3679291efe9d215f2d80c5 100644
+--- a/build/d3fc-chart.js
++++ b/build/d3fc-chart.js
+@@ -67,6 +67,7 @@
+       var webglPlotArea = null;
+       var canvasPlotArea = null;
+       var svgPlotArea = null;
++      var svgAnnotationPlotArea = null;
+       var isContextLost = false;
+       var useDevicePixelRatio = true;
+       var xAxisStore = store('tickFormat', 'ticks', 'tickArguments', 'tickSize', 'tickSizeInner', 'tickSizeOuter', 'tickValues', 'tickPadding', 'tickCenterLabel');
+@@ -78,6 +79,7 @@
+       var webglDataJoin = d3fcDataJoin.dataJoin('d3fc-canvas', 'webgl-plot-area');
+       var canvasDataJoin = d3fcDataJoin.dataJoin('d3fc-canvas', 'canvas-plot-area');
+       var svgDataJoin = d3fcDataJoin.dataJoin('d3fc-svg', 'svg-plot-area');
++      var svgAnnotationDataJoin = d3fcDataJoin.dataJoin('d3fc-svg', 'annotation-plot-area');
+       var xAxisDataJoin = d3fcDataJoin.dataJoin('d3fc-svg', 'x-axis').key(function (d) {
+         return d;
+       });
+@@ -149,6 +151,11 @@
+             svgPlotArea.xScale(xScale).yScale(yScale);
+             transitionPropagator(d3Selection.select(child).datum(d)).call(svgPlotArea);
+           });
++          svgAnnotationDataJoin(container, svgAnnotationPlotArea ? [data] : []).classed('plot-area', true).classed('annotations', true).on('draw', function (event, d) {
++            var child = event.detail.child;
++            svgAnnotationPlotArea.xScale(xScale).yScale(yScale);
++            transitionPropagator(d3Selection.select(child).datum(d)).call(svgAnnotationPlotArea);
++          });
+           xAxisDataJoin(container, [xOrient(data)]).attr('class', function (d) {
+             return "x-axis ".concat(d, "-axis");
+           }).style('height', xAxisHeight(data)).on('measure', function (event, d) {
+@@ -281,6 +288,13 @@
+         svgPlotArea = arguments.length <= 0 ? undefined : arguments[0];
+         return cartesian;
+       };
++      cartesian.svgAnnotationPlotArea = function () {
++        if (!arguments.length) {
++          return svgAnnotationPlotArea;
++        }
++        svgAnnotationPlotArea = arguments.length <= 0 ? undefined : arguments[0];
++        return cartesian;
++      };
+       cartesian.decorate = function () {
+         if (!arguments.length) {
+           return decorate;
+diff --git a/build/d3fc-chart.min.js b/build/d3fc-chart.min.js
+index 15f3729c0f08ae8298192e2134798807040a4800..d3c7687f5fd1f1a6a299c35444f4b59ade15ea9c 100644
+--- a/build/d3fc-chart.min.js
++++ b/build/d3fc-chart.min.js
+@@ -1 +1 @@
+-!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports,require("@d3fc/d3fc-rebind"),require("d3-selection"),require("d3-scale"),require("@d3fc/d3fc-axis"),require("@d3fc/d3fc-data-join"),require("@d3fc/d3fc-element"),require("@d3fc/d3fc-series")):"function"==typeof define&&define.amd?define(["exports","@d3fc/d3fc-rebind","d3-selection","d3-scale","@d3fc/d3fc-axis","@d3fc/d3fc-data-join","@d3fc/d3fc-element","@d3fc/d3fc-series"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).fc=e.fc||{},e.fc,e.d3,e.d3,e.fc,e.fc,e.fc,e.fc)}(this,(function(e,t,n,r,i,a,c,o){"use strict";var l=function(){for(var e={},t=function(t){for(var n=0,r=Object.keys(e);n<r.length;n++){var i=r[n];t[i].apply(null,e[i])}return t},n=arguments.length,r=new Array(n),i=0;i<n;i++)r[i]=arguments[i];for(var a=function(){var n=o[c];t[n]=function(){for(var r=arguments.length,i=new Array(r),a=0;a<r;a++)i[a]=arguments[a];return i.length?(e[n]=i,t):e[n]}},c=0,o=r;c<o.length;c++)a();return t},d="d3fc-group.cartesian-chart{width:100%;height:100%;overflow:hidden;display:grid;display:-ms-grid;grid-template-columns:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);-ms-grid-columns:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);grid-template-rows:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);-ms-grid-rows:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);}\nd3fc-group.cartesian-chart>.top-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:3;-ms-grid-column:3;grid-row:1;-ms-grid-row:1;}\nd3fc-group.cartesian-chart>.top-axis{height:2em;grid-column:3;-ms-grid-column:3;grid-row:2;-ms-grid-row:2;}\nd3fc-group.cartesian-chart>.left-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:1;-ms-grid-column:1;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.left-axis{width:3em;grid-column:2;-ms-grid-column:2;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.plot-area{overflow:hidden;grid-column:3;-ms-grid-column:3;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.right-axis{width:3em;grid-column:4;-ms-grid-column:4;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.right-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:5;-ms-grid-column:5;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.bottom-axis{height:2em;grid-column:3;-ms-grid-column:3;grid-row:4;-ms-grid-row:4;}\nd3fc-group.cartesian-chart>.bottom-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:3;-ms-grid-column:3;grid-row:5;-ms-grid-row:5;}\nd3fc-group.cartesian-chart>.y-label{display:flex;transform:rotate(-90deg);width:1em;white-space:nowrap;justify-content:center;}",s=document.createElement("style");s.setAttribute("type","text/css"),document.querySelector("head").appendChild(s),s.styleSheet?s.styleSheet.cssText+=d:s.textContent+=d;var u=function(e){return"function"==typeof e?e:function(){return e}},g=function(){var e=f.apply(void 0,arguments),r=e.xScale,i=e.yScale,c=e.xAxis,o=e.yAxis,d=u(""),s=u(""),g=u(""),m=u(null),h=u(null),x=u("right"),y=u("bottom"),p=null,v=null,w=null,b=!1,S=!0,k=l("tickFormat","ticks","tickArguments","tickSize","tickSizeInner","tickSizeOuter","tickValues","tickPadding","tickCenterLabel"),A=function(){},j=l("tickFormat","ticks","tickArguments","tickSize","tickSizeInner","tickSizeOuter","tickValues","tickPadding","tickCenterLabel"),C=function(){},L=function(){},q=a.dataJoin("d3fc-group","cartesian-chart"),R=a.dataJoin("d3fc-canvas","webgl-plot-area"),J=a.dataJoin("d3fc-canvas","canvas-plot-area"),O=a.dataJoin("d3fc-svg","svg-plot-area"),P=a.dataJoin("d3fc-svg","x-axis").key((function(e){return e})),z=a.dataJoin("d3fc-svg","y-axis").key((function(e){return e})),T=a.dataJoin("div","chart-label"),D=a.dataJoin("div","x-label").key((function(e){return e})),I=a.dataJoin("div","y-label").key((function(e){return e})),B=function(e){var t,l=(t=e,function(e){return a.isTransition(t)?e.transition(t):e});e.each((function(e,t,a){var u=q(n.select(a[t]),[e]);u.enter().attr("auto-resize",""),T(u,[y(e)]).attr("class",(function(e){return"top"===e?"chart-label bottom-label":"chart-label top-label"})).style("margin-bottom",(function(e){return"top"===e?0:"1em"})).style("margin-top",(function(e){return"top"===e?"1em":0})).text(d(e)),D(u,[y(e)]).attr("class",(function(e){return"x-label ".concat(e,"-label")})).text(s(e)),I(u,[x(e)]).attr("class",(function(e){return"y-label ".concat(e,"-label")})).text(g(e)),R(u,p?[e]:[]).attr("set-webgl-viewport","").classed("plot-area",!0).attr("use-device-pixel-ratio",S).on("draw",(function(e,t){var n=e.detail,a=n.child,c=n.pixelRatio;p.context(b?null:a.getContext("webgl")).pixelRatio(c).xScale(r).yScale(i),p(t)})),u.select(".webgl-plot-area>canvas").on("webglcontextlost",(function(e){console.warn("WebGLRenderingContext lost"),e.preventDefault(),b=!0,u.node().requestRedraw()})).on("webglcontextrestored",(function(){console.info("WebGLRenderingContext restored"),b=!1,u.node().requestRedraw()})),J(u,v?[e]:[]).classed("plot-area",!0).attr("use-device-pixel-ratio",S).on("draw",(function(e,t){var n=e.detail,a=n.child,c=n.pixelRatio,o=a.getContext("2d");o.save(),S&&o.scale(c,c),v.context(o).xScale(r).yScale(i),v(t),o.restore()})),O(u,w?[e]:[]).classed("plot-area",!0).on("draw",(function(e,t){var a=e.detail.child;w.xScale(r).yScale(i),l(n.select(a).datum(t)).call(w)})),P(u,[y(e)]).attr("class",(function(e){return"x-axis ".concat(e,"-axis")})).style("height",m(e)).on("measure",(function(e,t){var i=e.detail,a=i.width,c=i.height,o=i.child;"top"===t&&n.select(o).attr("viewBox","0 ".concat(-c," ").concat(a," ").concat(c)),r.range([0,a])})).on("draw",(function(e,t){var i=e.detail.child,a="top"===t?c.top(r):c.bottom(r);a.decorate(A),l(n.select(i).datum(t)).call(k(a))})),z(u,[x(e)]).attr("class",(function(e){return"y-axis ".concat(e,"-axis")})).style("width",h(e)).on("measure",(function(e,t){var r=e.detail,a=r.width,c=r.height,o=r.child;"left"===t&&n.select(o).attr("viewBox","".concat(-a," 0 ").concat(a," ").concat(c)),i.range([c,0])})).on("draw",(function(e,t){var r=e.detail.child,a="left"===t?o.left(i):o.right(i);a.decorate(C),l(n.select(r).datum(t)).call(j(a))})),u.each((function(e,t,n){return n[t].requestRedraw()})),L(u,e,t)}))},F=t.exclude(/range\w*/,/tickFormat/);return t.rebindAll(B,r,F,t.prefix("x")),t.rebindAll(B,i,F,t.prefix("y")),t.rebindAll(B,k,t.prefix("x")),t.rebindAll(B,j,t.prefix("y")),B.xOrient=function(){return arguments.length?(y=u(arguments.length<=0?void 0:arguments[0]),B):y},B.yOrient=function(){return arguments.length?(x=u(arguments.length<=0?void 0:arguments[0]),B):x},B.xDecorate=function(){return arguments.length?(A=arguments.length<=0?void 0:arguments[0],B):A},B.yDecorate=function(){return arguments.length?(C=arguments.length<=0?void 0:arguments[0],B):C},B.chartLabel=function(){return arguments.length?(d=u(arguments.length<=0?void 0:arguments[0]),B):d},B.xLabel=function(){return arguments.length?(s=u(arguments.length<=0?void 0:arguments[0]),B):s},B.yLabel=function(){return arguments.length?(g=u(arguments.length<=0?void 0:arguments[0]),B):g},B.xAxisHeight=function(){return arguments.length?(m=u(arguments.length<=0?void 0:arguments[0]),B):m},B.yAxisWidth=function(){return arguments.length?(h=u(arguments.length<=0?void 0:arguments[0]),B):h},B.webglPlotArea=function(){return arguments.length?(p=arguments.length<=0?void 0:arguments[0],B):p},B.canvasPlotArea=function(){return arguments.length?(v=arguments.length<=0?void 0:arguments[0],B):v},B.svgPlotArea=function(){return arguments.length?(w=arguments.length<=0?void 0:arguments[0],B):w},B.decorate=function(){return arguments.length?(L=arguments.length<=0?void 0:arguments[0],B):L},B.useDevicePixelRatio=function(){return arguments.length?(S=arguments.length<=0?void 0:arguments[0],B):S},B},f=function(){for(var e={xScale:r.scaleIdentity(),yScale:r.scaleIdentity(),xAxis:{bottom:i.axisBottom,top:i.axisTop},yAxis:{right:i.axisRight,left:i.axisLeft}},t=arguments.length,n=new Array(t),a=0;a<t;a++)n[a]=arguments[a];return 1!==n.length||n[0].domain||n[0].range?Object.assign(e,{xScale:n[0]||e.xScale,yScale:n[1]||e.yScale}):Object.assign(e,n[0])},m=function(e){return"function"==typeof e?e:function(){return e}},h=function(e,n){return function(){var r=m(""),i=n,a=function(){},c=g.apply(void 0,arguments),o=function(t){e(c,i),c.decorate((function(e,t,n){e.enter().select(".x-label").style("height","1em").style("line-height","1em");var i=c.yOrient()(t);e.enter().append("div").attr("class","y-label-container").style("grid-column","left"===i?1:5).style("-ms-grid-column","left"===i?1:5).style("grid-row",3).style("-ms-grid-row",3).style("width","1em").style("display","flex").style("align-items","center").style("justify-content","center").style("white-space","nowrap").append("div").attr("class","y-label").style("transform","rotate(-90deg)"),e.select(".y-label-container>.y-label").text(r),a(e,t,n)})),t.call(c)};return t.rebindAll(o,c,t.include(/^x/,/^y/,"chartLabel")),o.yLabel=function(){return arguments.length?(r=m(arguments.length<=0?void 0:arguments[0]),o):r},o.plotArea=function(){return arguments.length?(i=arguments.length<=0?void 0:arguments[0],o):i},o.decorate=function(){return arguments.length?(a=arguments.length<=0?void 0:arguments[0],o):a},o}},x=h((function(e,t){return e.svgPlotArea(t)}),o.seriesSvgLine),y=h((function(e,t){return e.canvasPlotArea(t)}),o.seriesCanvasLine);e.chartCanvasCartesian=y,e.chartCartesian=g,e.chartSvgCartesian=x,Object.defineProperty(e,"__esModule",{value:!0})}));
++!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports,require("@d3fc/d3fc-rebind"),require("d3-selection"),require("d3-scale"),require("@d3fc/d3fc-axis"),require("@d3fc/d3fc-data-join"),require("@d3fc/d3fc-element"),require("@d3fc/d3fc-series")):"function"==typeof define&&define.amd?define(["exports","@d3fc/d3fc-rebind","d3-selection","d3-scale","@d3fc/d3fc-axis","@d3fc/d3fc-data-join","@d3fc/d3fc-element","@d3fc/d3fc-series"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).fc=e.fc||{},e.fc,e.d3,e.d3,e.fc,e.fc,e.fc,e.fc)}(this,(function(e,t,n,r,i,a,c,o){"use strict";var l=function(){for(var e={},t=function(t){for(var n=0,r=Object.keys(e);n<r.length;n++){var i=r[n];t[i].apply(null,e[i])}return t},n=arguments.length,r=new Array(n),i=0;i<n;i++)r[i]=arguments[i];for(var a=function(){var n=o[c];t[n]=function(){for(var r=arguments.length,i=new Array(r),a=0;a<r;a++)i[a]=arguments[a];return i.length?(e[n]=i,t):e[n]}},c=0,o=r;c<o.length;c++)a();return t},d="d3fc-group.cartesian-chart{width:100%;height:100%;overflow:hidden;display:grid;display:-ms-grid;grid-template-columns:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);-ms-grid-columns:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);grid-template-rows:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);-ms-grid-rows:minmax(1em,max-content) auto 1fr auto minmax(1em,max-content);}\nd3fc-group.cartesian-chart>.top-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:3;-ms-grid-column:3;grid-row:1;-ms-grid-row:1;}\nd3fc-group.cartesian-chart>.top-axis{height:2em;grid-column:3;-ms-grid-column:3;grid-row:2;-ms-grid-row:2;}\nd3fc-group.cartesian-chart>.left-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:1;-ms-grid-column:1;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.left-axis{width:3em;grid-column:2;-ms-grid-column:2;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.plot-area{overflow:hidden;grid-column:3;-ms-grid-column:3;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.right-axis{width:3em;grid-column:4;-ms-grid-column:4;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.right-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:5;-ms-grid-column:5;grid-row:3;-ms-grid-row:3;}\nd3fc-group.cartesian-chart>.bottom-axis{height:2em;grid-column:3;-ms-grid-column:3;grid-row:4;-ms-grid-row:4;}\nd3fc-group.cartesian-chart>.bottom-label{align-self:center;-ms-grid-column-align:center;justify-self:center;-ms-grid-row-align:center;grid-column:3;-ms-grid-column:3;grid-row:5;-ms-grid-row:5;}\nd3fc-group.cartesian-chart>.y-label{display:flex;transform:rotate(-90deg);width:1em;white-space:nowrap;justify-content:center;}",s=document.createElement("style");s.setAttribute("type","text/css"),document.querySelector("head").appendChild(s),s.styleSheet?s.styleSheet.cssText+=d:s.textContent+=d;var u=function(e){return"function"==typeof e?e:function(){return e}},g=function(){var e=f.apply(void 0,arguments),r=e.xScale,i=e.yScale,c=e.xAxis,o=e.yAxis,d=u(""),s=u(""),g=u(""),m=u(null),h=u(null),x=u("right"),p=u("bottom"),y=null,v=null,w=null,b=null,S=!1,A=!0,k=l("tickFormat","ticks","tickArguments","tickSize","tickSizeInner","tickSizeOuter","tickValues","tickPadding","tickCenterLabel"),j=function(){},C=l("tickFormat","ticks","tickArguments","tickSize","tickSizeInner","tickSizeOuter","tickValues","tickPadding","tickCenterLabel"),L=function(){},q=function(){},J=a.dataJoin("d3fc-group","cartesian-chart"),P=a.dataJoin("d3fc-canvas","webgl-plot-area"),R=a.dataJoin("d3fc-canvas","canvas-plot-area"),O=a.dataJoin("d3fc-svg","svg-plot-area"),z=a.dataJoin("d3fc-svg","annotation-plot-area"),T=a.dataJoin("d3fc-svg","x-axis").key((function(e){return e})),D=a.dataJoin("d3fc-svg","y-axis").key((function(e){return e})),I=a.dataJoin("div","chart-label"),B=a.dataJoin("div","x-label").key((function(e){return e})),F=a.dataJoin("div","y-label").key((function(e){return e})),W=function(e){var t,l=(t=e,function(e){return a.isTransition(t)?e.transition(t):e});e.each((function(e,t,a){var u=J(n.select(a[t]),[e]);u.enter().attr("auto-resize",""),I(u,[p(e)]).attr("class",(function(e){return"top"===e?"chart-label bottom-label":"chart-label top-label"})).style("margin-bottom",(function(e){return"top"===e?0:"1em"})).style("margin-top",(function(e){return"top"===e?"1em":0})).text(d(e)),B(u,[p(e)]).attr("class",(function(e){return"x-label ".concat(e,"-label")})).text(s(e)),F(u,[x(e)]).attr("class",(function(e){return"y-label ".concat(e,"-label")})).text(g(e)),P(u,y?[e]:[]).attr("set-webgl-viewport","").classed("plot-area",!0).attr("use-device-pixel-ratio",A).on("draw",(function(e,t){var n=e.detail,a=n.child,c=n.pixelRatio;y.context(S?null:a.getContext("webgl")).pixelRatio(c).xScale(r).yScale(i),y(t)})),u.select(".webgl-plot-area>canvas").on("webglcontextlost",(function(e){console.warn("WebGLRenderingContext lost"),e.preventDefault(),S=!0,u.node().requestRedraw()})).on("webglcontextrestored",(function(){console.info("WebGLRenderingContext restored"),S=!1,u.node().requestRedraw()})),R(u,v?[e]:[]).classed("plot-area",!0).attr("use-device-pixel-ratio",A).on("draw",(function(e,t){var n=e.detail,a=n.child,c=n.pixelRatio,o=a.getContext("2d");o.save(),A&&o.scale(c,c),v.context(o).xScale(r).yScale(i),v(t),o.restore()})),O(u,w?[e]:[]).classed("plot-area",!0).on("draw",(function(e,t){var a=e.detail.child;w.xScale(r).yScale(i),l(n.select(a).datum(t)).call(w)})),z(u,b?[e]:[]).classed("plot-area",!0).classed("annotations",!0).on("draw",(function(e,t){var a=e.detail.child;b.xScale(r).yScale(i),l(n.select(a).datum(t)).call(b)})),T(u,[p(e)]).attr("class",(function(e){return"x-axis ".concat(e,"-axis")})).style("height",m(e)).on("measure",(function(e,t){var i=e.detail,a=i.width,c=i.height,o=i.child;"top"===t&&n.select(o).attr("viewBox","0 ".concat(-c," ").concat(a," ").concat(c)),r.range([0,a])})).on("draw",(function(e,t){var i=e.detail.child,a="top"===t?c.top(r):c.bottom(r);a.decorate(j),l(n.select(i).datum(t)).call(k(a))})),D(u,[x(e)]).attr("class",(function(e){return"y-axis ".concat(e,"-axis")})).style("width",h(e)).on("measure",(function(e,t){var r=e.detail,a=r.width,c=r.height,o=r.child;"left"===t&&n.select(o).attr("viewBox","".concat(-a," 0 ").concat(a," ").concat(c)),i.range([c,0])})).on("draw",(function(e,t){var r=e.detail.child,a="left"===t?o.left(i):o.right(i);a.decorate(L),l(n.select(r).datum(t)).call(C(a))})),u.each((function(e,t,n){return n[t].requestRedraw()})),q(u,e,t)}))},G=t.exclude(/range\w*/,/tickFormat/);return t.rebindAll(W,r,G,t.prefix("x")),t.rebindAll(W,i,G,t.prefix("y")),t.rebindAll(W,k,t.prefix("x")),t.rebindAll(W,C,t.prefix("y")),W.xOrient=function(){return arguments.length?(p=u(arguments.length<=0?void 0:arguments[0]),W):p},W.yOrient=function(){return arguments.length?(x=u(arguments.length<=0?void 0:arguments[0]),W):x},W.xDecorate=function(){return arguments.length?(j=arguments.length<=0?void 0:arguments[0],W):j},W.yDecorate=function(){return arguments.length?(L=arguments.length<=0?void 0:arguments[0],W):L},W.chartLabel=function(){return arguments.length?(d=u(arguments.length<=0?void 0:arguments[0]),W):d},W.xLabel=function(){return arguments.length?(s=u(arguments.length<=0?void 0:arguments[0]),W):s},W.yLabel=function(){return arguments.length?(g=u(arguments.length<=0?void 0:arguments[0]),W):g},W.xAxisHeight=function(){return arguments.length?(m=u(arguments.length<=0?void 0:arguments[0]),W):m},W.yAxisWidth=function(){return arguments.length?(h=u(arguments.length<=0?void 0:arguments[0]),W):h},W.webglPlotArea=function(){return arguments.length?(y=arguments.length<=0?void 0:arguments[0],W):y},W.canvasPlotArea=function(){return arguments.length?(v=arguments.length<=0?void 0:arguments[0],W):v},W.svgPlotArea=function(){return arguments.length?(w=arguments.length<=0?void 0:arguments[0],W):w},W.svgAnnotationPlotArea=function(){return arguments.length?(b=arguments.length<=0?void 0:arguments[0],W):b},W.decorate=function(){return arguments.length?(q=arguments.length<=0?void 0:arguments[0],W):q},W.useDevicePixelRatio=function(){return arguments.length?(A=arguments.length<=0?void 0:arguments[0],W):A},W},f=function(){for(var e={xScale:r.scaleIdentity(),yScale:r.scaleIdentity(),xAxis:{bottom:i.axisBottom,top:i.axisTop},yAxis:{right:i.axisRight,left:i.axisLeft}},t=arguments.length,n=new Array(t),a=0;a<t;a++)n[a]=arguments[a];return 1!==n.length||n[0].domain||n[0].range?Object.assign(e,{xScale:n[0]||e.xScale,yScale:n[1]||e.yScale}):Object.assign(e,n[0])},m=function(e){return"function"==typeof e?e:function(){return e}},h=function(e,n){return function(){var r=m(""),i=n,a=function(){},c=g.apply(void 0,arguments),o=function(t){e(c,i),c.decorate((function(e,t,n){e.enter().select(".x-label").style("height","1em").style("line-height","1em");var i=c.yOrient()(t);e.enter().append("div").attr("class","y-label-container").style("grid-column","left"===i?1:5).style("-ms-grid-column","left"===i?1:5).style("grid-row",3).style("-ms-grid-row",3).style("width","1em").style("display","flex").style("align-items","center").style("justify-content","center").style("white-space","nowrap").append("div").attr("class","y-label").style("transform","rotate(-90deg)"),e.select(".y-label-container>.y-label").text(r),a(e,t,n)})),t.call(c)};return t.rebindAll(o,c,t.include(/^x/,/^y/,"chartLabel")),o.yLabel=function(){return arguments.length?(r=m(arguments.length<=0?void 0:arguments[0]),o):r},o.plotArea=function(){return arguments.length?(i=arguments.length<=0?void 0:arguments[0],o):i},o.decorate=function(){return arguments.length?(a=arguments.length<=0?void 0:arguments[0],o):a},o}},x=h((function(e,t){return e.svgPlotArea(t)}),o.seriesSvgLine),p=h((function(e,t){return e.canvasPlotArea(t)}),o.seriesCanvasLine);e.chartCanvasCartesian=p,e.chartCartesian=g,e.chartSvgCartesian=x,Object.defineProperty(e,"__esModule",{value:!0})}));
+diff --git a/src/cartesian.d.ts b/src/cartesian.d.ts
+index f8d0fd0c4e67792f68660f4449a4a4fd7eb358f4..8568c1f633c8582cf9ba886614f541be9f7e03c6 100644
+--- a/src/cartesian.d.ts
++++ b/src/cartesian.d.ts
+@@ -103,12 +103,23 @@ export type CartesianChart<XScale, YScale> = {
+     svgPlotArea(): SvgPlotAreaComponent | null;
+ 
+     /**
+-     * Sets the component to render onto the SVG, and returns the Cartesian chart. 
++     * Returns the existing annotataion component.
++     */
++    svgAnnotationPlotArea(): SvgPlotAreaComponent | null;
++
++    /**
++     * Sets the component to render onto the SVG, and returns the Cartesian chart.
+      * For components that require user-interaction, rendering to SVG can simplify their implementation.
+      * @param component
+      */
+     svgPlotArea(component: SvgPlotAreaComponent): CartesianChart<XScale, YScale>;
+ 
++    /**
++     * Sets the annotation to render onto the SVG, and returns the Cartesian chart.
++     * @param component
++     */
++    svgAnnotationPlotArea(component: SvgPlotAreaComponent): CartesianChart<XScale, YScale>;
++
+     /**
+      * Returns the current useDevicePixelRatio value.
+      */
+diff --git a/src/cartesian.js b/src/cartesian.js
+index 853b82914f58f871f3a6fad23742862ea9bba366..c71f512561a651069d75daccaf2822a3ea9abd55 100644
+--- a/src/cartesian.js
++++ b/src/cartesian.js
+@@ -23,6 +23,7 @@ export default (...args) => {
+     let webglPlotArea = null;
+     let canvasPlotArea = null;
+     let svgPlotArea = null;
++    let svgAnnotationPlotArea = null;
+     let isContextLost = false;
+     let useDevicePixelRatio = true;
+     let xAxisStore = store('tickFormat', 'ticks', 'tickArguments', 'tickSize', 'tickSizeInner', 'tickSizeOuter', 'tickValues', 'tickPadding', 'tickCenterLabel');
+@@ -35,6 +36,7 @@ export default (...args) => {
+     const webglDataJoin = dataJoin('d3fc-canvas', 'webgl-plot-area');
+     const canvasDataJoin = dataJoin('d3fc-canvas', 'canvas-plot-area');
+     const svgDataJoin = dataJoin('d3fc-svg', 'svg-plot-area');
++    const svgAnnotationDataJoin = dataJoin('d3fc-svg', 'annotation-plot-area');
+     const xAxisDataJoin = dataJoin('d3fc-svg', 'x-axis')
+         .key(d => d);
+     const yAxisDataJoin = dataJoin('d3fc-svg', 'y-axis')
+@@ -125,6 +127,17 @@ export default (...args) => {
+                         .call(svgPlotArea);
+                 });
+ 
++            svgAnnotationDataJoin(container, svgAnnotationPlotArea ? [data] : [])
++                .classed('plot-area', true)
++                .classed('annotations', true)
++                .on('draw', (event, d) => {
++                    const { child } = event.detail;
++                    svgAnnotationPlotArea.xScale(xScale)
++                        .yScale(yScale);
++                    transitionPropagator(select(child).datum(d))
++                        .call(svgAnnotationPlotArea);
++                });
++
+             xAxisDataJoin(container, [xOrient(data)])
+                 .attr('class', d => `x-axis ${d}-axis`)
+                 .style('height', xAxisHeight(data))
+@@ -262,6 +275,13 @@ export default (...args) => {
+         svgPlotArea = args[0];
+         return cartesian;
+     };
++    cartesian.svgAnnotationPlotArea = (...args) => {
++        if (!args.length) {
++            return svgAnnotationPlotArea;
++        }
++        svgAnnotationPlotArea = args[0];
++        return cartesian;
++    };
+     cartesian.decorate = (...args) => {
+         if (!args.length) {
+             return decorate;

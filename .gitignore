@@ -13,7 +13,7 @@ package-lock.json
 dist
 dist-ssr
 *.local
-.yarn/
+.yarn/install-state.gz
 .vite/
 
 # Editor directories and files

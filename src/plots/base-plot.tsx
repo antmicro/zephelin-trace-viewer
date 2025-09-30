@@ -26,6 +26,12 @@ import "@styles/plots.scss";
 
 type ScaleType = d3.ScaleContinuousNumeric<any, any, never>;
 
+/** Defines side (and distance in px) from the datapoint on which annotation will be displayed */
+enum AnnotationSide {
+    LEFT = -20,
+    RIGHT = 20,
+}
+
 /** The properties of threshold type annotation */
 export interface ThresholdAnnotationProps {
     x: number,
@@ -100,6 +106,8 @@ interface PlotAnnotationData {
 export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>> extends StatelessComponent<T> {
     /** The reference to div containing whole plot */
     containerRef = createRef<HTMLDivElement>();
+    /** The reference to d3fc-svg element containing annotation */
+    annotationSvgElement: Element | undefined;
     /** The colors defined in CSS, in :root element */
     static cssColors: CSSStyleDeclaration | undefined = undefined;
 
@@ -322,14 +330,38 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             : { x1: this.xScale.range()[0] as number, x2: this.xScale.range()[1] as number };
 
         const annotationX = Math.max(Math.min(annotationData.x, xDomain[1]), xDomain[0]);
-        const xMult = (annotationX < (xDomain[1] + xDomain[0]) / 2) ? 1 : -1;
+        let side = (annotationX < (xDomain[1] + xDomain[0]) / 2) ? AnnotationSide.RIGHT : AnnotationSide.LEFT;
 
         const annotationY = Math.max(Math.min(annotationData.y, yDomain[1]), yDomain[0]);
+
+        // Check whether annotation is display on the far right or left of the body and adjust annotation side
+        const plotAreaRect = this.annotationSvgElement?.getBoundingClientRect();
+        if (plotAreaRect) {
+            const revX = this.xScale(annotationX) as number;
+            const bodyRect = document.body.getBoundingClientRect();
+            const trueX = revX + plotAreaRect.left;
+
+            const MIN_MARGIN = 0.3;
+            const MIN_ABSOLUTE_MARGIN = 400;
+            if (
+                side !== AnnotationSide.LEFT &&
+                trueX > Math.min(
+                    bodyRect.width * (1 - MIN_MARGIN), Math.max(bodyRect.width / 2, bodyRect.width - MIN_ABSOLUTE_MARGIN))
+            ) {
+                side = AnnotationSide.LEFT;
+            } else if (
+                side !== AnnotationSide.RIGHT &&
+                trueX < Math.max(
+                    bodyRect.width * MIN_MARGIN, Math.min(bodyRect.width / 2, MIN_ABSOLUTE_MARGIN))
+            ) {
+                side = AnnotationSide.RIGHT;
+            }
+        }
         this.annotations.push(
             {
                 x: annotationX,
                 y: annotationY,
-                dx: xMult * 20,
+                dx: side,
                 dy: ((annotationY - yDomain[0]) / (yDomain[1] - yDomain[0]) >= 0.5) ? 15 : -15,
                 note: {
                     title: annotationData.title,
@@ -606,12 +638,13 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         Plot.cssColors ??= window.getComputedStyle(document.documentElement);
         this.createChart();
 
-        for (const tag of (this.containerRef.current?.getElementsByClassName("svg-plot-area") ?? [])) {
-            if (tag.tagName === "D3FC-SVG") {
+        for (const tag of (this.containerRef.current?.getElementsByClassName("plot-area") ?? [])) {
+            if (tag.tagName === "D3FC-SVG" || tag.tagName === "D3FC-CANVAS") {
                 this.d3fcSvgNode = tag;
                 break;
             }
         }
+        this.annotationSvgElement = this.containerRef.current?.getElementsByClassName("annotation-plot-area")[0];
         const { onTimestampHover, onFrameHover, onFrameSelect, onProfileChange } = this.props;
         if (onTimestampHover) {timestampHoveredAtom.subscribe(onTimestampHover);}
         if (onFrameHover) {hoveredAtom.subscribe(onFrameHover);}

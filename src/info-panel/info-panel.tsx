@@ -17,7 +17,7 @@ import PanelTemplate from './common';
 import ModelInfoPanel from './model-panel';
 import { useFrameProvider } from '@/utils/frame-provider';
 import tilingComponent from '@/utils/tiling-component';
-import { isOpFrame } from "@/utils/model";
+import { isInferenceFrame, isOpFrame } from "@/utils/model";
 
 
 interface GenericInfoProps {
@@ -41,8 +41,8 @@ export function GenericInfo({info}: GenericInfoProps) {
 function InfoPanel() {
     const { frameSt } = useFrameProvider();
 
-    if (isOpFrame(frameSt)) {
-        return <ModelInfoPanel frameArgs={frameSt.args} />;
+    if (isOpFrame(frameSt?.frame)) {
+        return <ModelInfoPanel frame={frameSt.frame} parent={isInferenceFrame(frameSt?.parent?.frame) ? frameSt.parent.frame : undefined} />;
     } else if (frameSt) {
         return <GenericInfo info="The chosen event does not contain additional information" />;
     }

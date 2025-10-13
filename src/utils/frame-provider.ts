@@ -39,9 +39,18 @@ export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState
     return { viewMode, activeView };
 }
 
+
+interface FrameState {
+    /** The frame selected in Speedscope */
+    frame?: FrameInfo,
+    /** The parent of the selected frame */
+    parent?: CallTreeNode | null,
+}
+
+
 /** Provides the frame selected in the Speedscope, returns statefull object */
 export function useFrameProvider() {
-    const [frameSt, setFrameSt] = useState<FrameInfo | undefined>(undefined);
+    const [frameSt, setFrameSt] = useState<FrameState | undefined>(undefined);
     profileGroupAtom.subscribe(() => {
         const view = useView();
         if (view === null) {
@@ -50,10 +59,12 @@ export function useFrameProvider() {
         }
         const { viewMode, activeView } = view;
         if (viewMode === ViewMode.SANDWICH_VIEW) {
-            setFrameSt((activeView as SandwichViewState)?.callerCallee?.selectedFrame);
+            const callerCallee = (activeView as SandwichViewState)?.callerCallee;
+            setFrameSt({frame: callerCallee?.selectedFrame, parent: callerCallee?.calleeFlamegraph.selectedNode?.parent});
 
         } else {
-            setFrameSt((activeView as FlamechartViewState)?.selectedNode?.frame);
+            const selectedNode = (activeView as FlamechartViewState)?.selectedNode;
+            setFrameSt({frame: selectedNode?.frame, parent: selectedNode?.parent});
         }
     });
 
@@ -107,7 +118,7 @@ interface FrameEvent {
     name: string,
 }
 
-/** Callback for Speedscope frame hover event, sets plot annotations acording to hovered frame/node */
+/** Callback for Speedscope frame hover event, sets plot annotations according to hovered frame/node */
 export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseProps<D>>(plotRef: RefObject<Plot<D, T>>) => {
     return () => {
         if (!plotRef.current) {return;}

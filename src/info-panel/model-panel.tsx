@@ -16,15 +16,17 @@ import { useState } from 'preact/hooks';
 import styles from "@styles/model-panel.module.scss";
 import panelStyles from "@styles/info-panel.module.scss";
 import { metadataAtom } from '@speedscope/app-state';
-import { ModelEventArgs, SpeedscopeFrameArgs } from '../event-types';
+import { FrameInfoT, MetadataModelArgs, ModelEventArgs } from '../event-types';
 import PanelTemplate from './common';
 import { GenericInfo } from './info-panel';
 import { isModelMetadata } from '@/utils/model';
 
 
 interface ModelInfoPanelProps {
-    /** Arguments of frame selected in Speedscope */
-    frameArgs: SpeedscopeFrameArgs<ModelEventArgs>
+    /** Frame selected in Speedscope */
+    frame?: FrameInfoT<ModelEventArgs>,
+    /** Parent of the selected frame */
+    parent?: FrameInfoT<{model_id: number}>,
 }
 
 
@@ -32,9 +34,10 @@ interface ModelInfoPanelProps {
  * The tabular information with additional arguments
  * included in selected event.
  */
-function EventInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
+function EventInfo({frame}: ModelInfoPanelProps): JSX.Element | undefined {
+    if (frame?.args === undefined) { return; }
     const filterKeys: (keyof ModelEventArgs)[] = ["subgraph_idx", "op_idx", "tag", "runtime", "thread_id", "tag_len"];
-    const eventAdditionalInfo = Object.entries(frameArgs.begin).filter(
+    const eventAdditionalInfo = Object.entries(frame.args.begin).filter(
         ([key, _]: [keyof ModelEventArgs, any]) => !filterKeys.includes(key),
     );
     if (eventAdditionalInfo.length === 0) { return; }
@@ -51,7 +54,7 @@ function EventInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
                 {eventAdditionalInfo.map(([key, value]) => <tr>
                     <th className={styles.key}>{key}</th>
                     <th>{value}</th>
-                    <th>{frameArgs.end[key]}</th>
+                    <th>{frame?.args.end[key]}</th>
                 </tr>,
                 )}
             </tbody>
@@ -63,16 +66,28 @@ function EventInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
  * The tabular information about layer associated with selected event,
  * including inputs, outputs and type of operation.
  */
-function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
+function LayerInfo({frame, parent}: ModelInfoPanelProps): JSX.Element | undefined {
     const [metadataRef, setMetadataRef] = useState(metadataAtom.get());
     metadataAtom.subscribe(() => {
         setMetadataRef(metadataAtom.get());
     });
 
-    const modelData = (metadataRef ?? []).find(isModelMetadata)?.args;
+    const modelsData = (metadataRef ?? []).filter(isModelMetadata);
+    let modelData: MetadataModelArgs | undefined = undefined;
+    if (modelsData.length > 1) {
+        const modelId = parent?.args.begin.model_id;
+        if (modelId === undefined) {
+            console.warn("Missing model address, cannot choose right model metadata");
+            modelData = modelsData[0].args;
+        }
+        modelData = modelsData.find((m) => m.args.id === modelId)?.args;
+    } else if (modelsData.length === 1) {
+        console.debug("Only one model metadata available, using this metadata");
+        modelData = modelsData[0].args;
+    }
     const getTensor = (k: number) => {
         const tensor = modelData?.tensors.find((v) => (
-            v.index === k && v.subgraph_idx === frameArgs.begin.subgraph_idx
+            v.index === k && v.subgraph_idx === frame?.args.begin.subgraph_idx
         ));
         if (tensor === undefined) {return;}
 
@@ -90,7 +105,7 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
 
     if (modelData === undefined) { return; }
 
-    const opData = modelData.ops.find((v) => v.index === frameArgs.begin.op_idx);
+    const opData = modelData.ops.find((v) => v.index === frame?.args.begin.op_idx);
     if (!opData) {return;}
 
     const InfoItem = (props: {children: ComponentChildren}) => <span className={styles["item-name"]}>{props.children}</span>;
@@ -134,10 +149,10 @@ function LayerInfo({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
 
 
 /** The information panel about layer and additional argument of selected event */
-export default function ModelInfoPanel({frameArgs}: ModelInfoPanelProps): JSX.Element | undefined {
+export default function ModelInfoPanel(props: ModelInfoPanelProps): JSX.Element | undefined {
     // Call as function instead of VNodes to check whether object undefined is returned
-    const event = EventInfo({frameArgs});
-    const layer = LayerInfo({frameArgs});
+    const event = EventInfo(props);
+    const layer = LayerInfo(props);
     if (!event && !layer) {
         return <GenericInfo info="The event does not contain information to display" />;
     }

@@ -9,11 +9,17 @@
 import { CallTreeNode, FrameInfo } from "@speedscope/lib/profile";
 import { metadataAtom, profileGroupAtom } from "@speedscope/app-state";
 import { Metadata } from "@speedscope/app-state/profile-group";
-import { FrameInfoT, MetadataModelType, ModelEventArgs, ModelEventName, ModelIOType, ModelTensorType, OpExecutionData, OpSizeData } from "@/event-types";
+import { FrameInfoT, InferenceEventName, InferenceModelArgs, MetadataModelType, ModelEventArgs, ModelEventName, ModelIOType, ModelTensorType, OpExecutionData, OpSizeData } from "@/event-types";
 
+
+const MODEL_EVENT_PREFIX_REGEX = new RegExp(`^${ModelEventName}(?<modelNum>[0-9]*)::`);
 
 export function isOpFrame(maybeOpFrame?: FrameInfo): maybeOpFrame is FrameInfoT<ModelEventArgs> {
-    return typeof(maybeOpFrame?.key) === "string" && maybeOpFrame?.key?.startsWith(`${ModelEventName}::`);
+    return typeof(maybeOpFrame?.key) === "string" && maybeOpFrame?.key?.match(MODEL_EVENT_PREFIX_REGEX) !== null;
+}
+
+export function isInferenceFrame(maybeInferFrame?: FrameInfo): maybeInferFrame is FrameInfoT<InferenceModelArgs> {
+    return typeof(maybeInferFrame?.key) === "string" && maybeInferFrame?.key?.startsWith(`${InferenceEventName}::`);
 }
 
 export function isModelMetadata(maybeModelMetadata?: Metadata): maybeModelMetadata is MetadataModelType {
@@ -27,8 +33,16 @@ type OpInstance = string
 // Describes execution times of an operator type grouped by an instance
 type OpTypeExecutionTimes = Map<OpInstance, number[]>;
 
+
+function opNameReplacer(_match: string, modelNum: string) {
+    if (modelNum && modelNum !== "") {
+        return modelNum + "::";
+    }
+    return "";
+}
+
 export function normalizeOpName(name: string) {
-    return name.replace(new RegExp(`${ModelEventName}::`), '');
+    return name.replace(MODEL_EVENT_PREFIX_REGEX, opNameReplacer);
 }
 
 function getCallTreeNodes() {

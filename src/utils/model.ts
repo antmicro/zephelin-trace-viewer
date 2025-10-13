@@ -101,69 +101,73 @@ export function getOpTypeExecutionData(): { plotData: OpExecutionData[][] } | nu
 export function getOpSizeData(): { plotData: OpSizeData[][] } | null {
     // Metadata
     const metadata = metadataAtom.get();
-    const modelData = (metadata ?? []).find(isModelMetadata)?.args;
-    if (!modelData) {return null;}
+    const modelsData = (metadata ?? []).filter(isModelMetadata).map((m) => m?.args);
+    if (!modelsData.length) {return null;}
 
-    // Tensors
-    const { tensors, inputs: modelInputs, outputs: modelOutputs } = modelData;
-    const tensorsWithSize = tensors.filter(({ size }) => size !== undefined).length;
-    if (!tensorsWithSize) {return null;}
+    const plotData: OpSizeData[] = [];
 
-    // Op instances
-    const opFrames = getCallTreeNodes()
-        .map(({ frame }) => frame)
-        .filter((frame) => isOpFrame(frame));
+    modelsData.forEach((modelData) => {
+        // Tensors
+        const { tensors, inputs: modelInputs, outputs: modelOutputs } = modelData;
+        const tensorsWithSize = tensors.filter(({ size }) => size !== undefined).length;
+        if (!tensorsWithSize) {return null;}
 
-    // Substitute type names with instance names
-    let offset = 0;
-    const { ops: globalOps } = modelData;
-    const ops = globalOps.flatMap((op) => {
-        const frameIdx = opFrames.slice(offset).findIndex((frame) => frame.args.begin.tag === op.op_name);
-        if (frameIdx === -1) {return [];}
-        const { name } = opFrames[offset];
-        offset = offset + frameIdx + 1;
-        return [{...op, op_name: normalizeOpName(name)}];
+        // Op instances
+        const opFrames = getCallTreeNodes()
+            .filter(({frame, parent}) => isOpFrame(frame) && (modelsData.length === 1 || (isInferenceFrame(parent?.frame) && parent?.frame.args?.begin?.model_id === modelData.id)))
+            .map(({frame}) => frame as FrameInfoT<ModelEventArgs>);
+
+        // Substitute type names with instance names
+        let offset = 0;
+        const { ops: globalOps } = modelData;
+        const ops = globalOps.flatMap((op) => {
+            const frameIdx = opFrames.slice(offset).findIndex((frame) => frame.args.begin.tag === op.op_name);
+            if (frameIdx === -1) {return [];}
+            const { name } = opFrames[offset];
+            offset = offset + frameIdx + 1;
+            return [{...op, op_name: normalizeOpName(name)}];
+        });
+
+        // Identify non-weight tensors
+        const matchModelTensor =
+            (modelTensor: ModelIOType) =>
+                (tensor: ModelTensorType) => (modelTensor.name_long ?? modelTensor.name) === tensor.name;
+        const nonWeightTensors = new Set([
+            ...modelInputs.map((modelTensor) => tensors.find(matchModelTensor(modelTensor))?.index),
+            ...modelOutputs.map((modelTensor) => tensors.find(matchModelTensor(modelTensor))?.index),
+            ...globalOps.flatMap(({ outputs }) => outputs),
+        ]);
+
+        const usedTensors = new Set();
+        const tensorToSizeMap = new Map(tensors.map(({ index, size }) => [index, size]));
+        const tensorToSize = (tensorIdx: number) => {
+            if (usedTensors.has(tensorIdx)) {
+                console.debug(`Trying to add tensor ${tensorIdx} size more than once`);
+                return;
+            }
+            usedTensors.add(tensorIdx);
+
+            if (!tensorToSizeMap.has(tensorIdx)) {
+                console.debug(`Tensor ${tensorIdx} is not in tensor data`);
+                return;
+            }
+            const size = tensorToSizeMap.get(tensorIdx);
+
+            if (size === undefined) {
+                console.debug(`Tensor ${tensorIdx} has ${size} size`);
+            }
+            return size;
+        };
+
+        plotData.push(...ops.flatMap(({ op_name, inputs }) => {
+            const size = inputs
+                .filter((i) => !nonWeightTensors.has(i)).map((i) => tensorToSize(i) ?? 0)
+                .reduce((a, b) => a + b, 0);
+            if (!size) {return [];}
+            return [{ name: op_name, size }];
+        }));
+
     });
-
-    // Identify non-weight tensors
-    const matchModelTensor =
-        (modelTensor: ModelIOType) =>
-            (tensor: ModelTensorType) => (modelTensor.name_long ?? modelTensor.name) === tensor.name;
-    const nonWeightTensors = new Set([
-        ...modelInputs.map((modelTensor) => tensors.find(matchModelTensor(modelTensor))?.index),
-        ...modelOutputs.map((modelTensor) => tensors.find(matchModelTensor(modelTensor))?.index),
-        ...globalOps.flatMap(({ outputs }) => outputs),
-    ]);
-
-    const usedTensors = new Set();
-    const tensorToSizeMap = new Map(tensors.map(({ index, size }) => [index, size]));
-    const tensorToSize = (tensorIdx: number) => {
-        if (usedTensors.has(tensorIdx)) {
-            console.debug(`Trying to add tensor ${tensorIdx} size more than once`);
-            return;
-        }
-        usedTensors.add(tensorIdx);
-
-        if (!tensorToSizeMap.has(tensorIdx)) {
-            console.debug(`Tensor ${tensorIdx} is not in tensor data`);
-            return;
-        }
-        const size = tensorToSizeMap.get(tensorIdx);
-
-        if (size === undefined) {
-            console.debug(`Tensor ${tensorIdx} has ${size} size`);
-        }
-        return size;
-    };
-
-    const plotData = ops.flatMap(({ op_name, inputs }) => {
-        const size = inputs
-            .filter((i) => !nonWeightTensors.has(i)).map((i) => tensorToSize(i) ?? 0)
-            .reduce((a, b) => a + b, 0);
-        if (!size) {return [];}
-        return [{ name: op_name, size }];
-    });
-
     if (!plotData.length) {return null;}
     return { plotData: [plotData] };
 }

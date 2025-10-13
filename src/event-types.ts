@@ -171,6 +171,7 @@ export interface MetadataModelArgs {
     outputs: ModelIOType[],
     tensors: ModelTensorType[],
     ops: ModelOpsType[],
+    id?: number | string,
 }
 
 export const ModelEventName = "MODEL";
@@ -197,6 +198,13 @@ export interface ModelEventArgs {
     subgraph_idx?: number,
     arena_used_bytes?: number,
     arena_tail_usage?: number,
+}
+
+export const InferenceEventName = "INFERENCE";
+
+/** The arguments of inference event */
+export interface InferenceModelArgs {
+    model_id: number;
 }
 
 /** The arguments of selected frame provided by Speedscope */

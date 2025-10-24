@@ -36,7 +36,7 @@ interface ModelInfoPanelProps {
  */
 function EventInfo({frame}: ModelInfoPanelProps): JSX.Element | undefined {
     if (frame?.args === undefined) { return; }
-    const filterKeys: (keyof ModelEventArgs)[] = ["subgraph_idx", "op_idx", "tag", "runtime", "thread_id", "tag_len"];
+    const filterKeys: (keyof ModelEventArgs)[] = ["subgraph_idx", "op_idx", "tag", "runtime", "thread_id", "tag_len", "cpu_id"];
     const eventAdditionalInfo = Object.entries(frame.args.begin).filter(
         ([key, _]: [keyof ModelEventArgs, any]) => !filterKeys.includes(key),
     );

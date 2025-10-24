@@ -193,6 +193,7 @@ export interface ModelEventArgs {
     runtime: string,
     thread_id: number,
     tag_len: number,
+    cpu_id: number,
 
     // TFLM specific options
     subgraph_idx?: number,

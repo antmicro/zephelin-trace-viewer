@@ -50,8 +50,8 @@ export default memo(({setWelcomeScreenSt}: {setWelcomeScreenSt: Dispatch<StateUp
     const onClick = () => {
         setLoadingSt(true);
         appRefAtom.get()?.current?.browseForFile(
-            () => {setLoadingSt(false); setWelcomeScreenSt(false);},
-            () => {setLoadingSt(false);},
+            () => setLoadingSt(false),
+            () => setLoadingSt(false),
         );
     };
 

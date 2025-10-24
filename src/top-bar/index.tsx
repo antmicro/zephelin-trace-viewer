@@ -15,7 +15,7 @@ import { useState } from "preact/hooks";
 import { memo } from "preact/compat";
 
 import { useAtom } from "@speedscope/lib/atom";
-import { appRefAtom, profileGroupAtom } from "@speedscope/app-state";
+import { appRefAtom, errorAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
@@ -28,11 +28,18 @@ import LogoIcon from "@/icons/logo";
 import { DocsIcon, GitIcon, ImportIcon, ExportIcon } from "@/icons";
 
 
+interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
+    /** Whether title should be displayed */
+    displayTitle?: boolean,
+}
+
+
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "tilingRef"> & {displayTitle?: boolean}): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element => {
     const appRefSt = useAtom(appRefAtom);
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
+    const isErrorSt = useAtom<boolean>(errorAtom);
 
     profileGroupAtom.subscribe(() => {
         setTraceLoadedSt((profileGroupAtom.get()?.profiles.length ?? 0) > 0);
@@ -56,7 +63,7 @@ export default memo(({tilingRef, displayTitle=true}: Pick<TilingLayoutProps, "ti
                     <button onClick={() => appRefSt?.current?.browseForFile()}>
                         <ImportIcon /><p>Import trace</p>
                     </button>
-                    {traceLoadedSt ? <button onClick={appRefSt?.current?.saveFile}>
+                    {traceLoadedSt && !isErrorSt ? <button onClick={appRefSt?.current?.saveFile}>
                         <ExportIcon /><p>Export trace</p>
                     </button> : null}
                     <hr />

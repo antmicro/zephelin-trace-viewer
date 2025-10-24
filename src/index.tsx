@@ -16,7 +16,7 @@ import { lazy, Suspense } from 'preact/compat';
 import style from '@styles/app.module.scss';
 import '@styles/flexlayout.scss';
 import { ThemeProvider } from '@speedscope/views/themes/theme';
-import { errorAtom, isImmediatelyLoading } from '@speedscope/app-state';
+import { errorAtom, isImmediatelyLoading, loadingCallbacksAtom } from '@speedscope/app-state';
 import { useAtom } from '@speedscope/lib/atom';
 import { useRef, useState } from 'preact/hooks';
 
@@ -38,6 +38,7 @@ configureSpeedscope();
 export function App() {
     const tilingRef = useRef(null);
     const [welcomeSt, setWelcomeSt] = useState<boolean>(!isImmediatelyLoading);
+    loadingCallbacksAtom.set({onstart() {setWelcomeSt(false);}});
     const isErrorSt = useAtom<boolean>(errorAtom);
 
     const displayWelcome = welcomeSt || isErrorSt;

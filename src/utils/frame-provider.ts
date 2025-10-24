@@ -8,13 +8,14 @@
 
 import { useState } from "preact/hooks";
 import { CallTreeNode, Frame, FrameInfo } from '@speedscope/lib/profile';
-import { hoveredAtom, profileGroupAtom, viewModeAtom } from '@speedscope/app-state';
+import { flattenRecursionAtom, hoveredAtom, profileGroupAtom, selectedAtom, viewModeAtom } from '@speedscope/app-state';
 import { FlamechartID, FlamechartViewState, SandwichViewState } from '@speedscope/app-state/profile-group';
 import { ViewMode } from '@speedscope/lib/view-mode';
 import { Theme } from "@speedscope/views/themes/theme";
 import { noop } from "@speedscope/lib/utils";
 import { createGetCSSColorForFrame, getFrameToColorBucket } from "@speedscope/app-state/getters";
 import { RefObject } from "preact";
+import { getInvertedCallerProfile } from "@speedscope/views/inverted-caller-flamegraph-view";
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
 
@@ -51,20 +52,35 @@ interface FrameState {
 /** Provides the frame selected in the Speedscope, returns statefull object */
 export function useFrameProvider() {
     const [frameSt, setFrameSt] = useState<FrameState | undefined>(undefined);
-    profileGroupAtom.subscribe(() => {
+    selectedAtom.subscribe(() => {
+        const selectedNode = selectedAtom.get();
+        if (selectedNode === null) {
+            setFrameSt(undefined);
+            return;
+        }
         const view = useView();
         if (view === null) {
             setFrameSt(undefined);
             return;
         }
-        const { viewMode, activeView } = view;
-        if (viewMode === ViewMode.SANDWICH_VIEW) {
-            const callerCallee = (activeView as SandwichViewState)?.callerCallee;
-            setFrameSt({frame: callerCallee?.selectedFrame, parent: callerCallee?.calleeFlamegraph.selectedNode?.parent});
-
-        } else {
-            const selectedNode = (activeView as FlamechartViewState)?.selectedNode;
+        const profile = profileGroupAtom.getActiveProfile()?.profile;
+        if (profile === undefined) {
+            setFrameSt(undefined);
+            return;
+        }
+        const { viewMode } = view;
+        if (viewMode === ViewMode.SANDWICH_VIEW && selectedNode instanceof Frame) {
+            // inverted caller profile is memorized, so it will not be recalculated here
+            const callerProf = getInvertedCallerProfile({profile, frame: selectedNode, flattenRecursion: flattenRecursionAtom.get()});
+            const callers = callerProf.getAppendOrderCalltreeRoot().children[0].children;
+            // Choosing first caller as MODEL events should be a child of only one INFERENCE event
+            setFrameSt({frame: selectedNode, parent: callers[0]});
+        } else if (viewMode !== ViewMode.SANDWICH_VIEW && selectedNode instanceof CallTreeNode) {
             setFrameSt({frame: selectedNode?.frame, parent: selectedNode?.parent});
+        } else {
+            setFrameSt(undefined);
+            console.debug("Mismatch between viewMode and selected node type, setting frame state to undefined");
+            return;
         }
     });
 

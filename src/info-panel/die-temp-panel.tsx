@@ -15,12 +15,12 @@ import { TempEventType } from "@/event-types";
 import { useTimestampCallbacks } from "@/utils/time-sync";
 
 export interface DieTempPanelProps {
-    /** The data for DIE temperature plot */
+    /** The data for Die temperature plot */
     fullData: TempEventType[][],
 }
 
 /**
- * The panel with DIE temperatures plot,
+ * The panel with Die temperatures plot,
  * it's created directly from the tiling layout only when metadata changes.
  */
 const DieTempPanel = memo(({fullData}: DieTempPanelProps) => {
@@ -32,7 +32,7 @@ const DieTempPanel = memo(({fullData}: DieTempPanelProps) => {
     );
 });
 
-export default tilingComponent(DieTempPanel, "DIE temperature", {
+export default tilingComponent(DieTempPanel, "Die temperature", {
     dataProvider: getDieTempData,
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,

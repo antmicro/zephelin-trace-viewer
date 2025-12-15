@@ -9,11 +9,16 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import path from 'path';
-
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
     const production = command === 'build';
+
+    const plugin_list = [preact()];
+    if (mode === 'single-file') {
+        plugin_list.push(viteSingleFile());
+    }
 
     return {
         esbuild: {
@@ -30,6 +35,6 @@ export default defineConfig(({ command }) => {
                 "react/jsx-runtime": "preact/jsx-runtime",
             }
         },
-        plugins: [preact()],
+        plugins: plugin_list,
     };
 });

@@ -16,10 +16,11 @@ import { lazy, Suspense } from 'preact/compat';
 import style from '@styles/app.module.scss';
 import '@styles/flexlayout.scss';
 import { ThemeProvider } from '@speedscope/views/themes/theme';
-import { errorAtom, isImmediatelyLoading, loadingCallbacksAtom } from '@speedscope/app-state';
+import { errorAtom, isImmediatelyLoading, loadingCallbacksAtom, appRefAtom } from '@speedscope/app-state';
 import { useAtom } from '@speedscope/lib/atom';
 import { useRef, useState } from 'preact/hooks';
 
+import { importProfilesFromBase64 } from '@speedscope/views/application';
 import TopBar from "./top-bar";
 import DragDropLayout from './drag-drop-layout';
 import WelcomeScreen from './welcome-screen';
@@ -28,8 +29,28 @@ import { configureSpeedscope } from './speedscope';
 const LazyTilingLayout = lazy(() => import("@/tiling-layout"));
 
 
+/*
+ * There is an option to bake trace data into the html post-build, by adding a
+ * <script> tag assigning base64-encoded traces to the initialTraces key in window.
+ * The code below handles that.
+ */
+const tracesBaked = 'initialTraces' in window;
+
+if(tracesBaked)
+{
+    const appMonitor = () => {
+        const appRef = appRefAtom.get();
+        if(appRef){
+            appRef.current.loadProfile(() => importProfilesFromBase64('tracefile', window.initialTraces as string)).catch(e => console.error(e));
+            appRefAtom.unsubscribe(appMonitor);
+        };
+    };
+    appRefAtom.subscribe(appMonitor);
+}
+
 // Configure Speedscope - only once before application starts
 configureSpeedscope();
+
 
 /**
  * The entrypoint of the application, defining top bar,
@@ -41,7 +62,7 @@ export function App() {
     loadingCallbacksAtom.set({onstart() {setWelcomeSt(false);}});
     const isErrorSt = useAtom<boolean>(errorAtom);
 
-    const displayWelcome = welcomeSt || isErrorSt;
+    const displayWelcome = ((welcomeSt || isErrorSt) && (!tracesBaked));
 
     return (
         <div id={style.app}>

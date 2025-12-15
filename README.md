@@ -37,6 +37,7 @@ yarn
 
 - `yarn dev` - Starts a development server at http://localhost:5173/
 - `yarn build` - Builds the application for production, emitting to `dist/`
+- `yarn build-singlefile` - Builds the application, but inlines all assets (CSS, JS etc.) into HTML files
 - `yarn preview` - Starts a server at http://localhost:4173/ to test production build locally
 - `yarn lint` - Runs linter and applies fixes to code
 

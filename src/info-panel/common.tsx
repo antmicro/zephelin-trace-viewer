@@ -24,6 +24,14 @@ interface PanelTemplateProps {
 export default function PanelTemplate({children, additionalContentClass}: PanelTemplateProps) {
     return (
         <div className={styles["panel-element"]}>
+            <div className={styles["panel-header"]}>
+                <label htmlFor="group-select">Source:</label>
+                <select id="group-select">
+                    <option value="0">Dummy Profile 1</option>
+                    <option value="1">Dummy Profile 2</option>
+                </select>
+            </div>
+
             <div className={styles["section-content"] + ` ${additionalContentClass ?? ''}`}>
                 {children}
             </div>

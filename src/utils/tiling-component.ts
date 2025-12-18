@@ -31,7 +31,7 @@ export class TilingComponent<T> {
         /** The atomic number of created instances of this component */
         public instances: Atom<number>,
         /** The max number of instance for this component */
-        public maxInstances = 1,
+        public maxInstances = 10,
         /** Properties of FlexLayout tab, omitting ones that are set automatically */
         public additionalProps: Omit<ITabAttributes, "name" | "component" | "config">,
         /** The function producing properties for the component */
@@ -108,7 +108,7 @@ export default <T extends object>(
         component,
         new Atom(_available, `${title}_available`),
         new Atom(0, `${title}_instances`),
-        options.maxInstances ?? 1,
+        options.maxInstances ?? 10,
         options.additionalProps,
         options.dataProvider,
     );

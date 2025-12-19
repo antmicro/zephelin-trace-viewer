@@ -56,7 +56,13 @@ export class TilingComponent<T> {
     calculateData(groupName?: string) {
         if (!this.dataProvider) {return;}
 
+        const groupNames = getGroupNames();
+
+        if (!this.targetGroupName && groupNames.length > 0) {
+            this.targetGroupName = groupNames[0];
+        }
         const name = groupName ?? this.targetGroupName;
+
         this.data = this.dataProvider(name) ?? undefined;
         this.available.set(Boolean(this.data));
     }
@@ -80,6 +86,7 @@ export class TilingComponent<T> {
     setTargetGroup(groupName: string) {
         this.targetGroupName = groupName;
         this.calculateData(groupName);
+
     }
 }
 

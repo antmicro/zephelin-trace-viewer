@@ -6,12 +6,12 @@
  */
 
 
-import { metadataAtom } from "@speedscope/app-state";
+import { getMetadataForGroup  } from "@speedscope/app-state/utils";
 import { CPULoadEventName, CPULoadEventType, MetadataCPULoadType } from "../event-types";
 
 /** Provides CPU load plot data */
-export function getCPULoadData(): {fullData: CPULoadEventType[]} | undefined {
-    const metadata = metadataAtom.get() as ((MetadataCPULoadType)[] | null);
+export function getCPULoadData(groupName: string): {fullData: CPULoadEventType[]} | undefined {
+    const metadata = getMetadataForGroup(groupName) as MetadataCPULoadType[];
     const fullData = (metadata ?? []).filter((v) => v.name === CPULoadEventName).map((value) => {
         return {
             ts: +value.ts.toFixed(3),

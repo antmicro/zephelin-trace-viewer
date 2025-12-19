@@ -14,12 +14,15 @@ import { loadingAtom } from "@speedscope/app-state";
 import { Atom } from "@speedscope/lib/atom";
 import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
+import { getGroupNames } from "@speedscope/app-state/utils";
 
 
 export class TilingComponent<T> {
 
     /** The data used to initialize the component, calculated one when the trace is loaded */
     private data?: T | undefined = undefined;
+
+    public targetGroupName = "";
 
     constructor(
         /** The title (unique for component type) of tile where the component is displayed */
@@ -35,7 +38,7 @@ export class TilingComponent<T> {
         /** Properties of FlexLayout tab, omitting ones that are set automatically */
         public additionalProps: Omit<ITabAttributes, "name" | "component" | "config">,
         /** The function producing properties for the component */
-        public dataProvider?: () => (T | undefined | null),
+        public dataProvider?: (groupName: string) => (T | undefined | null),
     ) {}
 
     /** Increases the number of the component's instances */
@@ -50,9 +53,11 @@ export class TilingComponent<T> {
     /**
      * Calculates new data (if dataProvider is available) and sets availability accordingly.
      */
-    calculateData() {
+    calculateData(groupName?: string) {
         if (!this.dataProvider) {return;}
-        this.data = this.dataProvider() ?? undefined;
+
+        const name = groupName ?? this.targetGroupName;
+        this.data = this.dataProvider(name) ?? undefined;
         this.available.set(Boolean(this.data));
     }
 
@@ -69,6 +74,13 @@ export class TilingComponent<T> {
         };
     }
 
+    /**
+     * Set the target group for the component.
+     */
+    setTargetGroup(groupName: string) {
+        this.targetGroupName = groupName;
+        this.calculateData(groupName);
+    }
 }
 
 /** The object storing all registered components */

@@ -10,7 +10,7 @@
  * The module with utilities for metadata memory management.
  */
 
-import { metadataAtom } from '@speedscope/app-state';
+import { getMetadataForGroup } from '@speedscope/app-state/utils';
 import { MemoryEventName, MemoryEventType, MemoryMetadataEvents, MemoryStatMemEventName, MemorySymbolsEventName, ThreadNameEventName } from '@/event-types';
 import { MemoryPanelProps } from '@/info-panel/memory-panel';
 
@@ -150,8 +150,8 @@ export function memoryRegionName(
 };
 
 
-export function getMemoryData(): MemoryPanelProps | undefined {
-    const metadata = metadataAtom.get() as ((MemoryMetadataEvents)[] | null);
+export function getMemoryData(groupName: string): MemoryPanelProps | undefined {
+    const metadata = getMetadataForGroup(groupName) as MemoryMetadataEvents[];
     const fullData = (metadata ?? []).filter((v) => v.name === MemoryEventName).map((value) => {
         return {
             name: value.name,

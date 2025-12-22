@@ -17,6 +17,7 @@ import MemoryUsageGraph from './memory-usage';
 import { MemoryEventType } from '@/event-types';
 import { MemoryPlotData, memoryRegionName, getMemoryData } from '@/utils/memory';
 import { TotalMemoryPlotProps } from '@/plots/memory-plot';
+import { TilingComponent } from '@/utils/tiling-component';
 
 
 /**
@@ -29,6 +30,10 @@ export interface CommonPlotProps extends Omit<TotalMemoryPlotProps, "onZoomEnd" 
     memoryRegionName: (addr: number, withAddr?: boolean, ramPercentage?: boolean) => string,
     /** The mapping of address to memory properties */
     addrToProps: Record<number, {range?: [number, number], threadName?: string, symbol?: string, ramPercent?: number, region?: string}>,
+    /** Reference to the tilingComponent instance */
+    tilingComponent?: TilingComponent<CommonPlotProps>,
+    /** Name of the selected group */
+    selectedGroup?: string,
 }
 
 export interface MemoryPanelProps {
@@ -48,23 +53,26 @@ export interface MemoryPanelProps {
     readonly totalMemory: number,
 }
 
-let CURRENT_MERADATA: Metadata[] | null = null;
-let CALCULATED_DATA: CommonPlotProps | undefined | null = null;
+let CURRENT_GLOBAL_METADATA: Metadata[] | null = null;
+let GROUP_CACHE: Record<string, CommonPlotProps | undefined> = {};
 
 /** Calculates data for memory plots and caches the results */
-export function dataProvider(): CommonPlotProps | undefined {
-    if (CALCULATED_DATA !== null && CURRENT_MERADATA !== null) {
-        if (metadataAtom.get() === CURRENT_MERADATA) {
-            console.debug("Returning cached data for memory plots");
-            return CALCULATED_DATA;
-        }
-    }
-    CURRENT_MERADATA = metadataAtom.get();
+export function dataProvider(groupName: string): CommonPlotProps | undefined {
+    const globalMetadata = metadataAtom.get();
 
-    const memoryData = getMemoryData();
+    if (globalMetadata !== CURRENT_GLOBAL_METADATA) {
+        CURRENT_GLOBAL_METADATA = globalMetadata;
+        GROUP_CACHE = {};
+    }
+
+    if (groupName in GROUP_CACHE) {
+        return GROUP_CACHE[groupName];
+    }
+
+    const memoryData = getMemoryData(groupName);
     if (!memoryData) {
-        CALCULATED_DATA = undefined;
-        return CALCULATED_DATA;
+        GROUP_CACHE[groupName] = undefined;
+        return undefined;
     }
 
     const {fullData, plotData, threadNameData, memorySymbols, addrToRange, staticallyAssignedMem, totalMemory} = memoryData;
@@ -83,7 +91,7 @@ export function dataProvider(): CommonPlotProps | undefined {
         };
     });
 
-    CALCULATED_DATA = {
+    const result: CommonPlotProps = {
         data: fullData,
         plotData,
         assignedMemory: staticallyAssignedMem,
@@ -91,8 +99,10 @@ export function dataProvider(): CommonPlotProps | undefined {
         totalMemory,
         addrToRange,
         memoryRegionName: memNameFunc,
+        selectedGroup: groupName,
     };
-    return CALCULATED_DATA;
+    GROUP_CACHE[groupName] = result;
+    return result;
 }
 
 

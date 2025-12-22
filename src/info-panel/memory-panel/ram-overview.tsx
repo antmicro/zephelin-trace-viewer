@@ -50,10 +50,17 @@ const ZoomButton = memo((props: ZoomButton) => {
 /**
  * The component with plot representing RAM and button to zoom on the selected region.
  */
-const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName }: CommonPlotProps) => {
+const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName, tilingComponent, selectedGroup }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
+    const activeGroupName = selectedGroup ?? tilingComponent?.targetGroupName;
+
+    const isValid = (name: string) => {
+        return !!tilingComponent?.dataProvider?.(name);
+    };
+
+    if (!tilingComponent) {return null;}
     if (assignedMemory === 0) { console.info("Size of statically assigned memory is missing"); }
 
     const zoomOn = (addr: number) => {
@@ -77,9 +84,12 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
     };
 
     return (
-        <PanelTemplate>
+        <PanelTemplate
+            selectedGroupName={activeGroupName}
+            isValidGroup={isValid}
+            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
             <div className={styles['ram-overview-content']}>
-                <TotalMemoryPlot ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} {...useTimestampCallbacks(plotRef)} />
+                <TotalMemoryPlot key={activeGroupName} ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} {...useTimestampCallbacks(plotRef)} />
                 <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
                     <ZoomButton
                         name="whole graph" percent={100}
@@ -109,7 +119,7 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
 
 
 export default tilingComponent(RAMOverview, "RAM Overview", {
-    dataProvider: dataProvider,
+    dataProvider: (groupName: string) => dataProvider(groupName),
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,
         minHeight: 460,

@@ -36,8 +36,13 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
 /**
  * Memory usage (in percent) plot with legend.
  */
-function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName }: CommonPlotProps): JSX.Element |undefined {
+function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName, tilingComponent, selectedGroup }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
+
+    const activeGroupName = selectedGroup ?? tilingComponent?.targetGroupName;
+    const isValid = (name: string) => {
+        return !!tilingComponent?.dataProvider?.(name);
+    };
     const plotLegendRef = useRef<HTMLDivElement | null>(null);
     const [legendEntries, setLegendEntries] = useState<JSX.Element[]>();
 
@@ -61,10 +66,13 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
     }, [plotRef]);
 
     return (
-        <PanelTemplate>
+        <PanelTemplate
+            selectedGroupName={activeGroupName}
+            isValidGroup={isValid}
+            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
             <div className={styles['memory-usage-content']}>
                 {/* Skip first two elements of plotData used for area plot (RAM overview) */}
-                <MemoryUsagePlot ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} {...useTimestampCallbacks(plotRef)} />
+                <MemoryUsagePlot key={activeGroupName} ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} {...useTimestampCallbacks(plotRef)} />
                 <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
                     {legendEntries}
                 </div>
@@ -75,7 +83,7 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
 
 
 export default tilingComponent(MemoryUsageGraph, "Memory usage", {
-    dataProvider: dataProvider,
+    dataProvider: (groupName: string) => dataProvider(groupName),
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,
         minHeight: 200,

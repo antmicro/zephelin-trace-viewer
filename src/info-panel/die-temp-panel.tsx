@@ -31,6 +31,9 @@ const DieTempPanel = memo(({fullData, tilingComponent, selectedGroup}: DieTempPa
     const plotRef = useRef<DieTempPlot>(null);
 
     const activeGrupName = selectedGroup ?? tilingComponent.targetGroupName;
+    const isValid = (name: string) => {
+        return !!tilingComponent?.dataProvider?.(name);
+    };
 
     if (!tilingComponent) {
         console.info("Tiling Component is not available");
@@ -39,6 +42,7 @@ const DieTempPanel = memo(({fullData, tilingComponent, selectedGroup}: DieTempPa
     return (
         <PanelTemplate
             selectedGroupName={activeGrupName}
+            isValidGroup={isValid}
             onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
             <DieTempPlot
                 key={tilingComponent.targetGroupName}

@@ -23,6 +23,8 @@ interface PanelTemplateProps {
     selectedGroupName? : string,
     /** Callback when different group is chosen */
     onGroupChange?: (name: string) => void,
+    /** Function to check if a group has a data for this panel */
+    isValidGroup?: (name: string) => boolean,
 }
 
 /** The basic panel template */
@@ -31,8 +33,12 @@ export default function PanelTemplate({
     additionalContentClass,
     selectedGroupName,
     onGroupChange,
+    isValidGroup,
 }: PanelTemplateProps) {
-    const groupNames = getGroupNames();
+    let groupNames = getGroupNames();
+    if (isValidGroup) {
+        groupNames = groupNames.filter(name => isValidGroup(name));
+    }
 
     return (
         <div className={styles["panel-element"]}>

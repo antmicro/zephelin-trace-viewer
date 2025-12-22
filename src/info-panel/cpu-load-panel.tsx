@@ -32,6 +32,9 @@ const CPULoadPanel = memo(({fullData, tilingComponent, selectedGroup}: CPULoadPa
     const plotRef = useRef<CPULoadPlot>(null);
 
     const activeGroupName = selectedGroup ?? tilingComponent.targetGroupName;
+    const isValid = (name: string) => {
+        return !!tilingComponent?.dataProvider?.(name);
+    };
 
     if (!tilingComponent) {
         console.info("Tiling Component is not available");
@@ -40,6 +43,7 @@ const CPULoadPanel = memo(({fullData, tilingComponent, selectedGroup}: CPULoadPa
     return (
         <PanelTemplate
             selectedGroupName={activeGroupName}
+            isValidGroup={isValid}
             onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
             <CPULoadPlot
                 key={tilingComponent.targetGroupName}

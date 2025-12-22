@@ -77,7 +77,7 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragD
         e.preventDefault();
         e.stopImmediatePropagation();
     };
-    const drop = (e: DragEvent) => {
+    const drop = async (e: DragEvent) => {
         if (onDropStart) {onDropStart();}
         unsetDrag();
         e.preventDefault();
@@ -87,8 +87,14 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragD
             console.warn("Speedscope reference is not available - trace cannot be loaded");
             return;
         }
-        appRef.current.loadDropFile(e);
-        if (onDropEnd) {onDropEnd();}
+        try {
+            await appRef.current.loadDropFile(e);
+        } catch (err) {
+            console.error("Trace load failed:", err);
+        } finally {
+            if (onDropEnd) { onDropEnd(); }
+        }
+
     };
 
     return (
@@ -97,7 +103,7 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragD
             className={style['layout-container']} ref={ref}
             style={enabled ? {} : {pointerEvents: "none"}}
             onDragOver={dragOver}
-            onDrop={drop}
+            onDrop={(e) => {drop(e).catch(er => console.error(er));}}
             onDragLeave={dragLeave}
         >
             {children}

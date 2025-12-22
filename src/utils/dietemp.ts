@@ -6,12 +6,12 @@
  */
 
 
-import { metadataAtom } from "@speedscope/app-state";
+import { getMetadataForGroup } from "@speedscope/app-state/utils";
 import { TempEventName, TempEventType, MetadataTempType } from "../event-types";
 
 /** Provides temperature plot data */
-export function getDieTempData() {
-    const metadata = metadataAtom.get() as ((MetadataTempType)[] | null);
+export function getDieTempData(groupName: string): { fullData: TempEventType[][] } | undefined {
+    const metadata = getMetadataForGroup(groupName) as MetadataTempType[];
 
     const dataMap = new Map<number,TempEventType[]>();
 
@@ -33,7 +33,7 @@ export function getDieTempData() {
         });
     });
 
-    if(dataMap.size === 0) {return;}
+    if(dataMap.size === 0) {return undefined;}
 
     // Delete sensor values if all of them are equal to null
     dataMap.forEach((data, k) => {

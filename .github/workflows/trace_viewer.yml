@@ -35,6 +35,8 @@ jobs:
           yarn
       - name: Build Zephelin Trace Viewer
         run: yarn build
+      - name: Build Zephelin Trace Viewer in single-html mode
+        run: yarn build-singlefile --outDir dist/single-html
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

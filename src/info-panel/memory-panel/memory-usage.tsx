@@ -36,10 +36,29 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
 /**
  * Memory usage (in percent) plot with legend.
  */
-function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName, tilingComponent, selectedGroup }: CommonPlotProps): JSX.Element |undefined {
+function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName, tilingComponent }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
 
-    const activeGroupName = selectedGroup ?? tilingComponent?.targetGroupName;
+    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
+    const [displayDataSt, setDisplayDataSt] = useState({
+        data: data,
+        plotData: plotData,
+        assignedMemory: assignedMemory,
+        addrToRange: addrToRange,
+        memoryRegionName: memoryRegionName,
+    });
+
+    useEffect(() => {
+        const newData = tilingComponent?.dataProvider?.(activeGroupNameSt ?? "");
+        if (newData) {
+            setDisplayDataSt({ ...newData });}
+    }, [activeGroupNameSt, tilingComponent]);
+
+    const handleGroupChange = (name: string) => {
+        setActiveGroupNameSt(name);
+        tilingComponent?.setTargetGroup(name);
+    };
+
     const isValid = (name: string) => {
         return !!tilingComponent?.dataProvider?.(name);
     };
@@ -67,13 +86,20 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
 
     return (
         <PanelTemplate
-            selectedGroupName={activeGroupName}
+            selectedGroupName={activeGroupNameSt}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent?.setTargetGroup(name)}
+            onGroupChange={handleGroupChange}
             allowGroupSelection={true}>
             <div className={styles['memory-usage-content']}>
                 {/* Skip first two elements of plotData used for area plot (RAM overview) */}
-                <MemoryUsagePlot key={activeGroupName} ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} {...useTimestampCallbacks(plotRef)} />
+                <MemoryUsagePlot
+                    key={activeGroupNameSt}
+                    ref={plotRef}
+                    plotData={displayDataSt.plotData.slice(2)}
+                    addrToRange={displayDataSt.addrToRange}
+                    assignedMemory={displayDataSt.assignedMemory}
+                    memoryNameFunc={displayDataSt.memoryRegionName}
+                    {...useTimestampCallbacks(plotRef)} />
                 <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
                     {legendEntries}
                 </div>

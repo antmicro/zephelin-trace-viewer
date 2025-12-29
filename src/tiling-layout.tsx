@@ -164,10 +164,6 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         });
     };
 
-    interface NodeConfig extends Record<string, unknown> {
-        selectedGroup?: string;
-    }
-
     /** Factory creating new tiles based on a node definition */
     const factory = (node: TabNode): ComponentChild => {
         const component = node.getComponent();
@@ -184,27 +180,13 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             return;
         }
 
+
+        /**
+         * This shallow copy ensures that tilingComponent is not reused across multiple panels,
+         *  without it panels of the same type would coupled.
+         */
         const proto = Object.getPrototypeOf(template) as object;
         const tilingComponent = Object.assign(Object.create(proto), template) as TilingComponent<unknown>;
-
-        const currentConfig = (node.getConfig() ?? {}) as NodeConfig;
-        if (currentConfig?.selectedGroup) {
-            tilingComponent.targetGroupName = currentConfig.selectedGroup;
-        }
-
-        tilingComponent.onDataUpdate = () => {
-            const currentGroup = tilingComponent.targetGroupName;
-            const newData = tilingComponent.dataProvider?.(currentGroup);
-            console.log(currentGroup);
-            model.doAction(Actions.updateNodeAttributes(node.getId(), {
-                config: {
-                    ...(newData ?? { fullData: [] }) as Record<string, unknown>,
-                    selectedGroup: currentGroup,
-                },
-            }));
-
-            ref.current?.forceUpdate();
-        };
 
         node.setEventListener('visibility', () => {
             if (node.isVisible()) {

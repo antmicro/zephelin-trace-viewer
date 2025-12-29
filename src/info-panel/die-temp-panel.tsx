@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useRef } from "preact/compat";
+import { memo, useEffect, useRef, useState } from "preact/compat";
 import PanelTemplate from "./common";
 import { getDieTempData } from "@/utils/dietemp";
 import { DieTempPlot } from "@/plots/temp-plot";
@@ -19,18 +19,30 @@ export interface DieTempPanelProps {
     fullData: TempEventType[][],
     /** Reference to the tilingComponent instance */
     tilingComponent: TilingComponent<DieTempPanelProps>,
-    /** Name of the selected group */
-    selectedGroup?: string,
 }
 
 /**
  * The panel with Die temperatures plot,
  * it's created directly from the tiling layout only when metadata changes.
  */
-const DieTempPanel = memo(({fullData, tilingComponent, selectedGroup}: DieTempPanelProps) => {
+const DieTempPanel = memo(({fullData: initialData, tilingComponent}: DieTempPanelProps) => {
     const plotRef = useRef<DieTempPlot>(null);
 
-    const activeGrupName = selectedGroup ?? tilingComponent.targetGroupName;
+    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+    const [displayDataSt, setDisplayDataSt] = useState(initialData);
+
+    useEffect(() => {
+        const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
+        if (newData) {
+            setDisplayDataSt(newData.fullData ?? {});
+        }
+    }, [activeGroupNameSt, tilingComponent]);
+
+    const handleGroupChange = (name: string) => {
+        setActiveGroupNameSt(name);
+        tilingComponent.setTargetGroup(name);
+    };
+
     const isValid = (name: string) => {
         return !!tilingComponent?.dataProvider?.(name);
     };
@@ -41,14 +53,14 @@ const DieTempPanel = memo(({fullData, tilingComponent, selectedGroup}: DieTempPa
     }
     return (
         <PanelTemplate
-            selectedGroupName={activeGrupName}
+            selectedGroupName={activeGroupNameSt}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            onGroupChange={handleGroupChange}
             allowGroupSelection={true}>
             <DieTempPlot
-                key={tilingComponent.targetGroupName}
+                key={activeGroupNameSt}
                 ref={plotRef}
-                plotData={fullData}
+                plotData={displayDataSt}
                 {...useTimestampCallbacks(plotRef)} />
         </PanelTemplate>
     );

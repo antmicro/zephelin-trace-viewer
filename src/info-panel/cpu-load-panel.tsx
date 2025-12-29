@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useRef } from "preact/compat";
+import { memo, useRef, useState, useEffect } from "preact/compat";
 
 import PanelTemplate from "./common";
 import { getCPULoadData } from "@/utils/cpuload";
@@ -20,18 +20,30 @@ export interface CPULoadPanelProps {
     fullData: CPULoadEventType[],
     /** Reference to the tilingComponent instance */
     tilingComponent: TilingComponent<CPULoadPanelProps>,
-    /** Name of the selected group */
-    selectedGroup?: string,
 }
 
 /**
  * The panel with CPU usage plot,
  * it's created directly from the tiling layout only when metadata changes.
  */
-const CPULoadPanel = memo(({fullData, tilingComponent, selectedGroup}: CPULoadPanelProps) => {
+const CPULoadPanel = memo(({fullData: initialData, tilingComponent}: CPULoadPanelProps) => {
     const plotRef = useRef<CPULoadPlot>(null);
 
-    const activeGroupName = selectedGroup ?? tilingComponent.targetGroupName;
+    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+    const [displayDataSt, setDisplayDataSt] = useState(initialData);
+
+    useEffect(() => {
+        const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
+        if (newData) {
+            setDisplayDataSt(newData.fullData ?? []);
+        }
+    }, [activeGroupNameSt, tilingComponent]);
+
+    const handleGroupChange = (name: string) => {
+        setActiveGroupNameSt(name);
+        tilingComponent.setTargetGroup(name);
+    };
+
     const isValid = (name: string) => {
         return !!tilingComponent?.dataProvider?.(name);
     };
@@ -42,14 +54,14 @@ const CPULoadPanel = memo(({fullData, tilingComponent, selectedGroup}: CPULoadPa
     }
     return (
         <PanelTemplate
-            selectedGroupName={activeGroupName}
+            selectedGroupName={activeGroupNameSt}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            onGroupChange={handleGroupChange}
             allowGroupSelection={true}>
             <CPULoadPlot
-                key={tilingComponent.targetGroupName}
+                key={activeGroupNameSt}
                 ref={plotRef}
-                plotData={[fullData]}
+                plotData={[displayDataSt]}
                 {...useTimestampCallbacks(plotRef)} />
         </PanelTemplate>
     );

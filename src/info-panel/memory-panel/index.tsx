@@ -32,8 +32,6 @@ export interface CommonPlotProps extends Omit<TotalMemoryPlotProps, "onZoomEnd" 
     addrToProps: Record<number, {range?: [number, number], threadName?: string, symbol?: string, ramPercent?: number, region?: string}>,
     /** Reference to the tilingComponent instance */
     tilingComponent?: TilingComponent<CommonPlotProps>,
-    /** Name of the selected group */
-    selectedGroup?: string,
 }
 
 export interface MemoryPanelProps {
@@ -99,7 +97,6 @@ export function dataProvider(groupName: string): CommonPlotProps | undefined {
         totalMemory,
         addrToRange,
         memoryRegionName: memNameFunc,
-        selectedGroup: groupName,
     };
     GROUP_CACHE[groupName] = result;
     return result;

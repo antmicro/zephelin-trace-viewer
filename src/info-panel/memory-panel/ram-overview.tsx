@@ -11,7 +11,7 @@
  */
 
 import { memo, RefObject } from "preact/compat";
-import { useRef } from "preact/hooks";
+import { useRef, useState, useEffect } from "preact/hooks";
 
 import styles from '@styles/memory-panel.module.scss';
 import PanelTemplate from "../common";
@@ -50,11 +50,30 @@ const ZoomButton = memo((props: ZoomButton) => {
 /**
  * The component with plot representing RAM and button to zoom on the selected region.
  */
-const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName, tilingComponent, selectedGroup }: CommonPlotProps) => {
+const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName, tilingComponent }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
-    const activeGroupName = selectedGroup ?? tilingComponent?.targetGroupName;
+    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
+    const [displayDataSt, setDisplayDataSt] = useState({
+        plotData: plotData,
+        assignedMemory: assignedMemory,
+        addrToRange: addrToRange,
+        totalMemory: totalMemory,
+        memoryRegionName: memoryRegionName,
+    });
+
+
+    useEffect(() => {
+        const newData = tilingComponent?.dataProvider?.(activeGroupNameSt ?? "");
+        if (newData) {
+            setDisplayDataSt({ ...newData });}
+    }, [activeGroupNameSt, tilingComponent]);
+
+    const handleGroupChange = (name: string) => {
+        setActiveGroupNameSt(name);
+        tilingComponent?.setTargetGroup(name);
+    };
 
     const isValid = (name: string) => {
         return !!tilingComponent?.dataProvider?.(name);
@@ -85,12 +104,21 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
 
     return (
         <PanelTemplate
-            selectedGroupName={activeGroupName}
+            selectedGroupName={activeGroupNameSt}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            onGroupChange={handleGroupChange}
             allowGroupSelection={true}>
             <div className={styles['ram-overview-content']}>
-                <TotalMemoryPlot key={activeGroupName} ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} {...useTimestampCallbacks(plotRef)} />
+                <TotalMemoryPlot
+                    key={activeGroupNameSt}
+                    ref={plotRef}
+                    plotData={displayDataSt.plotData}
+                    addrToRange={displayDataSt.addrToRange}
+                    assignedMemory={displayDataSt.assignedMemory}
+                    totalMemory={displayDataSt.totalMemory}
+                    memoryNameFunc={displayDataSt.memoryRegionName}
+                    onZoomEnd={() => resetSelectedButton()}
+                    {...useTimestampCallbacks(plotRef)} />
                 <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
                     <ZoomButton
                         name="whole graph" percent={100}

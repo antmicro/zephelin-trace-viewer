@@ -25,6 +25,8 @@ interface PanelTemplateProps {
     onGroupChange?: (name: string) => void,
     /** Function to check if a group has a data for this panel */
     isValidGroup?: (name: string) => boolean,
+    /** Toggle the panel header */
+    allowGroupSelection?: boolean,
 }
 
 /** The basic panel template */
@@ -34,36 +36,40 @@ export default function PanelTemplate({
     selectedGroupName,
     onGroupChange,
     isValidGroup,
+    allowGroupSelection = false,
 }: PanelTemplateProps) {
     let groupNames = getGroupNames();
     if (isValidGroup) {
         groupNames = groupNames.filter(name => isValidGroup(name));
     }
 
+    const showHeader = allowGroupSelection && groupNames.length > 1;
+
     return (
         <div className={styles["panel-element"]}>
-            <div className={styles["panel-header"]}>
-                <label htmlFor="group-select">Source:</label>
-                <select
-                    id="group-select"
-                    value={selectedGroupName}
-                    onChange={(e) => {
-                        const selectedGroup = (e.target as HTMLSelectElement).value;
-                        if (onGroupChange) {onGroupChange(selectedGroup);}
-                    }}
-                >
-                    {groupNames.length > 0 ? (
-                        groupNames.map((name) => (
-                            <option key={name} value={name}>
-                                {name}
-                            </option>
-                        ))
-                    ) : (
-                        <option value="">No Groups Available</option>
-                    )}
-                </select>
-            </div>
-
+            {showHeader && (
+                <div className={styles["panel-header"]}>
+                    <label htmlFor="group-select">Source:</label>
+                    <select
+                        id="group-select"
+                        value={selectedGroupName}
+                        onChange={(e) => {
+                            const selectedGroup = (e.target as HTMLSelectElement).value;
+                            if (onGroupChange) {onGroupChange(selectedGroup);}
+                        }}
+                    >
+                        {groupNames.length > 0 ? (
+                            groupNames.map((name) => (
+                                <option key={name} value={name}>
+                                    {name}
+                                </option>
+                            ))
+                        ) : (
+                            <option value="">No Groups Available</option>
+                        )}
+                    </select>
+                </div>
+            )}
             <div className={styles["section-content"] + ` ${additionalContentClass ?? ''}`}>
                 {children}
             </div>

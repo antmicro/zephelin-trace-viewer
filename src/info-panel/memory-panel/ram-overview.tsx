@@ -87,7 +87,8 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
         <PanelTemplate
             selectedGroupName={activeGroupName}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
+            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            allowGroupSelection={true}>
             <div className={styles['ram-overview-content']}>
                 <TotalMemoryPlot key={activeGroupName} ref={plotRef} plotData={plotData} addrToRange={addrToRange} assignedMemory={assignedMemory} totalMemory={totalMemory} memoryNameFunc={memoryRegionName} onZoomEnd={() => resetSelectedButton()} {...useTimestampCallbacks(plotRef)} />
                 <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>

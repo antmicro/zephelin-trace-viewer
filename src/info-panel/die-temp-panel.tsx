@@ -43,7 +43,8 @@ const DieTempPanel = memo(({fullData, tilingComponent, selectedGroup}: DieTempPa
         <PanelTemplate
             selectedGroupName={activeGrupName}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
+            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            allowGroupSelection={true}>
             <DieTempPlot
                 key={tilingComponent.targetGroupName}
                 ref={plotRef}

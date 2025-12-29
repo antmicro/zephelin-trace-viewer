@@ -69,7 +69,8 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
         <PanelTemplate
             selectedGroupName={activeGroupName}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
+            onGroupChange={(name) => tilingComponent?.setTargetGroup(name)}
+            allowGroupSelection={true}>
             <div className={styles['memory-usage-content']}>
                 {/* Skip first two elements of plotData used for area plot (RAM overview) */}
                 <MemoryUsagePlot key={activeGroupName} ref={plotRef} plotData={plotData.slice(2)} addrToRange={addrToRange} assignedMemory={assignedMemory} memoryNameFunc={memoryRegionName} {...useTimestampCallbacks(plotRef)} />

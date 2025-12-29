@@ -44,7 +44,8 @@ const CPULoadPanel = memo(({fullData, tilingComponent, selectedGroup}: CPULoadPa
         <PanelTemplate
             selectedGroupName={activeGroupName}
             isValidGroup={isValid}
-            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}>
+            onGroupChange={(name) => tilingComponent.setTargetGroup(name)}
+            allowGroupSelection={true}>
             <CPULoadPlot
                 key={tilingComponent.targetGroupName}
                 ref={plotRef}

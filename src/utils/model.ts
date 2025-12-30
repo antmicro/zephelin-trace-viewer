@@ -97,8 +97,8 @@ export function getOpExecutionData(groupName: string): { plotData: OpExecutionDa
 
 }
 
-export function getOpTypeExecutionData(): { plotData: OpExecutionData[][] } | null {
-    const opExecutionTimes = getOpExecutionTimes();
+export function getOpTypeExecutionData(groupName: string): { plotData: OpExecutionData[][] } | null {
+    const opExecutionTimes = getOpExecutionTimes(groupName);
     if (!opExecutionTimes) {return null;}
 
     const plotData = Array.from(opExecutionTimes.entries())

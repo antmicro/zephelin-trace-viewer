@@ -9,6 +9,7 @@
 import { CallTreeNode, FrameInfo } from "@speedscope/lib/profile";
 import { metadataAtom, profileGroupAtom } from "@speedscope/app-state";
 import { Metadata } from "@speedscope/app-state/profile-group";
+import { getProfilesForGroup } from "@speedscope/app-state/utils";
 import { FrameInfoT, InferenceEventName, InferenceModelArgs, MetadataModelType, ModelEventArgs, ModelEventName, ModelIOType, ModelTensorType, OpExecutionData, OpSizeData } from "@/event-types";
 
 
@@ -45,20 +46,24 @@ export function normalizeOpName(name: string) {
     return name.replace(MODEL_EVENT_PREFIX_REGEX, opNameReplacer);
 }
 
-function getCallTreeNodes() {
-    const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
+function getCallTreeNodes(profile: Profile) {
     const callTreeNodes: CallTreeNode[] = [];
-    activeProfile?.forEachCall((callNode) => {callTreeNodes.push(callNode);}, () => {});
+    profile.forEachCall((callNode) => {
+        callTreeNodes.push(callNode);
+    }, () => {});
     return callTreeNodes;
 }
 
-function getOpExecutionTimes() {
-    const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
-    if (!activeProfile) { return null; };
+function getOpExecutionTimes(groupName: string) {
+    const profileWrappers = getProfilesForGroup(groupName);
+    if (!profileWrappers.length) {return null;}
 
     const opTypes = new Map<OpType, OpTypeExecutionTimes>();
-    getCallTreeNodes()?.forEach(
-        (callNode) => {
+
+    profileWrappers?.forEach((wrapper) => {
+        const nodes = getCallTreeNodes(wrapper.profile);
+
+        nodes.forEach((callNode) => {
             const { frame } = callNode;
             if (!isOpFrame(frame)) { return; }
             const { name, args: { begin: { tag: opType } } } = frame;
@@ -70,14 +75,14 @@ function getOpExecutionTimes() {
             if (!opTypeMapping.has(opInstance)) { opTypeMapping.set(opInstance, []); }
             const opInstancesDurations = opTypeMapping.get(opInstance)!;
             opInstancesDurations.push(duration);
-        },
-    );
+        }, () => {});
+    });
 
     return opTypes;
 }
 
-export function getOpExecutionData(): { plotData: OpExecutionData[][] } | null {
-    const opExecutionTimes = getOpExecutionTimes();
+export function getOpExecutionData(groupName: string): { plotData: OpExecutionData[][] } | null {
+    const opExecutionTimes = getOpExecutionTimes(groupName);
     if (!opExecutionTimes) {return null;}
 
     const plotData = Array.from(opExecutionTimes.values())

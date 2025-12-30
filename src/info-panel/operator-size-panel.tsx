@@ -11,25 +11,55 @@
  */
 
 import { Theme, useTheme } from '@speedscope/views/themes/theme';
-import { useRef } from 'preact/compat';
+import { useRef, useState } from 'preact/compat';
 import PanelTemplate from './common';
-import tilingComponent, { CSS_ENABLING_OVERFLOW } from '@/utils/tiling-component';
+import tilingComponent, { CSS_ENABLING_OVERFLOW, getTilingComponent, TilingComponent } from '@/utils/tiling-component';
 import { OpSizeData } from '@/event-types';
 import { useFrameCallbacks } from '@/utils/frame-provider';
 import { OpSizePlot } from '@/plots/operator-size-plot';
 import { BarPlotProps } from '@/plots/bar-plot';
 import { getOpSizeData } from '@/utils/model';
 
+
+export interface OpSizeProps {
+    /** The data for Op Size plot */
+    plotData: OpSizeData[][],
+    /** Reference to the tilingComponent instance */
+    tilingComponent: TilingComponent<OpSizeProps>
+}
+
 /** Panel with Operator Size plot */
-function OpSizePanel({ plotData }: { plotData: OpSizeData[][] }) {
+function OpSizePanel({ tilingComponent }: OpSizeProps) {
     const theme = useTheme();
     const plotRef = useRef<OpSizePlot<OpSizeData, BarPlotProps<OpSizeData> & { theme: Theme }>>(null);
 
+    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+
+    const newData = tilingComponent?.dataProvider?.(activeGroupNameSt);
+    const displayData = newData?.plotData ?? [];
+
+    const handleGroupChange = (name: string) => {
+        setActiveGroupNameSt(name);
+        tilingComponent.setTargetGroup(name);
+    };
+
+    const isValid = (name: string) => {
+        const component = getTilingComponent("OP Size");
+        return !!component?.dataProvider?.(name);
+    };
+
+    if (!tilingComponent) {return null;}
+
     return (
-        <PanelTemplate>
+        <PanelTemplate
+            selectedGroupName={activeGroupNameSt}
+            isValidGroup={isValid}
+            onGroupChange={handleGroupChange}
+            allowGroupSelection={true}>
             <OpSizePlot
+                key={activeGroupNameSt}
                 ref={plotRef}
-                plotData={plotData}
+                plotData={displayData}
                 orient='horizontal'
                 order='ascending'
                 theme={theme}
@@ -40,7 +70,7 @@ function OpSizePanel({ plotData }: { plotData: OpSizeData[][] }) {
 };
 
 export default tilingComponent(OpSizePanel, "OP Size", {
-    dataProvider: getOpSizeData,
+    dataProvider: (groupName: string) => getOpSizeData(groupName),
     additionalProps: {
         contentClassName: CSS_ENABLING_OVERFLOW,
         minHeight: 200,

@@ -6,10 +6,9 @@
  */
 
 
-import { CallTreeNode, FrameInfo } from "@speedscope/lib/profile";
-import { metadataAtom, profileGroupAtom } from "@speedscope/app-state";
+import { CallTreeNode, FrameInfo, Profile } from "@speedscope/lib/profile";
 import { Metadata } from "@speedscope/app-state/profile-group";
-import { getProfilesForGroup } from "@speedscope/app-state/utils";
+import { getMetadataForGroup, getProfilesForGroup } from "@speedscope/app-state/utils";
 import { FrameInfoT, InferenceEventName, InferenceModelArgs, MetadataModelType, ModelEventArgs, ModelEventName, ModelIOType, ModelTensorType, OpExecutionData, OpSizeData } from "@/event-types";
 
 
@@ -117,13 +116,17 @@ export function getOpTypeExecutionData(groupName: string): { plotData: OpExecuti
     return { plotData: [plotData] };
 }
 
-export function getOpSizeData(): { plotData: OpSizeData[][] } | null {
-    // Metadata
-    const metadata = metadataAtom.get();
+export function getOpSizeData(groupName: string): { plotData: OpSizeData[][] } | null {
+    const metadata = getMetadataForGroup(groupName);
     const modelsData = (metadata ?? []).filter(isModelMetadata).map((m) => m?.args);
     if (!modelsData.length) {return null;}
 
+    const profileWrappers = getProfilesForGroup(groupName);
+    if (!profileWrappers.length) {return null;}
+
     const plotData: OpSizeData[] = [];
+
+    const allGroupNodes = profileWrappers.flatMap(wrapper => getCallTreeNodes(wrapper.profile));
 
     modelsData.forEach((modelData) => {
         // Tensors
@@ -132,8 +135,12 @@ export function getOpSizeData(): { plotData: OpSizeData[][] } | null {
         if (!tensorsWithSize) {return null;}
 
         // Op instances
-        const opFrames = getCallTreeNodes()
-            .filter(({frame, parent}) => isOpFrame(frame) && (modelsData.length === 1 || (isInferenceFrame(parent?.frame) && parent?.frame.args?.begin?.model_id === modelData.id)))
+        const opFrames = allGroupNodes
+            .filter(({frame, parent}) =>
+                isOpFrame(frame) &&
+                (modelsData.length === 1 || (isInferenceFrame(parent?.frame)
+                && parent?.frame.args?.begin?.model_id === modelData.id)
+                ))
             .map(({frame}) => frame as FrameInfoT<ModelEventArgs>);
 
         // Substitute type names with instance names

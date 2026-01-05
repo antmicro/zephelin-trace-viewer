@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useEffect, useRef, useState } from "preact/compat";
+import { memo, useRef, useState } from "preact/compat";
 import PanelTemplate from "./common";
 import { getDieTempData } from "@/utils/dietemp";
 import { DieTempPlot } from "@/plots/temp-plot";
@@ -25,18 +25,13 @@ export interface DieTempPanelProps {
  * The panel with Die temperatures plot,
  * it's created directly from the tiling layout only when metadata changes.
  */
-const DieTempPanel = memo(({fullData: initialData, tilingComponent}: DieTempPanelProps) => {
+const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
     const plotRef = useRef<DieTempPlot>(null);
 
     const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
-    const [displayDataSt, setDisplayDataSt] = useState(initialData);
 
-    useEffect(() => {
-        const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
-        if (newData) {
-            setDisplayDataSt(newData.fullData ?? {});
-        }
-    }, [activeGroupNameSt, tilingComponent]);
+    const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
+    const displayData = newData?.fullData ?? [];
 
     const handleGroupChange = (name: string) => {
         setActiveGroupNameSt(name);
@@ -60,7 +55,7 @@ const DieTempPanel = memo(({fullData: initialData, tilingComponent}: DieTempPane
             <DieTempPlot
                 key={activeGroupNameSt}
                 ref={plotRef}
-                plotData={displayDataSt}
+                plotData={displayData}
                 {...useTimestampCallbacks(plotRef)} />
         </PanelTemplate>
     );

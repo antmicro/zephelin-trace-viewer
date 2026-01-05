@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useRef, useState, useEffect } from "preact/compat";
+import { memo, useRef, useState } from "preact/compat";
 
 import PanelTemplate from "./common";
 import { getCPULoadData } from "@/utils/cpuload";
@@ -26,18 +26,13 @@ export interface CPULoadPanelProps {
  * The panel with CPU usage plot,
  * it's created directly from the tiling layout only when metadata changes.
  */
-const CPULoadPanel = memo(({fullData: initialData, tilingComponent}: CPULoadPanelProps) => {
+const CPULoadPanel = memo(({tilingComponent}: CPULoadPanelProps) => {
     const plotRef = useRef<CPULoadPlot>(null);
 
     const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
-    const [displayDataSt, setDisplayDataSt] = useState(initialData);
 
-    useEffect(() => {
-        const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
-        if (newData) {
-            setDisplayDataSt(newData.fullData ?? []);
-        }
-    }, [activeGroupNameSt, tilingComponent]);
+    const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
+    const displayData = newData?.fullData ?? [];
 
     const handleGroupChange = (name: string) => {
         setActiveGroupNameSt(name);
@@ -61,7 +56,7 @@ const CPULoadPanel = memo(({fullData: initialData, tilingComponent}: CPULoadPane
             <CPULoadPlot
                 key={activeGroupNameSt}
                 ref={plotRef}
-                plotData={[displayDataSt]}
+                plotData={[displayData]}
                 {...useTimestampCallbacks(plotRef)} />
         </PanelTemplate>
     );

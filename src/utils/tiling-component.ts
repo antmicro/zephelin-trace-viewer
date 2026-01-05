@@ -85,7 +85,6 @@ export class TilingComponent<T> {
             type: "tab",
             name: this.title,
             component: this.title,
-            config: this.data,
             ...this.additionalProps,
         };
     }

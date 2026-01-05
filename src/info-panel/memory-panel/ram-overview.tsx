@@ -11,7 +11,7 @@
  */
 
 import { memo, RefObject } from "preact/compat";
-import { useRef, useState, useEffect } from "preact/hooks";
+import { useRef, useState, useMemo} from "preact/hooks";
 
 import styles from '@styles/memory-panel.module.scss';
 import PanelTemplate from "../common";
@@ -50,25 +50,21 @@ const ZoomButton = memo((props: ZoomButton) => {
 /**
  * The component with plot representing RAM and button to zoom on the selected region.
  */
-const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName, tilingComponent }: CommonPlotProps) => {
+const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
     const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
-    const [displayDataSt, setDisplayDataSt] = useState({
-        plotData: plotData,
-        assignedMemory: assignedMemory,
-        addrToRange: addrToRange,
-        totalMemory: totalMemory,
-        memoryRegionName: memoryRegionName,
-    });
 
+    const currentData = useMemo(() => {
+        return tilingComponent?.dataProvider?.(activeGroupNameSt ?? "") ?? null;
+    }, [tilingComponent, activeGroupNameSt]);
 
-    useEffect(() => {
-        const newData = tilingComponent?.dataProvider?.(activeGroupNameSt ?? "");
-        if (newData) {
-            setDisplayDataSt({ ...newData });}
-    }, [activeGroupNameSt, tilingComponent]);
+    if (!currentData || currentData.assignedMemory === -1) {
+        return;
+    }
+
+    const { assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName } = currentData;
 
     const handleGroupChange = (name: string) => {
         setActiveGroupNameSt(name);
@@ -112,11 +108,11 @@ const RAMOverview = memo(({ assignedMemory, addrToRange, addrToProps, plotData, 
                 <TotalMemoryPlot
                     key={activeGroupNameSt}
                     ref={plotRef}
-                    plotData={displayDataSt.plotData}
-                    addrToRange={displayDataSt.addrToRange}
-                    assignedMemory={displayDataSt.assignedMemory}
-                    totalMemory={displayDataSt.totalMemory}
-                    memoryNameFunc={displayDataSt.memoryRegionName}
+                    plotData={plotData}
+                    addrToRange={addrToRange}
+                    assignedMemory={assignedMemory}
+                    totalMemory={totalMemory}
+                    memoryNameFunc={memoryRegionName}
                     onZoomEnd={() => resetSelectedButton()}
                     {...useTimestampCallbacks(plotRef)} />
                 <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>

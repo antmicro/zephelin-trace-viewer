@@ -197,7 +197,6 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         return (
             <TilingPanel>
                 <ComponentType
-                    {...(node.getConfig() ?? {})}
                     tilingComponent={tilingComponent}
                 />
             </TilingPanel>

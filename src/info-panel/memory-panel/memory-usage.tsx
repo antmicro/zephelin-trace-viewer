@@ -13,7 +13,7 @@
 import { JSX } from "preact";
 
 import styles from '@styles/memory-panel.module.scss';
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState, useMemo } from "preact/hooks";
 import * as d3 from 'd3';
 import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
@@ -36,23 +36,19 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
 /**
  * Memory usage (in percent) plot with legend.
  */
-function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryRegionName, tilingComponent }: CommonPlotProps): JSX.Element |undefined {
+function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
-
     const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
-    const [displayDataSt, setDisplayDataSt] = useState({
-        data: data,
-        plotData: plotData,
-        assignedMemory: assignedMemory,
-        addrToRange: addrToRange,
-        memoryRegionName: memoryRegionName,
-    });
 
-    useEffect(() => {
-        const newData = tilingComponent?.dataProvider?.(activeGroupNameSt ?? "");
-        if (newData) {
-            setDisplayDataSt({ ...newData });}
-    }, [activeGroupNameSt, tilingComponent]);
+    const currentData = useMemo(() => {
+        return tilingComponent?.dataProvider?.(activeGroupNameSt ?? "") ?? null;
+    }, [tilingComponent, activeGroupNameSt]);
+
+    if (!currentData || currentData.assignedMemory === -1) {
+        return;
+    }
+
+    const { data, plotData, addrToRange, assignedMemory, memoryRegionName } = currentData;
 
     const handleGroupChange = (name: string) => {
         setActiveGroupNameSt(name);
@@ -95,10 +91,10 @@ function MemoryUsageGraph({ data, assignedMemory, addrToRange, plotData, memoryR
                 <MemoryUsagePlot
                     key={activeGroupNameSt}
                     ref={plotRef}
-                    plotData={displayDataSt.plotData.slice(2)}
-                    addrToRange={displayDataSt.addrToRange}
-                    assignedMemory={displayDataSt.assignedMemory}
-                    memoryNameFunc={displayDataSt.memoryRegionName}
+                    plotData={plotData.slice(2)}
+                    addrToRange={addrToRange}
+                    assignedMemory={assignedMemory}
+                    memoryNameFunc={memoryRegionName}
                     {...useTimestampCallbacks(plotRef)} />
                 <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
                     {legendEntries}

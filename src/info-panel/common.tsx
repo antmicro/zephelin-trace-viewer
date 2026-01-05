@@ -13,6 +13,7 @@
 import styles from "@styles/info-panel.module.scss";
 import { VNode } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
+import { useMemo } from "preact/hooks";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
@@ -45,6 +46,22 @@ export default function PanelTemplate({
 
     const showHeader = allowGroupSelection && groupNames.length > 1;
 
+    const getOptions = useMemo(() => {
+        if (!groupNames.length) {
+            return <option value="">No Groups Available</option>;
+        }
+        return groupNames.map((name) => (
+            <option key={name} value={name}>
+                {name}
+            </option>
+        ));
+    }, [groupNames]);
+
+    const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedGroup = (e.target as HTMLSelectElement).value;
+        if (onGroupChange) {onGroupChange(selectedGroup);}
+    };
+
     return (
         <div className={styles["panel-element"]}>
             {showHeader && (
@@ -53,20 +70,9 @@ export default function PanelTemplate({
                     <select
                         id="group-select"
                         value={selectedGroupName}
-                        onChange={(e) => {
-                            const selectedGroup = (e.target as HTMLSelectElement).value;
-                            if (onGroupChange) {onGroupChange(selectedGroup);}
-                        }}
+                        onChange={onChange}
                     >
-                        {groupNames.length > 0 ? (
-                            groupNames.map((name) => (
-                                <option key={name} value={name}>
-                                    {name}
-                                </option>
-                            ))
-                        ) : (
-                            <option value="">No Groups Available</option>
-                        )}
+                        {getOptions}
                     </select>
                 </div>
             )}

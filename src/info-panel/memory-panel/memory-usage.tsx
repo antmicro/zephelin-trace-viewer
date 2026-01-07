@@ -13,7 +13,7 @@
 import { JSX } from "preact";
 
 import styles from '@styles/memory-panel.module.scss';
-import { useEffect, useRef, useState, useMemo } from "preact/hooks";
+import { useRef, useState, useEffect } from "preact/hooks";
 import * as d3 from 'd3';
 import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
@@ -38,68 +38,60 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
  */
 function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
+    const [isPlotReadySt, setIsPlotReadySt] = useState(false);
 
-    const currentData = useMemo(() => {
-        return tilingComponent?.dataProvider?.(activeGroupNameSt ?? "") ?? null;
-    }, [tilingComponent, activeGroupNameSt]);
-
-    if (!currentData || currentData.assignedMemory === -1) {
-        return;
-    }
-
-    const { data, plotData, addrToRange, assignedMemory, memoryRegionName } = currentData;
-
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent?.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        return !!tilingComponent?.dataProvider?.(name);
-    };
-    const plotLegendRef = useRef<HTMLDivElement | null>(null);
-    const [legendEntries, setLegendEntries] = useState<JSX.Element[]>();
+    useEffect(() => {
+        if (plotRef.current) {
+            setIsPlotReadySt(true);
+        }
+    }, []);
 
     const getLegendColor = (idx: number) => {
-        const plot = plotRef.current;
-        const defaultColor = "#FFFFFF";
-        if (plot === undefined) {
-            return defaultColor;
-        }
-
-        const [r, g, b, _] = plot.getWebglColorByIdx(idx);
+        if (!plotRef.current) {return "#FFFFFF";}
+        const [r, g, b] = plotRef.current.getWebglColorByIdx(idx);
         return d3.rgb(r * 255, g * 255, b * 255, 1).formatHex();
     };
 
-    if (assignedMemory === -1) { return; }
+    const renderContent = (activeGroup: string) => {
+        const currentData = tilingComponent?.dataProvider?.(activeGroup);
 
-    const addresses = Array.from(new Set(data.map(v => v.memory_addr)).values()).sort();
+        if (!currentData || currentData.assignedMemory === -1) {
+            return null;
+        }
 
-    useEffect(() => {
-        setLegendEntries(addresses.map((v, i) => <p><LineMarker color={getLegendColor(i)} strokeWidth="1.5rem" /> {memoryRegionName(v, true, false)} </p>));
-    }, [plotRef]);
+        const { data, plotData, addrToRange, assignedMemory, memoryRegionName } = currentData;
 
-    return (
-        <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
+        const addresses = Array.from(new Set(data.map(v => v.memory_addr)).values()).sort();
+
+        return (
             <div className={styles['memory-usage-content']}>
-                {/* Skip first two elements of plotData used for area plot (RAM overview) */}
                 <MemoryUsagePlot
-                    key={activeGroupNameSt}
+                    key={activeGroup}
                     ref={plotRef}
                     plotData={plotData.slice(2)}
                     addrToRange={addrToRange}
                     assignedMemory={assignedMemory}
                     memoryNameFunc={memoryRegionName}
-                    {...useTimestampCallbacks(plotRef)} />
-                <div ref={plotLegendRef} className={styles['memory-usage-legend']}>
-                    {legendEntries}
+                    {...useTimestampCallbacks(plotRef)}
+                />
+                <div className={styles['memory-usage-legend']}>
+                    {isPlotReadySt && addresses.map((v, i) => (
+                        <p key={`${activeGroup}-${v}`}>
+                            <LineMarker color={getLegendColor(i)} strokeWidth="1.5rem" />
+                            {memoryRegionName(v, true, false)}
+                        </p>
+                    ))}
                 </div>
             </div>
+        );
+    };
+
+    return (
+        <PanelTemplate
+            tilingComponent={tilingComponent ?? null}
+            allowGroupSelection={true}
+        >
+            {renderContent}
         </PanelTemplate>
     );
 }

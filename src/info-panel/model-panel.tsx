@@ -20,6 +20,7 @@ import { FrameInfoT, MetadataModelArgs, ModelEventArgs } from '../event-types';
 import PanelTemplate from './common';
 import { GenericInfo } from './info-panel';
 import { isModelMetadata } from '@/utils/model';
+import { TilingComponent } from '@/utils/tiling-component';
 
 
 interface ModelInfoPanelProps {
@@ -27,6 +28,8 @@ interface ModelInfoPanelProps {
     frame?: FrameInfoT<ModelEventArgs>,
     /** Parent of the selected frame */
     parent?: FrameInfoT<{model_id: number}>,
+    /** Reference to the tilingComponent instance */
+    tilingComponent: TilingComponent<ModelInfoPanelProps>
 }
 
 
@@ -157,11 +160,16 @@ export default function ModelInfoPanel(props: ModelInfoPanelProps): JSX.Element 
         return <GenericInfo info="The event does not contain information to display" />;
     }
     return (
-        <PanelTemplate additionalContentClass={panelStyles['no-padding']}>
-            <div className={styles["model-event-section"]}>
-                {event}
-                {layer}
-            </div>
+        <PanelTemplate
+            tilingComponent={props.tilingComponent}
+            additionalContentClass={panelStyles['no-padding']}
+        >
+            { () => (
+                <div className={styles["model-event-section"]}>
+                    {event}
+                    {layer}
+                </div>
+            )}
         </PanelTemplate>
     );
 }

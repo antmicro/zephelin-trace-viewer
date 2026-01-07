@@ -10,9 +10,8 @@
  * The module with panel containing operator type execution time plot.
  */
 
-import { useState } from 'preact/compat';
 import PanelTemplate from './common';
-import tilingComponent, { CSS_ENABLING_OVERFLOW, getTilingComponent, TilingComponent } from '@/utils/tiling-component';
+import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { getOpTypeExecutionData } from '@/utils/model';
 import { OpExecutionData } from '@/event-types';
 import { OpExecutionTimePlot } from '@/plots/operator-execution-plot';
@@ -27,33 +26,25 @@ export interface OpTypeExecutionTimeProps {
 
 /** Panel with Operator Type Execution Time plot */
 function OpTypeExecutionTimePanel({ tilingComponent }: OpTypeExecutionTimeProps) {
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+    const renderPlot = (activeGroup: string) => {
+        const data = tilingComponent.dataProvider?.(activeGroup);
+        const displayData = data?.plotData ?? [];
 
-    const newData = tilingComponent?.dataProvider?.(activeGroupNameSt);
-    const displayData = newData?.plotData ?? [];
-
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        const component = getTilingComponent("OP Type Execution Time");
-        return !!component?.dataProvider?.(name);
-    };
-
-    if (!tilingComponent) {return null;}
-    return (
-        <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
+        return (
             <OpExecutionTimePlot
-                key={activeGroupNameSt}
+                key={activeGroup}
                 plotData={displayData}
                 orient='horizontal'
-                order='ascending' />
+                order='ascending'
+            />
+        );
+    };
+    return (
+        <PanelTemplate
+            tilingComponent={tilingComponent}
+            allowGroupSelection={true}
+        >
+            {renderPlot}
         </PanelTemplate>
     );
 };

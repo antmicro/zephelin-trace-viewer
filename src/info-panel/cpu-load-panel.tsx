@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useRef, useState } from "preact/compat";
+import { memo, useRef } from "preact/compat";
 
 import PanelTemplate from "./common";
 import { getCPULoadData } from "@/utils/cpuload";
@@ -29,35 +29,27 @@ export interface CPULoadPanelProps {
 const CPULoadPanel = memo(({tilingComponent}: CPULoadPanelProps) => {
     const plotRef = useRef<CPULoadPlot>(null);
 
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
 
-    const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
-    const displayData = newData?.fullData ?? [];
+    const renderPlot = (activeGroup: string) => {
+        const data = tilingComponent.dataProvider?.(activeGroup);
+        const displayData = data?.fullData ?? [];
 
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        return !!tilingComponent?.dataProvider?.(name);
-    };
-
-    if (!tilingComponent) {
-        console.info("Tiling Component is not available");
-        return null;
-    }
-    return (
-        <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
+        return (
             <CPULoadPlot
-                key={activeGroupNameSt}
+                key={activeGroup}
                 ref={plotRef}
                 plotData={[displayData]}
-                {...useTimestampCallbacks(plotRef)} />
+                {...useTimestampCallbacks(plotRef)}
+            />
+        );
+    };
+
+    return (
+        <PanelTemplate
+            tilingComponent={tilingComponent}
+            allowGroupSelection={true}
+        >
+            {renderPlot}
         </PanelTemplate>
     );
 });

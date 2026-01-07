@@ -11,9 +11,9 @@
  */
 
 import { Theme, useTheme } from '@speedscope/views/themes/theme';
-import { useRef, useState } from 'preact/compat';
+import { useRef } from 'preact/compat';
 import PanelTemplate from './common';
-import tilingComponent, { CSS_ENABLING_OVERFLOW, getTilingComponent, TilingComponent } from '@/utils/tiling-component';
+import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { getOpExecutionData } from '@/utils/model';
 import { OpExecutionData } from '@/event-types';
 import { useFrameCallbacks } from '@/utils/frame-provider';
@@ -33,30 +33,13 @@ function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
     const theme = useTheme();
     const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
 
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+    const renderPlot = (activeGroup: string) => {
+        const data = tilingComponent.dataProvider?.(activeGroup);
+        const displayData = data?.plotData ?? [];
 
-    const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
-    const displayData = newData?.plotData ?? [];
-
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        const component = getTilingComponent("OP Execution Time");
-        return !!component?.dataProvider?.(name);
-    };
-
-    if (!tilingComponent) {return null;}
-    return (
-        <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
+        return (
             <OpExecutionTimePlot
-                key={activeGroupNameSt}
+                key={activeGroup}
                 ref={plotRef}
                 plotData={displayData}
                 orient='horizontal'
@@ -64,6 +47,15 @@ function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
                 theme={theme}
                 {...useFrameCallbacks(plotRef)}
             />
+        );
+    };
+
+    return (
+        <PanelTemplate
+            tilingComponent={tilingComponent}
+            allowGroupSelection={true}
+        >
+            {renderPlot}
         </PanelTemplate>
     );
 };

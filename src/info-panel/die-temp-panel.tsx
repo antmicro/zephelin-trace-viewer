@@ -6,7 +6,7 @@
  */
 
 
-import { memo, useRef, useState } from "preact/compat";
+import { memo, useRef } from "preact/compat";
 import PanelTemplate from "./common";
 import { getDieTempData } from "@/utils/dietemp";
 import { DieTempPlot } from "@/plots/temp-plot";
@@ -28,35 +28,27 @@ export interface DieTempPanelProps {
 const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
     const plotRef = useRef<DieTempPlot>(null);
 
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent.targetGroupName);
+    const renderPlot = (activeGroup: string) => {
+        const data = tilingComponent.dataProvider?.(activeGroup);
+        const displayData = data?.fullData ?? [];
 
-    const newData = tilingComponent.dataProvider?.(activeGroupNameSt);
-    const displayData = newData?.fullData ?? [];
-
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        return !!tilingComponent?.dataProvider?.(name);
-    };
-
-    if (!tilingComponent) {
-        console.info("Tiling Component is not available");
-        return null;
-    }
-    return (
-        <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
+        return (
             <DieTempPlot
-                key={activeGroupNameSt}
+                key={activeGroup}
                 ref={plotRef}
                 plotData={displayData}
-                {...useTimestampCallbacks(plotRef)} />
+                {...useTimestampCallbacks(plotRef)}
+            />
+        );
+    };
+
+    return (
+        <PanelTemplate
+            tilingComponent={tilingComponent}
+            allowGroupSelection={true}
+            {...useTimestampCallbacks(plotRef)}
+        >
+            {renderPlot}
         </PanelTemplate>
     );
 });

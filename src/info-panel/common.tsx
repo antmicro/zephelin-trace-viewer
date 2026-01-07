@@ -13,19 +13,16 @@
 import styles from "@styles/info-panel.module.scss";
 import { VNode } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
-import { useMemo } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
+import { TilingComponent } from "@/utils/tiling-component";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
-    children: (VNode<any> | null)[] | VNode<any>,
+    children: (activeGroup: string) => VNode<any> | VNode<any>[] | null;
+    /** Reference to the Tiling Component */
+    tilingComponent: TilingComponent<any> | null,
     /** Optional class name added to content section */
     additionalContentClass?: string,
-    /** Currently selected group name for this panel */
-    selectedGroupName? : string,
-    /** Callback when different group is chosen */
-    onGroupChange?: (name: string) => void,
-    /** Function to check if a group has a data for this panel */
-    isValidGroup?: (name: string) => boolean,
     /** Toggle the panel header */
     allowGroupSelection?: boolean,
 }
@@ -33,23 +30,27 @@ interface PanelTemplateProps {
 /** The basic panel template */
 export default function PanelTemplate({
     children,
+    tilingComponent,
     additionalContentClass,
-    selectedGroupName,
-    onGroupChange,
-    isValidGroup,
     allowGroupSelection = false,
 }: PanelTemplateProps) {
-    let groupNames = getGroupNames();
-    if (isValidGroup) {
-        groupNames = groupNames.filter(name => isValidGroup(name));
+    if (!tilingComponent) {
+        console.info("Tiling Component is not available");
+        return null;
     }
 
-    const showHeader = allowGroupSelection && groupNames.length > 1;
+    const [activeGroupSt, setActiveGroupSt] = useState(tilingComponent.targetGroupName);
+
+    const groupNames = useMemo(() => {
+        return getGroupNames().filter(name => !!tilingComponent.dataProvider?.(name));
+    }, [tilingComponent]);
+
+    const onGroupChange = (name: string) => {
+        setActiveGroupSt(name);
+        tilingComponent.setTargetGroup(name);
+    };
 
     const getOptions = useMemo(() => {
-        if (!groupNames.length) {
-            return <option value="">No Groups Available</option>;
-        }
         return groupNames.map((name) => (
             <option key={name} value={name}>
                 {name}
@@ -57,10 +58,8 @@ export default function PanelTemplate({
         ));
     }, [groupNames]);
 
-    const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedGroup = (e.target as HTMLSelectElement).value;
-        if (onGroupChange) {onGroupChange(selectedGroup);}
-    };
+
+    const showHeader = allowGroupSelection && groupNames.length > 1;
 
     return (
         <div className={styles["panel-element"]}>
@@ -69,15 +68,15 @@ export default function PanelTemplate({
                     <label htmlFor="group-select">Source:</label>
                     <select
                         id="group-select"
-                        value={selectedGroupName}
-                        onChange={onChange}
+                        value={activeGroupSt}
+                        onChange={(e) => onGroupChange((e.target as HTMLSelectElement).value)}
                     >
                         {getOptions}
                     </select>
                 </div>
             )}
             <div className={styles["section-content"] + ` ${additionalContentClass ?? ''}`}>
-                {children}
+                {children(activeGroupSt)}
             </div>
         </div>
     );

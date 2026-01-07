@@ -11,7 +11,7 @@
  */
 
 import { memo, RefObject } from "preact/compat";
-import { useRef, useState, useMemo} from "preact/hooks";
+import { useRef} from "preact/hooks";
 
 import styles from '@styles/memory-panel.module.scss';
 import PanelTemplate from "../common";
@@ -54,37 +54,6 @@ const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
 
-    const [activeGroupNameSt, setActiveGroupNameSt] = useState(tilingComponent?.targetGroupName);
-
-    const currentData = useMemo(() => {
-        return tilingComponent?.dataProvider?.(activeGroupNameSt ?? "") ?? null;
-    }, [tilingComponent, activeGroupNameSt]);
-
-    if (!currentData || currentData.assignedMemory === -1) {
-        return;
-    }
-
-    const { assignedMemory, addrToRange, addrToProps, plotData, totalMemory, memoryRegionName } = currentData;
-
-    const handleGroupChange = (name: string) => {
-        setActiveGroupNameSt(name);
-        tilingComponent?.setTargetGroup(name);
-    };
-
-    const isValid = (name: string) => {
-        return !!tilingComponent?.dataProvider?.(name);
-    };
-
-    if (!tilingComponent) {return null;}
-    if (assignedMemory === 0) { console.info("Size of statically assigned memory is missing"); }
-
-    const zoomOn = (addr: number) => {
-        const plot = plotRef.current;
-        if (plot === undefined) { console.info("Plot is not defined, zoom will not be applied"); return; }
-
-        plot.setScale({yDomain: addrToRange[addr]});
-    };
-
     /** Selects (adds class "selected") button that triggered the event */
     const selectButton = (ref: RefObject<HTMLButtonElement>) => {
         resetSelectedButton();
@@ -98,46 +67,86 @@ const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
         }
     };
 
+    const renderContent = (activeGroup: string) => {
+        const currentData = tilingComponent?.dataProvider?.(activeGroup);
+
+        if (!currentData || currentData.assignedMemory === -1) {
+            return null;
+        }
+
+        const {
+            assignedMemory, addrToRange, addrToProps,
+            plotData, totalMemory, memoryRegionName,
+        } = currentData;
+
+        if (assignedMemory === 0) {
+            console.info("Size of statically assigned memory is missing");
+        }
+
+        const zoomOn = (addr: number) => {
+            const plot = plotRef.current;
+            if (!plot) {return;}
+            plot.setScale({ yDomain: addrToRange[addr] });
+        };
+
+        return (
+            <>
+                <div className={styles['ram-overview-content']}>
+                    <TotalMemoryPlot
+                        key={activeGroup}
+                        ref={plotRef}
+                        plotData={plotData}
+                        addrToRange={addrToRange}
+                        assignedMemory={assignedMemory}
+                        totalMemory={totalMemory}
+                        memoryNameFunc={memoryRegionName}
+                        onZoomEnd={resetSelectedButton}
+                        {...useTimestampCallbacks(plotRef)}
+                    />
+                    <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
+                        <ZoomButton
+                            name="whole graph"
+                            percent={100}
+                            onClick={() => plotRef.current?.setScale(plotRef.current?.originalDomain() ?? {})}
+                            selectButton={selectButton}
+                            additionalClass={styles.selected}
+                        />
+                        <div className={styles.divider} />
+                        {Object.keys(addrToProps)
+                            .map(v => Number.parseInt(v))
+                            .sort().reverse()
+                            .map((addr) => (
+                                <ZoomButton
+                                    key={`${activeGroup}-${addr}`}
+                                    name={
+                                        addrToProps[addr].threadName ?
+                                            `${addrToProps[addr].threadName} thread` :
+                                            (addrToProps[addr].symbol ?? addrToProps[addr].region ?? toHex(addr))
+                                    }
+                                    addr={addr}
+                                    percent={addrToProps[addr].ramPercent}
+                                    onClick={() => zoomOn(addr)}
+                                    selectButton={selectButton}
+                                />
+                            ))
+                        }
+                    </div>
+                </div>
+                <div className={styles.legend}>
+                    <span><div className={styles.square} style={{ backgroundColor: 'var(--colors-lime)' }} /> free</span>
+                    <span><div className={styles.square} style={{ backgroundColor: 'var(--colors-red)' }} /> allocated</span>
+                    <span><div className={styles.square} style={{ backgroundColor: 'var(--colors-orange)' }} /> statically allocated</span>
+                </div>
+            </>
+        );
+    };
+
     return (
         <PanelTemplate
-            selectedGroupName={activeGroupNameSt}
-            isValidGroup={isValid}
-            onGroupChange={handleGroupChange}
-            allowGroupSelection={true}>
-            <div className={styles['ram-overview-content']}>
-                <TotalMemoryPlot
-                    key={activeGroupNameSt}
-                    ref={plotRef}
-                    plotData={plotData}
-                    addrToRange={addrToRange}
-                    assignedMemory={assignedMemory}
-                    totalMemory={totalMemory}
-                    memoryNameFunc={memoryRegionName}
-                    onZoomEnd={() => resetSelectedButton()}
-                    {...useTimestampCallbacks(plotRef)} />
-                <div ref={selectButtonsRef} className={styles['ram-overview-selectors']}>
-                    <ZoomButton
-                        name="whole graph" percent={100}
-                        onClick={() => {plotRef.current?.setScale(plotRef.current?.originalDomain() ?? {});}}
-                        selectButton={selectButton} additionalClass={styles.selected} />
-                    <div className={styles.divider} />
-                    {Object.keys(addrToProps).map(v => Number.parseInt(v)).sort().reverse().map((addr) => <ZoomButton
-                        name={
-                            addrToProps[addr].threadName ?
-                                `${addrToProps[addr].threadName} thread` :
-                                (addrToProps[addr].symbol ?? addrToProps[addr].region ?? toHex(addr))}
-                        addr={addr}
-                        percent={addrToProps[addr].ramPercent}
-                        onClick={() => zoomOn(addr)}
-                        selectButton={selectButton} />)
-                    }
-                </div>
-            </div>
-            <div className={styles.legend}>
-                <span><div className={styles.square} style={{backgroundColor: 'var(--colors-lime)'}} /> free</span>
-                <span><div className={styles.square} style={{backgroundColor: 'var(--colors-red)'}} /> allocated</span>
-                <span><div className={styles.square} style={{backgroundColor: 'var(--colors-orange)'}} /> statically allocated</span>
-            </div>
+            tilingComponent={tilingComponent ?? null}
+            allowGroupSelection={true}
+        >
+            {renderContent}
         </PanelTemplate>
     );
 });

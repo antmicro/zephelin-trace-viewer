@@ -26,7 +26,7 @@
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1em;
+        gap: 0.5em;
         background-color: var(--colors-alt-bg-primary, #111);
 
         label {
@@ -43,10 +43,68 @@
             cursor: pointer;
             font-family: inherit;
             font-size: inherit;
+        }
 
-            &:focus {
-                outline: none;
+        .selectors-wrapper {
+            display: flex;
+            gap: 0.5em;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .selector-container {
+            display: flex;
+            align-items: center;
+            background: var(--colors-gray-1, #242424);
+            border: 1px solid var(--colors-gray-2, #333);
+            border-radius: 0.3em;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+
+            &:hover {
+                border-color: var(--colors-gray-4, #555);
+            }
+
+            &:focus-within {
                 border-color: var(--colors-selection-primary, #444);
+            }
+
+            .group-select {
+                background: transparent;
+                color: inherit;
+                border: none;
+                padding: 2px 0.5em;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: inherit;
+
+                &:focus {
+                    outline: none;
+                }
+            }
+
+            .remove-button {
+                background: transparent;
+                border: none;
+                border-left: 1px solid var(--colors-gray-2, #333);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                height: 1.5em;
+
+                svg path {
+                    transition: stroke 0.2s ease;
+                }
+
+                &:hover {
+                    background-color: rgba(255, 77, 77, 0.1);
+
+                    svg path {
+                        stroke: var(--danger-color, #ff4d4d);
+                    }
+                }
             }
         }
 

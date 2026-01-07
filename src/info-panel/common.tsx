@@ -15,7 +15,7 @@ import { VNode } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
 import { useMemo, useState } from "preact/hooks";
 import { TilingComponent } from "@/utils/tiling-component";
-import { CirclePlusIcon } from "@/icons";
+import { CirclePlusIcon, CloseIcon } from "@/icons";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
@@ -30,6 +30,7 @@ interface PanelTemplateProps {
     allowMultiplePlots?: boolean,
 
 }
+
 
 /** The basic panel template */
 export default function PanelTemplate({
@@ -71,11 +72,7 @@ export default function PanelTemplate({
     const showHeader = allowGroupSelection && unfilteredGroupNames.length > 1;
 
     const triggerChange = (updatedGroups: string[]) => {
-        if (allowMultiplePlots) {
-            onGroupChange(updatedGroups);
-        } else {
-            onGroupChange(updatedGroups[0]);
-        }
+        onGroupChange(allowMultiplePlots ? updatedGroups : updatedGroups[0]);
     };
 
     const handleAddDropdown = () => {
@@ -91,24 +88,43 @@ export default function PanelTemplate({
         triggerChange(updated);
     };
 
+    const handleRemoveDropdown = (index: number) => {
+        const updated = activeGroupsSt.filter((_, i) => i !== index);
+        setActiveGroupsSt(updated);
+        triggerChange(updated);
+    };
+
     return (
         <div className={styles["panel-element"]}>
             {showHeader && (
                 <div className={styles["panel-header"]}>
                     <label>Sources:</label>
-                    {activeGroupsSt.map((group, index) => (
-                        <select
-                            key={index}
-                            className={styles["group-select"]}
-                            value={group}
-                            onChange={(e) => {
-                                const val = (e.target as HTMLSelectElement).value;
-                                handleUpdateGroup(index, val);
-                            }}
-                        >
-                            {getOptions}
-                        </select>
-                    ))}
+                    <div className={styles["selectors-wrapper"]}>
+                        {activeGroupsSt.map((group, index) => (
+                            <div key={`${group}-${index}`} className={styles["selector-container"]}>
+                                <select
+                                    className={styles["group-select"]}
+                                    value={group}
+                                    onChange={(e) => {
+                                        const val = (e.target as HTMLSelectElement).value;
+                                        handleUpdateGroup(index, val);
+                                    }}
+                                >
+                                    {getOptions}
+                                </select>
+                                {allowMultiplePlots && activeGroupsSt.length > 1 && (
+                                    <button
+                                        type="button"
+                                        className={styles["remove-button"]}
+                                        onClick={() => handleRemoveDropdown(index)}
+                                        title="Remove source"
+                                    >
+                                        <CloseIcon />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                     {allowMultiplePlots && (
                         <button
                             type="button"

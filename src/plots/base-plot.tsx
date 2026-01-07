@@ -23,6 +23,7 @@ import { hoveredAtom, profileGroupAtom, selectedAtom, timestampHoveredAtom } fro
 import seriesSvgAnnotation from './series-annotation';
 import axisLabelHide from './axis-label-hide';
 import "@styles/plots.scss";
+import { getCSSColorByIdx } from './utils';
 
 type ScaleType = d3.ScaleContinuousNumeric<any, any, never>;
 
@@ -142,31 +143,6 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         return this.props.plotData;
     }
 
-    getCSSColorByIdx(i: number): string {
-        const N = this.plotData.length;
-        let cssColor: string;
-        if (N <= 8) {
-            cssColor = [
-                "#00E58D",  // green500
-                "#0093E5",  // blue500
-                "#E56000",  // orange500
-                "#007F8C",  // teal500
-                "#159500",  // lime500
-                "#DE1135",  // red500
-                "#9E1FDA",  // purple500
-                "#E59700",  // yellow500
-            ][i];
-        }
-        else if (N <= 10) {
-            cssColor = d3.schemeTableau10[i];
-        } else {
-            const t = (i / (N - 1)) * 0.96 + 0.04;
-            cssColor = d3.interpolateTurbo(t);
-        }
-
-        return cssColor;
-    }
-
     /**
      * Returns value of color defined in CSS variable.
      * @param name The name of the CSS variable defining color.
@@ -198,7 +174,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             return defaultColor;
         }
 
-        const cssColor = this.getCSSColorByIdx(i);
+        const cssColor = getCSSColorByIdx(i, this.plotData.length);
         return this.getWebGLColor(d3.rgb(cssColor)) ?? defaultColor;
     }
 

@@ -12,6 +12,7 @@
 
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
+import { getCSSColorByIdx } from './utils';
 
 import Plot, { PlotBaseProps } from './base-plot';
 
@@ -216,7 +217,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
             .defined(() => this.xScale.range().some(Boolean) && this.yScale.range().some(Boolean))
             .decorate(decorateSvgSeries(color));
 
-        return this.plotData.map((plotData, idx) => createSeries(plotData, this.getCSSColorByIdx(idx)));
+        return this.plotData.map((plotData, idx) => createSeries(plotData, getCSSColorByIdx(idx, this.plotData.length)));
         /* eslint-enable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,

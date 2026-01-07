@@ -16,6 +16,7 @@ import { getGroupNames } from "@speedscope/app-state/utils";
 import { useMemo, useState } from "preact/hooks";
 import { TilingComponent } from "@/utils/tiling-component";
 import { CirclePlusIcon, CloseIcon } from "@/icons";
+import {getCSSColorByIdx } from "@/plots/utils";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
@@ -36,10 +37,15 @@ interface SourceSelectorProps {
     options: string[];
     onUpdate: (val: string) => void;
     onRemove?: () => void;
+    color: string;
 }
 
-const SourceSelector = ({ value, options, onUpdate, onRemove }: SourceSelectorProps) => (
+const SourceSelector = ({ value, options, onUpdate, onRemove, color}: SourceSelectorProps) => (
     <div className={styles["selector-container"]}>
+        <span
+            className={styles["legend-indicator"]}
+            style={{ backgroundColor: color}}
+        />
         <select
             className={styles["group-select"]}
             value={value}
@@ -133,6 +139,7 @@ export default function PanelTemplate({
                                         ? () => handleRemoveDropdown(index)
                                         : undefined
                                     }
+                                    color={getCSSColorByIdx(index, activeGroupsSt.length)}
                                 />
                             );
                         })}

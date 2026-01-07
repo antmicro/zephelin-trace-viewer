@@ -34,17 +34,6 @@
             white-space: nowrap;
         }
 
-        .group-select {
-            background: var(--colors-gray-1, #242424);
-            color: inherit;
-            border: 1px solid var(--colors-gray-2, #333);
-            border-radius: 0.3em;
-            padding: 2px 0.3em;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: inherit;
-        }
-
         .selectors-wrapper {
             display: flex;
             gap: 0.5em;
@@ -58,6 +47,7 @@
             background: var(--colors-gray-1, #242424);
             border: 1px solid var(--colors-gray-2, #333);
             border-radius: 0.3em;
+            padding-left: 0.5em;
             overflow: hidden;
             transition: border-color 0.2s ease;
 
@@ -67,6 +57,14 @@
 
             &:focus-within {
                 border-color: var(--colors-selection-primary, #444);
+            }
+
+            .legend-indicator {
+                width: 0.6em;
+                height: 0.6em;
+                border-radius: 50%;
+                flex-shrink: 0;
+                border: 1px solid rgba(0, 0, 0, 0.1);
             }
 
             .group-select {

@@ -182,7 +182,6 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             return;
         }
 
-
         /**
          * This shallow copy ensures that tilingComponent is not reused across multiple panels,
          *  without it panels of the same type would coupled.
@@ -190,12 +189,14 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         const proto = Object.getPrototypeOf(template) as object;
         const tilingComponent = Object.assign(Object.create(proto), template) as TilingComponent<unknown>;
 
-        node.setEventListener('visibility', () => {
+        const resizeNode = () => {
             if (node.isVisible()) {
                 const event = new Event('resize', { bubbles: true });
                 node.getMoveableElement()?.dispatchEvent(event);
             }
-        });
+        };
+        node.setEventListener('resize', resizeNode);
+        node.setEventListener('visibility', resizeNode)
         return (
             <TilingPanel>
                 <ComponentType

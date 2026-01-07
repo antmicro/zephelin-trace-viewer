@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -19,7 +19,6 @@ import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
 import style from '@styles/app.module.scss';
-import { useEffect, useRef } from 'preact/hooks';
 import { memo } from 'preact/compat';
 import tilingComponent from './utils/tiling-component';
 
@@ -119,37 +118,8 @@ export function configureSpeedscope() {
 
 /** Element representing Speedscope app */
 const Speedscope = memo((): JSX.Element => {
-    const redrawCanvas = () => {
-        const appRef = appRefAtom.get()?.current;
-        if (appRef === undefined) {
-            console.warn("Reference to Speedscope is not present, cannot redraw canvas");
-            return;
-        }
-        appRef.redrawCanvas();
-    };
-
-    /*
-     * Create resize and scroll observer for Speedscope container
-     * which sends window resize event in order to redraw webGL context
-     */
-    const divRef = useRef<HTMLDivElement>(null);
-    const resizeOserver = new ResizeObserver((_) => redrawCanvas());
-    // Register observer after div is rendered
-    useEffect(() => {
-        if (divRef.current !== null) {
-            resizeOserver.observe(divRef.current);
-        }
-        document.body.addEventListener("scroll", redrawCanvas);
-
-        // Disconnect all elements on cleanup
-        return () => {
-            resizeOserver.disconnect();
-            document.body.removeEventListener("scroll", redrawCanvas);
-        };
-    }, []);
-
     return (
-        <div id={style['speedscope-container']} ref={divRef}>
+        <div id={style['speedscope-container']}>
             <ApplicationContainer />
         </div>
     );

@@ -15,16 +15,20 @@ import { VNode } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
 import { useMemo, useState } from "preact/hooks";
 import { TilingComponent } from "@/utils/tiling-component";
+import { CirclePlusIcon } from "@/icons";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
-    children: (activeGroup: string) => VNode<any> | VNode<any>[] | null;
-    /** Reference to the Tiling Component */
+    children: (activeGroups: string[]) => VNode<any> | VNode<any>[] | null;
+    /** Reference to the tilingComponent instance */
     tilingComponent: TilingComponent<any> | null,
     /** Optional class name added to content section */
     additionalContentClass?: string,
     /** Toggle the panel header */
     allowGroupSelection?: boolean,
+    /** Toggle to allow multiple plots */
+    allowMultiplePlots?: boolean,
+
 }
 
 /** The basic panel template */
@@ -33,13 +37,14 @@ export default function PanelTemplate({
     tilingComponent,
     additionalContentClass,
     allowGroupSelection = false,
+    allowMultiplePlots = false,
 }: PanelTemplateProps) {
     if (!tilingComponent) {
         console.info("Tiling Component is not available");
         return null;
     }
 
-    const [activeGroupSt, setActiveGroupSt] = useState(tilingComponent.targetGroupName);
+    const [activeGroupsSt, setActiveGroupsSt] = useState<string[]>([tilingComponent.targetGroupName]);
 
     const unfilteredGroupNames = getGroupNames();
 
@@ -47,9 +52,12 @@ export default function PanelTemplate({
         return getGroupNames().filter(name => !!tilingComponent.dataProvider?.(name));
     }, [tilingComponent]);
 
-    const onGroupChange = (name: string) => {
-        setActiveGroupSt(name);
-        tilingComponent.setTargetGroup(name);
+    const onGroupChange = (names: string[] | string) => {
+        const nameArray = Array.isArray(names) ? names: [names];
+        setActiveGroupsSt(nameArray);
+        if (nameArray.length > 0) {
+            tilingComponent.setTargetGroup(nameArray[0]);
+        }
     };
 
     const getOptions = useMemo(() => {
@@ -62,22 +70,58 @@ export default function PanelTemplate({
 
     const showHeader = allowGroupSelection && unfilteredGroupNames.length > 1;
 
+    const triggerChange = (updatedGroups: string[]) => {
+        if (allowMultiplePlots) {
+            onGroupChange(updatedGroups);
+        } else {
+            onGroupChange(updatedGroups[0]);
+        }
+    };
+
+    const handleAddDropdown = () => {
+        const updated = [...activeGroupsSt, groupNames[0] || ""];
+        setActiveGroupsSt(updated);
+        triggerChange(updated);
+    };
+
+    const handleUpdateGroup = (index: number, newValue: string) => {
+        const updated = [...activeGroupsSt];
+        updated[index] = newValue;
+        setActiveGroupsSt(updated);
+        triggerChange(updated);
+    };
+
     return (
         <div className={styles["panel-element"]}>
             {showHeader && (
                 <div className={styles["panel-header"]}>
-                    <label htmlFor="group-select">Source:</label>
-                    <select
-                        id="group-select"
-                        value={activeGroupSt}
-                        onChange={(e) => onGroupChange((e.target as HTMLSelectElement).value)}
-                    >
-                        {getOptions}
-                    </select>
+                    <label>Sources:</label>
+                    {activeGroupsSt.map((group, index) => (
+                        <select
+                            key={index}
+                            className={styles["group-select"]}
+                            value={group}
+                            onChange={(e) => {
+                                const val = (e.target as HTMLSelectElement).value;
+                                handleUpdateGroup(index, val);
+                            }}
+                        >
+                            {getOptions}
+                        </select>
+                    ))}
+                    {allowMultiplePlots && (
+                        <button
+                            type="button"
+                            className={styles["add-button"]}
+                            onClick={handleAddDropdown}
+                        >
+                            <CirclePlusIcon />
+                        </button>
+                    )}
                 </div>
             )}
             <div className={styles["section-content"] + ` ${additionalContentClass ?? ''}`}>
-                {children(activeGroupSt)}
+                {children(activeGroupsSt)}
             </div>
         </div>
     );

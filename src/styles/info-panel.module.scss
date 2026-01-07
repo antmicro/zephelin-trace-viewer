@@ -25,6 +25,7 @@
         border-bottom: 1px solid var(--colors-gray-1, #242424);
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 1em;
         background-color: var(--colors-alt-bg-primary, #111);
 
@@ -46,6 +47,25 @@
             &:focus {
                 outline: none;
                 border-color: var(--colors-selection-primary, #444);
+            }
+        }
+
+        .add-button {
+            background: transparent;
+            border: none;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+
+            &:hover {
+                transform: scale(1.1);
+            }
+
+            &:active {
+                transform: scale(0.95);
             }
         }
     }

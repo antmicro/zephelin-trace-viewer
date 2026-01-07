@@ -41,6 +41,8 @@ export default function PanelTemplate({
 
     const [activeGroupSt, setActiveGroupSt] = useState(tilingComponent.targetGroupName);
 
+    const unfilteredGroupNames = getGroupNames();
+
     const groupNames = useMemo(() => {
         return getGroupNames().filter(name => !!tilingComponent.dataProvider?.(name));
     }, [tilingComponent]);
@@ -58,8 +60,7 @@ export default function PanelTemplate({
         ));
     }, [groupNames]);
 
-
-    const showHeader = allowGroupSelection && groupNames.length > 1;
+    const showHeader = allowGroupSelection && unfilteredGroupNames.length > 1;
 
     return (
         <div className={styles["panel-element"]}>

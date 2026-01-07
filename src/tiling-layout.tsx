@@ -10,7 +10,8 @@
  * The module with tiling manager layout.
  */
 
-import { ComponentChild, RefObject } from "preact";
+import { JSX , ComponentChild, RefObject } from "preact";
+
 import { memo, useImperativeHandle, useRef } from "preact/compat";
 import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode, TabSetNode } from "flexlayout-react";
 import { loadingAtom } from "@speedscope/app-state";
@@ -173,7 +174,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         }
 
         const template = getTilingComponent(component) as TilingComponent<unknown> | undefined;
-        const ComponentType = template?.component;
+        const ComponentType = template?.component as (props: { tilingComponent: TilingComponent<any> }) => JSX.Element;
 
         if (!template || !ComponentType) {
             console.warn(`Factory: component '${component}' not registered`);
@@ -197,7 +198,6 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         return (
             <TilingPanel>
                 <ComponentType
-                    {...(node.getConfig() ?? [])}
                     tilingComponent={tilingComponent}
                 />
             </TilingPanel>

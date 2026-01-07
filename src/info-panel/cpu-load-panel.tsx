@@ -30,15 +30,17 @@ const CPULoadPanel = memo(({tilingComponent}: CPULoadPanelProps) => {
     const plotRef = useRef<CPULoadPlot>(null);
 
 
-    const renderPlot = (activeGroup: string) => {
-        const data = tilingComponent.dataProvider?.(activeGroup);
-        const displayData = data?.fullData ?? [];
+    const renderPlot = (activeGroups: string[]) => {
+        const displayData  = activeGroups.map(name => {
+            const data = tilingComponent.dataProvider?.(name);
+            return data?.fullData ?? [];
+        });
 
         return (
             <CPULoadPlot
-                key={activeGroup}
+                key={activeGroups.join(",")}
                 ref={plotRef}
-                plotData={[displayData]}
+                plotData={displayData}
                 {...useTimestampCallbacks(plotRef)}
             />
         );
@@ -48,6 +50,7 @@ const CPULoadPanel = memo(({tilingComponent}: CPULoadPanelProps) => {
         <PanelTemplate
             tilingComponent={tilingComponent}
             allowGroupSelection={true}
+            allowMultiplePlots={true}
         >
             {renderPlot}
         </PanelTemplate>

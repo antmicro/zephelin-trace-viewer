@@ -28,13 +28,15 @@ export interface DieTempPanelProps {
 const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
     const plotRef = useRef<DieTempPlot>(null);
 
-    const renderPlot = (activeGroup: string) => {
-        const data = tilingComponent.dataProvider?.(activeGroup);
-        const displayData = data?.fullData ?? [];
+    const renderPlot = (activeGroups: string[]) => {
+        const displayData  = activeGroups.flatMap(name => {
+            const data = tilingComponent.dataProvider?.(name);
+            return data?.fullData ?? [];
+        });
 
         return (
             <DieTempPlot
-                key={activeGroup}
+                key={activeGroups.join(",")}
                 ref={plotRef}
                 plotData={displayData}
                 {...useTimestampCallbacks(plotRef)}
@@ -46,6 +48,7 @@ const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
         <PanelTemplate
             tilingComponent={tilingComponent}
             allowGroupSelection={true}
+            allowMultiplePlots={true}
             {...useTimestampCallbacks(plotRef)}
         >
             {renderPlot}

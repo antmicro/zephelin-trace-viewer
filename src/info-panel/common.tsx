@@ -19,7 +19,7 @@ import { CirclePlusIcon, CloseIcon } from "@/icons";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
-    children: (activeGroups: string[]) => VNode<any> | VNode<any>[] | null;
+    children: (activeGroups: string[] | string) => VNode<any> | VNode<any>[] | null;
     /** Reference to the tilingComponent instance */
     tilingComponent: TilingComponent<any> | null,
     /** Optional class name added to content section */
@@ -31,6 +31,38 @@ interface PanelTemplateProps {
 
 }
 
+interface SourceSelectorProps {
+    value: string;
+    options: string[];
+    onUpdate: (val: string) => void;
+    onRemove?: () => void;
+}
+
+const SourceSelector = ({ value, options, onUpdate, onRemove }: SourceSelectorProps) => (
+    <div className={styles["selector-container"]}>
+        <select
+            className={styles["group-select"]}
+            value={value}
+            onChange={(e) => onUpdate((e.target as HTMLSelectElement).value)}
+        >
+            {options.map((name) => (
+                <option key={name} value={name}>
+                    {name}
+                </option>
+            ))};
+        </select>
+        {onRemove && (
+            <button
+                type="button"
+                className={styles["remove-button"]}
+                onClick={onRemove}
+                title="Remove source"
+            >
+                <CloseIcon />
+            </button>
+        )}
+    </div>
+);
 
 /** The basic panel template */
 export default function PanelTemplate({
@@ -49,50 +81,38 @@ export default function PanelTemplate({
 
     const unfilteredGroupNames = getGroupNames();
 
-    const groupNames = useMemo(() => {
-        return getGroupNames().filter(name => !!tilingComponent.dataProvider?.(name));
-    }, [tilingComponent]);
+    const groupsPool = useMemo(() => {
+        return unfilteredGroupNames.filter(name => !!tilingComponent.dataProvider?.(name));
+    }, [tilingComponent, unfilteredGroupNames]);
 
-    const onGroupChange = (names: string[] | string) => {
-        const nameArray = Array.isArray(names) ? names: [names];
-        setActiveGroupsSt(nameArray);
-        if (nameArray.length > 0) {
-            tilingComponent.setTargetGroup(nameArray[0]);
+    const updateGroups = (newGroups: string[]) => {
+        setActiveGroupsSt(newGroups);
+        if (newGroups.length > 0) {
+            tilingComponent.setTargetGroup(newGroups[0]);
         }
     };
 
-    const getOptions = useMemo(() => {
-        return groupNames.map((name) => (
-            <option key={name} value={name}>
-                {name}
-            </option>
-        ));
-    }, [groupNames]);
-
-    const showHeader = allowGroupSelection && unfilteredGroupNames.length > 1;
-
-    const triggerChange = (updatedGroups: string[]) => {
-        onGroupChange(allowMultiplePlots ? updatedGroups : updatedGroups[0]);
-    };
-
     const handleAddDropdown = () => {
-        const updated = [...activeGroupsSt, groupNames[0] || ""];
-        setActiveGroupsSt(updated);
-        triggerChange(updated);
+        const nextAvailable = groupsPool.find(name => !activeGroupsSt.includes(name));
+        if (nextAvailable) {
+            updateGroups([...activeGroupsSt, nextAvailable]);
+        }
     };
 
     const handleUpdateGroup = (index: number, newValue: string) => {
         const updated = [...activeGroupsSt];
         updated[index] = newValue;
-        setActiveGroupsSt(updated);
-        triggerChange(updated);
+        updateGroups(updated);
     };
 
     const handleRemoveDropdown = (index: number) => {
-        const updated = activeGroupsSt.filter((_, i) => i !== index);
-        setActiveGroupsSt(updated);
-        triggerChange(updated);
+        updateGroups(activeGroupsSt.filter((_, i) => i !== index));
     };
+
+    const showHeader = allowGroupSelection && unfilteredGroupNames.length > 1;
+    const isPoolExhausted = activeGroupsSt.length >= groupsPool.length;
+    const canAddMoreSources = allowMultiplePlots && !isPoolExhausted;
+    const canRemove = allowMultiplePlots && activeGroupsSt.length > 1;
 
     return (
         <div className={styles["panel-element"]}>
@@ -100,32 +120,25 @@ export default function PanelTemplate({
                 <div className={styles["panel-header"]}>
                     <label>Sources:</label>
                     <div className={styles["selectors-wrapper"]}>
-                        {activeGroupsSt.map((group, index) => (
-                            <div key={`${group}-${index}`} className={styles["selector-container"]}>
-                                <select
-                                    className={styles["group-select"]}
+                        {activeGroupsSt.map((group, index) => {
+                            const filteredOptions = groupsPool.filter(
+                                (opt) => opt === group || !activeGroupsSt.includes(opt));
+                            return (
+                                <SourceSelector
+                                    key={`${group}-${index}`}
                                     value={group}
-                                    onChange={(e) => {
-                                        const val = (e.target as HTMLSelectElement).value;
-                                        handleUpdateGroup(index, val);
-                                    }}
-                                >
-                                    {getOptions}
-                                </select>
-                                {allowMultiplePlots && activeGroupsSt.length > 1 && (
-                                    <button
-                                        type="button"
-                                        className={styles["remove-button"]}
-                                        onClick={() => handleRemoveDropdown(index)}
-                                        title="Remove source"
-                                    >
-                                        <CloseIcon />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                                    options={filteredOptions}
+                                    onUpdate={(val) => handleUpdateGroup(index, val)}
+                                    onRemove={canRemove
+                                        ? () => handleRemoveDropdown(index)
+                                        : undefined
+                                    }
+                                />
+                            );
+                        })}
                     </div>
-                    {allowMultiplePlots && (
+
+                    {canAddMoreSources && (
                         <button
                             type="button"
                             className={styles["add-button"]}
@@ -137,7 +150,7 @@ export default function PanelTemplate({
                 </div>
             )}
             <div className={styles["section-content"] + ` ${additionalContentClass ?? ''}`}>
-                {children(activeGroupsSt)}
+                {children(allowMultiplePlots ? activeGroupsSt : activeGroupsSt[0])}
             </div>
         </div>
     );

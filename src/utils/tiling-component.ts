@@ -10,7 +10,7 @@
  * The module with utilities for titling layout components.
  */
 
-import { loadingAtom } from "@speedscope/app-state";
+import { loadingAtom, profileGroupAtom } from "@speedscope/app-state";
 import { Atom } from "@speedscope/lib/atom";
 import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
@@ -152,10 +152,17 @@ export default <T extends object>(
         options.dataProvider,
     );
 
-    loadingAtom.subscribe(() => {
+    const load = () => {
         if (loadingAtom.get()) { return; }
         tilingComponent.calculateData();
-    });
+    };
+    loadingAtom.subscribe(load);
+
+    /*
+     * If `window.initialTraces` is set, then this code is executed after
+     * traces are loaded, which means `loadingAtom` does not trigger `calculateData`
+     */
+    if (profileGroupAtom.get()) {setTimeout(load);}
 
     // Register component
     REGISTERED_COMPONENTS[title] = tilingComponent;

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,9 +14,9 @@ import { useRef } from 'preact/hooks';
 import { memo } from 'preact/compat';
 import { VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
-import { appRefAtom } from '@speedscope/app-state';
 
 import style from '@styles/app.module.scss';
+import { useSpeedscopeLoader } from './speedscope';
 
 
 interface DragDropLayoutProps {
@@ -28,19 +28,23 @@ interface DragDropLayoutProps {
     onDropStart?: () => void,
     /** The callback triggered at the end of drop */
     onDropEnd?: () => void,
+    /** The callback triggered at error */
+    onDropAbort?: () => void,
     /** The children rendered inside the layout */
     children: VNode,
 }
 
 /**
- * The wrapper for tiling layout, implemening drag&drop feature,
+ * The wrapper for tiling layout, implementing drag&drop feature,
  * as well as managing pointer-events values.
  */
-export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragDropLayoutProps) => {
+export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, children}: DragDropLayoutProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const borderRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
     let timeouts: NodeJS.Timeout[] = [];
+
+    const loader = useSpeedscopeLoader();
 
     // Functions toggling drag&drop effects
     const setDrag = () => {
@@ -77,24 +81,15 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, children}: DragD
         e.preventDefault();
         e.stopImmediatePropagation();
     };
-    const drop = async (e: DragEvent) => {
+    const drop = (e: DragEvent) => {
         if (onDropStart) {onDropStart();}
         unsetDrag();
         e.preventDefault();
         e.stopPropagation();
-        const appRef = appRefAtom.get();
-        if (!appRef?.current) {
-            console.warn("Speedscope reference is not available - trace cannot be loaded");
-            return;
-        }
-        try {
-            await appRef.current.loadDropFile(e);
-        } catch (err) {
-            console.error("Trace load failed:", err);
-        } finally {
-            if (onDropEnd) { onDropEnd(); }
-        }
 
+        return loader.loadDropFile(e)
+            .then(onDropEnd)
+            .catch((err) => {console.error("Trace load failed:", err); onDropAbort?.();});
     };
 
     return (

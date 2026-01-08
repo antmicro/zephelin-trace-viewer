@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,18 +16,24 @@ import { lazy, Suspense } from 'preact/compat';
 import style from '@styles/app.module.scss';
 import '@styles/flexlayout.scss';
 import { ThemeProvider } from '@speedscope/views/themes/theme';
-import { errorAtom, isImmediatelyLoading, loadingCallbacksAtom, appRefAtom } from '@speedscope/app-state';
+import { errorAtom, isImmediatelyLoading, loadingCallbacksAtom } from '@speedscope/app-state';
 import { useAtom } from '@speedscope/lib/atom';
 import { useRef, useState } from 'preact/hooks';
 
-import { importProfilesFromBase64 } from '@speedscope/views/application';
+import { importProfilesFromBase64 } from '@speedscope/lib/profile-loader';
 import TopBar from "./top-bar";
 import DragDropLayout from './drag-drop-layout';
 import WelcomeScreen from './welcome-screen';
 import LoadingScreen from './loading-screen';
-import { configureSpeedscope } from './speedscope';
+import { configureSpeedscope, useSpeedscopeLoader } from './speedscope';
 const LazyTilingLayout = lazy(() => import("@/tiling-layout"));
 
+// Initial trace example
+
+/*
+ * import initialTraces from '../public/advanced.json';
+ * window.initialTraces = btoa(JSON.stringify(initialTraces))
+ */
 
 /*
  * There is an option to bake trace data into the html post-build, by adding a
@@ -35,17 +41,10 @@ const LazyTilingLayout = lazy(() => import("@/tiling-layout"));
  * The code below handles that.
  */
 const tracesBaked = 'initialTraces' in window;
-
-if(tracesBaked)
-{
-    const appMonitor = () => {
-        const appRef = appRefAtom.get();
-        if(appRef){
-            appRef.current.loadProfile(() => importProfilesFromBase64('tracefile', window.initialTraces as string)).catch(e => console.error(e));
-            appRefAtom.unsubscribe(appMonitor);
-        };
-    };
-    appRefAtom.subscribe(appMonitor);
+if (tracesBaked) {
+    useSpeedscopeLoader(false)
+        .loadProfile(() => importProfilesFromBase64('tracefile', window.initialTraces as string))
+        .catch(e => console.error(e));
 }
 
 // Configure Speedscope - only once before application starts

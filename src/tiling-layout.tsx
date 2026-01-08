@@ -14,7 +14,7 @@ import { JSX , ComponentChild, RefObject } from "preact";
 
 import { memo, useImperativeHandle, useRef } from "preact/compat";
 import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode, TabSetNode } from "flexlayout-react";
-import { loadingAtom } from "@speedscope/app-state";
+import { loadingAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
 import { MutableRef } from "preact/hooks";
@@ -196,7 +196,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             }
         };
         node.setEventListener('resize', resizeNode);
-        node.setEventListener('visibility', resizeNode)
+        node.setEventListener('visibility', resizeNode);
         return (
             <TilingPanel>
                 <ComponentType
@@ -207,7 +207,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
     };
 
     // Actions when new trace is loaded
-    loadingAtom.subscribe(() => {
+    const initialLoad = () => {
         if (loadingAtom.get()) { return; }
         // Delete all panels apart from Speedscope and info panel
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
@@ -220,7 +220,15 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             // Select last tab before overflow
             model.doAction(Actions.selectTab(lastTabIdBeforeOverflow));
         }
-    });
+    };
+    loadingAtom.subscribe(initialLoad);
+
+    /*
+     * If `window.initialTraces` is set, then this code is executed after
+     * traces are loaded, which means `loadingAtom` does not trigger panel
+     * availability check
+     */
+    if (profileGroupAtom.get()) {setTimeout(initialLoad);}
 
     /** External drag callback, that spawns new panel if a button associated with a component is dragged */
     const onExternalDrag = (_) => {

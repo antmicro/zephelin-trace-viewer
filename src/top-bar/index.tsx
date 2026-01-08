@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,7 +15,7 @@ import { useState } from "preact/hooks";
 import { memo } from "preact/compat";
 
 import { useAtom } from "@speedscope/lib/atom";
-import { appRefAtom, errorAtom, profileGroupAtom } from "@speedscope/app-state";
+import { errorAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
@@ -26,6 +26,7 @@ import { TilingLayoutProps } from "@/tiling-layout";
 import CirclePlusIcon from "@/icons/circle-plus";
 import LogoIcon from "@/icons/logo";
 import { DocsIcon, GitIcon, ImportIcon, ExportIcon } from "@/icons";
+import { useSpeedscopeLoader } from "@/speedscope";
 
 
 interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
@@ -36,7 +37,6 @@ interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
 
 /** The top bar of the application */
 export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element => {
-    const appRefSt = useAtom(appRefAtom);
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
@@ -56,14 +56,16 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
         <div id={style.panels}><CirclePlusIcon /> <h2>Panels</h2></div>
     );
 
+    const loader = useSpeedscopeLoader();
+
     return (
         <div id={style["top-bar"]}>
             <div id={style["left-buttons"]}>
                 <ButtonsContainer name={titleDiv} onClickAwayCallback={() => setTitleActiveSt(false)}>
-                    <button onClick={() => appRefSt?.current?.browseForFile()}>
+                    <button onClick={() => loader.browseForFile()}>
                         <ImportIcon /><p>Import trace</p>
                     </button>
-                    {traceLoadedSt && !isErrorSt ? <button onClick={appRefSt?.current?.saveFile}>
+                    {traceLoadedSt && !isErrorSt ? <button onClick={loader.saveFile}>
                         <ExportIcon /><p>Export trace</p>
                     </button> : null}
                     <hr />
@@ -79,7 +81,7 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
                 Zephelin Trace Viewer
             </div>
             <div id={style["right-buttons"]}>
-                {(appRefSt?.current && traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
+                {(traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
                     {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} setCustomDraggingSt={setCustomDraggingSt} />)}
                 </ButtonsContainer> : null }
                 {customDraggingSt ? <DragTooltip draggedElement={customDraggingSt} /> : null}

@@ -14,12 +14,14 @@ import { Fragment, JSX, VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
 import { ApplicationContainer } from '@speedscope/views/application-container';
-import { appRefAtom, customWelcomeMessagesAtom, toolbarConfigAtom } from '@speedscope/app-state';
+import { customWelcomeMessagesAtom, dragActiveAtom, errorAtom, hashParamsAtom, loadingAtom, profileGroupAtom, toolbarConfigAtom, viewModeAtom } from '@speedscope/app-state';
 import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
 import style from '@styles/app.module.scss';
 import { memo } from 'preact/compat';
+import { ProfileLoader } from '@speedscope/lib/profile-loader';
+import { useAtom } from '@speedscope/lib/atom';
 import tilingComponent from './utils/tiling-component';
 
 
@@ -115,6 +117,15 @@ export function configureSpeedscope() {
     }
 }
 
+export const useSpeedscopeLoader = (reactive = true) => new ProfileLoader({
+    setLoading: (v) => loadingAtom.set(v),
+    setError: (v) => errorAtom.set(v),
+    setProfileGroup: (v) => profileGroupAtom.setProfileGroup(v),
+    setDragActive: (v) => dragActiveAtom.set(v),
+    setViewMode: (v) => viewModeAtom.set(v),
+    profileGroup: reactive ? useAtom(profileGroupAtom) : profileGroupAtom.get(),
+    hashParams: reactive ? useAtom(hashParamsAtom) : hashParamsAtom.get(),
+});
 
 /** Element representing Speedscope app */
 const Speedscope = memo((): JSX.Element => {

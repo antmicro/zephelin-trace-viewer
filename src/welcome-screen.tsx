@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,8 +14,8 @@ import { memo } from "preact/compat";
 
 import styles from "@styles/welcome-screen.module.scss";
 import { Dispatch, StateUpdater, useState } from "preact/hooks";
-import { appRefAtom } from "@speedscope/app-state";
 import DragDropLayout from "./drag-drop-layout";
+import { useSpeedscopeLoader } from "./speedscope";
 import LargeLogo from "@/icons/large-logo";
 import LoadingIcon from "@/icons/loading";
 
@@ -46,10 +46,11 @@ const TrapezoidGradient = memo(({className}: {className: string}) => {
 /** The welcome screen with drag&drop section and button for importing traces */
 export default memo(({setWelcomeScreenSt}: {setWelcomeScreenSt: Dispatch<StateUpdater<boolean>>}) => {
     const [loadingSt, setLoadingSt] = useState<boolean>(false);
+    const loader = useSpeedscopeLoader();
 
     const onClick = () => {
         setLoadingSt(true);
-        appRefAtom.get()?.current?.browseForFile(
+        loader.browseForFile(
             () => setLoadingSt(false),
             () => setLoadingSt(false),
         );
@@ -63,6 +64,7 @@ export default memo(({setWelcomeScreenSt}: {setWelcomeScreenSt: Dispatch<StateUp
             <div className={styles["info-wrapper"]}> {/* drag&drop section */}
                 <DragDropLayout
                     onDropStart={() => setLoadingSt(true)}
+                    onDropAbort={() => setLoadingSt(false)}
                     onDropEnd={() => {setLoadingSt(false); setWelcomeScreenSt(false);}}>
                     <div className={styles.info}>
                         <div>

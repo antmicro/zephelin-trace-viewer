@@ -80,6 +80,7 @@ export interface PlotBaseProps<D> {
     onFrameSelect?: () => void
     onProfileChange?: () => void,
     useClick?: () => ((point: D) => void) | undefined,
+    decorateSvgSeries?: (defaultColor: string) => (selection: d3.Selection<any, any, any, any>) => void,
 }
 
 interface PlotAnnotationData {

@@ -72,13 +72,19 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return 'string';
     }
 
+    protected get _uniqueLabels(): string[] {
+        const oppositeAxis = getOppositeAxis(this._mainAxis);
+        const allLabels = this.plotData.flat().map(d => String(this._accessValue(d, oppositeAxis)));
+        return Array.from(new Set(allLabels));
+    }
+
     protected _access(current: D, plotData: D[], axis: Axis) {
         switch (this._axisType[axis]) {
         case 'number':
             return this._accessValue(current, axis) as number;
         case 'string':
-            const currentValue = this._accessValue(current, axis);
-            return plotData.findIndex((e) => currentValue === this._accessValue(e, axis));
+            const label = String(this._accessValue(current, axis));
+            return this._uniqueLabels.indexOf(label);
         };
     }
 
@@ -124,8 +130,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         case 'number':
             return axis === Axis.X ? super._xTickValues() : super._yTickValues();
         case 'string':
-            const [plotData] = this.plotData;
-            return d3.range(0, plotData.length);
+            return d3.range(0, this._uniqueLabels.length);
         };
     }
 
@@ -134,9 +139,9 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         case 'number':
             return axis === Axis.X ? super._xTickFormat() : super._yTickFormat();
         case 'string':
-            const [plotData] = this.plotData;
-            return (i: number) => this._accessValue(plotData[i], axis);
-        }
+            const labels = this._uniqueLabels;
+            return (i: number) => labels[i] ?? '';
+        };
     }
 
     protected override _xTickFormat() { return this._tickFormat(Axis.X); }
@@ -149,43 +154,61 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
     protected _createScale(axis: Axis) {
         switch (this._axisType[axis]) {
         case 'number':
-            /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-            return d3
-                .scaleLinear()
-                .domain(fc
-                    .extentLinear()
-                    .include([0])
-                    .pad([0, 0.05])
-                    .accessors(
-                        [(e: D) => this._accessValue(e, axis)],
-                    )(this.plotData.flat()) as Iterable<d3.NumberValue>);
-            /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+            const maxVal = d3.max(this.plotData.flat(), d =>
+                (this._accessValue(d, this._mainAxis) as number) || 0,
+            ) ?? 0;
+            return d3.scaleLinear().domain([0, maxVal * 1.05]);
         case 'string':
-            const range = [-0.5, this.plotData.reduce((acc, plotData) => acc + plotData.length - 1, 0) + 0.5];
-            return d3.scaleLinear().domain(range);
-        }
+            const count = this._uniqueLabels.length;
+            return d3.scaleLinear().domain([-0.5, count - 0.5]);
+        };
     }
 
     protected override _createXScale() { return this._createScale(Axis.X); }
     protected override _createYScale() { return this._createScale(Axis.Y); }
 
+    protected _getOffset(barGroupIndex: number) {
+        const groupWidth = 0.8;
+        const barGroupCount = this.plotData.length;
+        const barWidth = groupWidth / barGroupCount;
+
+        return (barGroupIndex - (barGroupCount - 1) / 2) * barWidth;
+    }
+
     public override _findClosestPoint(x: number, y: number) {
-        const [value, axis] = this.orient === 'vertical'
-            ? [x, Axis.X]
-            : [y, Axis.Y];
-        const bars = this.plotData.map((plotData) => plotData.map((e) => [e, plotData])).flat() as ([D, D[]])[];
-        const [closest] = d3.least(bars, ([e, plotData]) => Math.abs(this._access(e, plotData, axis) - value)) as D[];
-        return closest;
+        const oppositeAxis = getOppositeAxis(this._mainAxis);
+        const mouseCoord = this.orient === 'vertical' ? x : y;
+
+        const allPoints = this.plotData.flatMap((series, id) =>
+            series.map(d => ({ data: d, seriesId: id })),
+        );
+
+        const closest = d3.least(allPoints, ({ data, seriesId }) => {
+            const categoryIdx = this._uniqueLabels.indexOf(String(this._accessValue(data, oppositeAxis)));
+
+            return Math.abs((categoryIdx - this._getOffset(seriesId)) - mouseCoord);
+        });
+
+        return closest?.data;
     }
 
     protected override _annotationData(d: D) {
-        const [plotData] = this.plotData;
+        const plotData = this.plotData;
+
+        const barGroupIndex = plotData.findIndex(series => series.includes(d));
+
+        const oppositeAxis = getOppositeAxis(this._mainAxis);
+        const label = String(this._accessValue(d, oppositeAxis));
+        const categoryIndex = this._uniqueLabels.indexOf(label);
+
+        const offset = this._getOffset(barGroupIndex);
 
         const point = {
-            [Axis.X]: this._access(d, plotData, Axis.X),
-            [Axis.Y]: this._access(d, plotData, Axis.Y),
+            [Axis.X]: this.orient === 'vertical' ? categoryIndex - offset : this._access(d, plotData[barGroupIndex], Axis.X),
+            [Axis.Y]: this.orient === 'horizontal' ? categoryIndex - offset : this._access(d, plotData[barGroupIndex], Axis.Y),
         };
-        point[this._mainAxis] /= 2;
+
+        point[this._mainAxis] = (this._accessValue(d, this._mainAxis) as number) / 2;
 
         return {
             ...point,
@@ -199,29 +222,59 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
 
     protected override _createSvgSeries() {
         /* eslint-disable
-            @typescript-eslint/no-unsafe-call,
-            @typescript-eslint/no-unsafe-member-access,
-            @typescript-eslint/no-unsafe-return
-        */
+            @typescript-eslint/no-unsafe-call,
+            @typescript-eslint/no-unsafe-member-access,
+            @typescript-eslint/no-unsafe-return,
+            @typescript-eslint/no-unsafe-argument,
+            @typescript-eslint/no-unsafe-assignment
+        */
         const decorateSvgSeries = this.props.decorateSvgSeries
             ?? ((defaultColor: string) => (selection: d3.Selection<d3.BaseType, any, any, any>) => {
                 selection.select('path').attr('fill', defaultColor);
             });
 
-        const createSeries = (plotData: D[], color: string) => fc
-            .autoBandwidth(fc.seriesSvgBar())
-            .xScale(this.xScale).yScale(this.yScale)
-            .orient(this.orient)
-            .crossValue((e: D) => this._access(e, plotData, getOppositeAxis(this._mainAxis)))
-            .mainValue((e: D) => this._access(e, plotData, this._mainAxis))
-            .defined(() => this.xScale.range().some(Boolean) && this.yScale.range().some(Boolean))
-            .decorate(decorateSvgSeries(color));
+        // Define bar template
+        const barSeries = fc.seriesSvgBar().orient(this.orient);
 
-        return this.plotData.map((plotData, idx) => createSeries(plotData, getCSSColorByIdx(idx, this.plotData.length)));
+        // Define how bars should be grouped
+        const groupedBar = fc.seriesSvgGrouped(barSeries)
+            .xScale(this.xScale)
+            .yScale(this.yScale)
+            .orient(this.orient)
+            .crossValue((d: D) => {
+                const label = String(this._accessValue(d, getOppositeAxis(this._mainAxis)));
+                return this._uniqueLabels.indexOf(label);
+            })
+            .mainValue((d: D) => (this._accessValue(d, this._mainAxis) as number) || 0)
+            // Apply proper collor to the bar inside selection
+            .decorate((
+                selection: d3.Selection<d3.BaseType, any, any, any>,
+                _data: D[],
+                index: number,
+            ) => {
+                const color = getCSSColorByIdx(index, this.plotData.length);
+                decorateSvgSeries(color)(selection);
+            });
+
+        const finalGrouped = fc.autoBandwidth(groupedBar) as (
+            selection: d3.Selection<d3.BaseType, D[][], any, any>
+        ) => void;
+
+        // Bind plotData to the chart and render it
+        const seriesWrapper = (selection: d3.Selection<d3.BaseType, D[][], any, any>) => {
+            selection.datum(this.plotData).call(finalGrouped);
+        };
+
+        // As seriesWrapper is a custom function we need to copy xScale and yScale functions so d3fs can process it
+        fc.rebind(seriesWrapper, finalGrouped, 'xScale', 'yScale');
+
+        return [seriesWrapper];
         /* eslint-enable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,
-            @typescript-eslint/no-unsafe-return
+            @typescript-eslint/no-unsafe-return,
+            @typescript-eslint/no-unsafe-argument,
+            @typescript-eslint/no-unsafe-assignment
         */
     }
 }

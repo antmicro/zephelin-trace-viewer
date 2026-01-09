@@ -51,7 +51,7 @@ function OpSizePanel({ tilingComponent }: OpSizeProps) {
                 orient='horizontal'
                 order='ascending'
                 theme={theme}
-                {...useFrameCallbacks(plotRef)}
+                {...useFrameCallbacks(plotRef, activeGroup)}
             />
         );
     };

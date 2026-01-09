@@ -49,6 +49,14 @@ interface FrameState {
 }
 
 
+/** Checks if the currently selected group is a port of  active profile in Speedscope */
+const _isPlotActive = (activeGroup: string): boolean => {
+    const activeProfileState = profileGroupAtom.getActiveProfile();
+    const activeProfile = activeProfileState?.profile;
+
+    return activeProfile?.getGroupName() !== activeGroup;
+};
+
 /** Provides the frame selected in the Speedscope, returns statefull object */
 export function useFrameProvider() {
     const [frameSt, setFrameSt] = useState<FrameState | undefined>(undefined);
@@ -88,10 +96,11 @@ export function useFrameProvider() {
 }
 
 /** Callback for plot click event, selects corresponding frame/node in Speedscope */
-export function setSelectedFromClick() {
+export function setSelectedFromClick(activeGroup: string) {
     const activeProfileState = profileGroupAtom.getActiveProfile();
     const activeProfile = activeProfileState?.profile;
-    if (!activeProfile) {return;}
+
+    if (!activeProfile || _isPlotActive(activeGroup)) {return;}
 
     const nameToFrame = new Map<string, Frame>();
     const nameToNode = new Map<string, CallTreeNode>();
@@ -135,12 +144,20 @@ interface FrameEvent {
 }
 
 /** Callback for Speedscope frame hover event, sets plot annotations according to hovered frame/node */
-export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseProps<D>>(plotRef: RefObject<Plot<D, T>>) => {
+export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseProps<D>>(
+    plotRef: RefObject<Plot<D, T>>,
+    activeGroup: string,
+) => {
     return () => {
         if (!plotRef.current) {return;}
         const { current: plot } = plotRef;
 
         plot.annotations.pop();
+
+        if (_isPlotActive(activeGroup)) {
+            plot.redraw();
+            return;
+        }
 
         const hovered = hoveredAtom.get();
         if (!hovered) {
@@ -162,7 +179,11 @@ export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseP
 type PlotPropsWithTheme<D> = PlotBaseProps<D> & { theme: Theme };
 
 /** Plot decoration callback, sets SVG colors according to Speedscope theme  */
-export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(plotRef: RefObject<Plot<D, T>>) => {
+export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
+    plotRef: RefObject<Plot<D, T>>,
+    activeGroup: string,
+) => {
+    if (_isPlotActive(activeGroup)) {return;}
     return (defaultColor: string) => {
         const { current: plot } = plotRef;
         if (!plot) {return noop;}
@@ -231,7 +252,11 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
 };
 
 /** Callback for plot point event, sets hovered frame/node in Speedscope */
-export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(plotRef: RefObject<Plot<D, T>>) => {
+export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
+    plotRef: RefObject<Plot<D, T>>,
+    activeGroup: string,
+) => {
+    if (_isPlotActive(activeGroup)) {return;}
     return ([coord]: { x: number, y: number }[]) => {
         const { current: plot } = plotRef;
         if (!plot) {return;}
@@ -259,14 +284,17 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
 };
 
 /** Creates frame/node plot callbacks, linking selection, hover, colors with Speedscope and other plots */
-export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(plotRef: RefObject<Plot<D, T>>) => {
+export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
+    plotRef: RefObject<Plot<D, T>>,
+    groupName: string,
+) => {
     const redraw = () => plotRef.current?.redraw();
     return {
         onFrameSelect: redraw,
         onProfileChange: redraw,
-        onFrameHover: setAnnotationFromHover(plotRef),
-        useClick: setSelectedFromClick,
-        decorateSvgSeries: applyFrameColors(plotRef),
-        onPoint: setHoverFromPoint(plotRef),
+        onFrameHover: setAnnotationFromHover(plotRef, groupName),
+        useClick: () => setSelectedFromClick(groupName),
+        decorateSvgSeries: applyFrameColors(plotRef, groupName),
+        onPoint: setHoverFromPoint(plotRef, groupName),
     };
 };

@@ -30,30 +30,45 @@ export interface OpExecutionTimeProps {
 }
 
 
+function OpExecutionTimePlotWrapper({ activeGroup, theme, tilingComponent }: {
+    activeGroup: string,
+    theme: Theme,
+    tilingComponent: TilingComponent<OpExecutionTimeProps>
+}) {
+    const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
+    const data = tilingComponent.dataProvider?.(activeGroup);
+    const displayData = data?.plotData ?? [];
+
+    return (
+        <OpExecutionTimePlot
+            key={activeGroup}
+            ref={plotRef}
+            plotData={displayData}
+            orient='horizontal'
+            order='ascending'
+            theme={theme}
+            {...useFrameCallbacks(plotRef, activeGroup)}
+        />
+    );
+}
+
 /** Panel with Operator Execution Time plot */
 function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
     const theme = useTheme();
-    const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
-
-    const profileGroup = useAtom(profileGroupAtom);
-    const activeProfileIndex = profileGroup?.indexToView;
 
     const renderPlot = (activeGroup: string) => {
-        const data = tilingComponent.dataProvider?.(activeGroup);
-        const displayData = data?.plotData ?? [];
 
-        return (
-            <OpExecutionTimePlot
+        const profileGroup = useAtom(profileGroupAtom);
+        const activeProfileIndex = profileGroup?.indexToView;
+
+        return  (
+            <OpExecutionTimePlotWrapper
                 key={`${activeGroup}:${activeProfileIndex }`}
-                ref={plotRef}
-                plotData={displayData}
-                orient='horizontal'
-                order='ascending'
+                activeGroup={activeGroup}
                 theme={theme}
-                {...useFrameCallbacks(plotRef, activeGroup)}
+                tilingComponent={tilingComponent}
             />
-        );
-    };
+        );};
 
     return (
         <PanelTemplate

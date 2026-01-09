@@ -30,31 +30,44 @@ export interface OpSizeProps {
     tilingComponent: TilingComponent<OpSizeProps>
 }
 
+function OpSizePlotWrapper({ activeGroup, theme, tilingComponent }: {
+    activeGroup: string,
+    theme: Theme,
+    tilingComponent: TilingComponent<OpSizeProps>
+}) {
+    const plotRef = useRef<OpSizePlot<OpSizeData, BarPlotProps<OpSizeData> & { theme: Theme }>>(null);
+    const data = tilingComponent.dataProvider?.(activeGroup);
+    const displayData = data?.plotData ?? [];
+
+    return (
+        <OpSizePlot
+            key={activeGroup}
+            ref={plotRef}
+            plotData={displayData}
+            orient='horizontal'
+            order='ascending'
+            theme={theme}
+            {...useFrameCallbacks(plotRef, activeGroup)}
+        />
+    );
+}
+
 /** Panel with Operator Size plot */
 function OpSizePanel({ tilingComponent }: OpSizeProps) {
     const theme = useTheme();
-    const plotRef = useRef<OpSizePlot<OpSizeData, BarPlotProps<OpSizeData> & { theme: Theme }>>(null);
-
 
     const profileGroup = useAtom(profileGroupAtom);
     const activeProfileIndex = profileGroup?.indexToView;
 
     const renderPlot = (activeGroup: string) => {
-        const data = tilingComponent.dataProvider?.(activeGroup);
-        const displayData = data?.plotData ?? [];
-
-        return (
-            <OpSizePlot
+        return  (
+            <OpSizePlotWrapper
                 key={`${activeGroup}:${activeProfileIndex }`}
-                ref={plotRef}
-                plotData={displayData}
-                orient='horizontal'
-                order='ascending'
+                activeGroup={activeGroup}
                 theme={theme}
-                {...useFrameCallbacks(plotRef, activeGroup)}
+                tilingComponent={tilingComponent}
             />
-        );
-    };
+        );};
 
     return (
         <PanelTemplate

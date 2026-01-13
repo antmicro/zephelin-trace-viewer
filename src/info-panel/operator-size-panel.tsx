@@ -12,6 +12,8 @@
 
 import { Theme, useTheme } from '@speedscope/views/themes/theme';
 import { useRef } from 'preact/compat';
+import { useAtom } from '@speedscope/lib/atom';
+import { profileGroupAtom } from '@speedscope/app-state';
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { OpSizeData } from '@/event-types';
@@ -34,13 +36,16 @@ function OpSizePanel({ tilingComponent }: OpSizeProps) {
     const plotRef = useRef<OpSizePlot<OpSizeData, BarPlotProps<OpSizeData> & { theme: Theme }>>(null);
 
 
+    const profileGroup = useAtom(profileGroupAtom);
+    const activeProfileIndex = profileGroup?.indexToView;
+
     const renderPlot = (activeGroup: string) => {
         const data = tilingComponent.dataProvider?.(activeGroup);
         const displayData = data?.plotData ?? [];
 
         return (
             <OpSizePlot
-                key={activeGroup}
+                key={`${activeGroup}:${activeProfileIndex }`}
                 ref={plotRef}
                 plotData={displayData}
                 orient='horizontal'

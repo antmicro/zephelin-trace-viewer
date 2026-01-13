@@ -12,6 +12,8 @@
 
 import { Theme, useTheme } from '@speedscope/views/themes/theme';
 import { useRef } from 'preact/compat';
+import { useAtom } from '@speedscope/lib/atom';
+import { profileGroupAtom } from '@speedscope/app-state';
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { getOpExecutionData } from '@/utils/model';
@@ -33,13 +35,16 @@ function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
     const theme = useTheme();
     const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
 
+    const profileGroup = useAtom(profileGroupAtom);
+    const activeProfileIndex = profileGroup?.indexToView;
+
     const renderPlot = (activeGroup: string) => {
         const data = tilingComponent.dataProvider?.(activeGroup);
         const displayData = data?.plotData ?? [];
 
         return (
             <OpExecutionTimePlot
-                key={activeGroup}
+                key={`${activeGroup}:${activeProfileIndex }`}
                 ref={plotRef}
                 plotData={displayData}
                 orient='horizontal'

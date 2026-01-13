@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -52,7 +52,6 @@ export interface MemoryPanelProps {
 }
 
 let CURRENT_GLOBAL_METADATA: Metadata[] | null = null;
-let GROUP_CACHE: Record<string, CommonPlotProps | undefined> = {};
 
 /** Calculates data for memory plots and caches the results */
 export function dataProvider(groupName: string): CommonPlotProps | undefined {
@@ -60,16 +59,11 @@ export function dataProvider(groupName: string): CommonPlotProps | undefined {
 
     if (globalMetadata !== CURRENT_GLOBAL_METADATA) {
         CURRENT_GLOBAL_METADATA = globalMetadata;
-        GROUP_CACHE = {};
     }
 
-    if (groupName in GROUP_CACHE) {
-        return GROUP_CACHE[groupName];
-    }
 
     const memoryData = getMemoryData(groupName);
     if (!memoryData) {
-        GROUP_CACHE[groupName] = undefined;
         return undefined;
     }
 
@@ -98,7 +92,6 @@ export function dataProvider(groupName: string): CommonPlotProps | undefined {
         addrToRange,
         memoryRegionName: memNameFunc,
     };
-    GROUP_CACHE[groupName] = result;
     return result;
 }
 

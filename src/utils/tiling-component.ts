@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,6 +15,7 @@ import { Atom } from "@speedscope/lib/atom";
 import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
+import { GroupDataCache } from "./cache";
 
 
 export class TilingComponent<T> {
@@ -38,8 +39,19 @@ export class TilingComponent<T> {
         /** Properties of FlexLayout tab, omitting ones that are set automatically */
         public additionalProps: Omit<ITabAttributes, "name" | "component" | "config">,
         /** The function producing properties for the component */
-        public dataProvider?: (groupName: string) => (T | undefined | null),
+        public fetcher?: (groupName: string) => (T | undefined | null),
     ) {}
+
+    /** Wrapps properties producing function in caching mechanism */
+    public dataProvider = (groupName: string): (T | undefined | null) => {
+        if (!this.fetcher) {return null;}
+
+        return GroupDataCache.getOrCreateEntry<T | undefined | null>(
+            this.title,
+            groupName,
+            (name) => this.fetcher!(name),
+        );
+    };
 
     /** Increases the number of the component's instances */
     incrInstances() {
@@ -149,7 +161,6 @@ export default <T extends object>(
     REGISTERED_COMPONENTS[title] = tilingComponent;
 
     return tilingComponent;
-    // return wrappedCompoenent;
 };
 
 

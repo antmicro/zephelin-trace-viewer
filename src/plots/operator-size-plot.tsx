@@ -26,9 +26,13 @@ export class OpSizePlot<D extends OpSizeData = OpSizeData, T extends BarPlotProp
 
     /** Create annotation title and note from an event */
     protected override _annotationNote(d: OpSizeData) {
+        let note = `Size: ${d.size}B`;
+        if (d.sourceProfile) {
+            note += `\nSource Profile: ${d.sourceProfile}`;
+        }
         return {
             title: d.name,
-            note: `Size: ${d.size}B`,
+            note: note,
         };
     }
 }

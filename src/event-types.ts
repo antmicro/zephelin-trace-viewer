@@ -232,4 +232,5 @@ export interface OpExecutionData {
 export interface OpSizeData {
     name: string,
     size: number,
+    sourceProfile?: string,
 }

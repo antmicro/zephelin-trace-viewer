@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -36,6 +36,7 @@ function OpTypeExecutionTimePanel({ tilingComponent }: OpTypeExecutionTimeProps)
                 plotData={displayData}
                 orient='horizontal'
                 order='ascending'
+                showTypeLabel={true}
             />
         );
     };

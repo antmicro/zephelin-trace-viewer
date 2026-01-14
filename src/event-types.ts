@@ -226,6 +226,7 @@ export interface OpExecutionData {
         total: number,
         average: number,
     },
+    sourceProfile?: string,
 }
 
 export interface OpSizeData {

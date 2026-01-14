@@ -31,9 +31,13 @@ export class OpExecutionTimePlot<D extends OpExecutionData = OpExecutionData, T 
         const name = d.name;
         const total = this.formatter.format(d.duration.total);
         const average = this.formatter.format(d.duration.average);
+        let note = `Average time: ${average}\nTotal time: ${total}`;
+        if (d.sourceProfile) {
+            note += `\nSource Profile: ${d.sourceProfile}`;
+        }
         return {
             title: name.toString(),
-            note: `Average time: ${average}\nTotal time: ${total}`,
+            note: note,
         };
     }
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -23,6 +23,7 @@ import Speedscope from "./speedscope";
 import * as panels from "./info-panel";
 import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/tiling-component";
 import { getDraggedButtonTitle } from "./top-bar/tiling-component-button";
+import { GroupDataCache } from "./utils/cache";
 import { PanelIcon, MaximizeIcon, CloseIcon } from "@/icons";
 import TilingPanel from "@/utils/tiling-panel";
 
@@ -210,6 +211,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         // Delete all panels apart from Speedscope and info panel
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
         lastTabIdBeforeOverflow = null;
+        GroupDataCache.clear();
 
         // On each metadata update, create available panels
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>) && v.available.get()).forEach(addNode);

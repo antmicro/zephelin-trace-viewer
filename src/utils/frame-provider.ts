@@ -150,6 +150,8 @@ export function setSelectedFromClick(activeGroup: string, profileLookup: Map<str
 interface FrameEvent {
     /** Name of the frame/node */
     name: string,
+    /** Name of the profil the frame comes from */
+    sourceProfile?: string
 }
 
 /** Callback for Speedscope frame hover event, sets plot annotations according to hovered frame/node */
@@ -264,8 +266,8 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
 export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
     activeGroup: string,
+    profileLookup: Map<string, ProfileContext[]>,
 ) => {
-    if (_isPlotActive(activeGroup)) {return;}
     return ([coord]: { x: number, y: number }[]) => {
         const { current: plot } = plotRef;
         if (!plot) {return;}
@@ -283,8 +285,26 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         const y = plot.yScale.invert(coord.y as d3.NumberValue);
         const d = plot._findClosestPoint(x, y);
 
+        if (d) {
+            const activeProfileName = profileGroupAtom.getActiveProfile()?.profile.getName();
+
+            const contexts = profileLookup.get(activeGroup) ?? [];
+            const ownerContext = contexts.find(c => c.nameToFrame.has(d.name));
+            const allProfiles = profileGroupAtom.get()?.profiles;
+            const ownerProfileName = (ownerContext && allProfiles)
+                ? allProfiles[ownerContext.globalIndex].profile.getName()
+                : undefined;
+
+            const displaySource = (ownerProfileName && ownerProfileName !== activeProfileName)
+                ? ownerProfileName
+                : undefined;
+            d.sourceProfile = displaySource;
+
+        }
+
         plot._addAnnotation(d);
 
+        if (_isPlotActive(activeGroup)) {return;}
         const { onFrameHover } = plot.props;
         if (onFrameHover) {hoveredAtom.unsubscribe(onFrameHover);}
         hoveredAtom.set(d ? { name: d.name } as Frame : null);
@@ -345,6 +365,6 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
         onFrameHover: setAnnotationFromHover(plotRef, groupName),
         useClick: () => setSelectedFromClick(groupName, profileLookup),
         decorateSvgSeries: applyFrameColors(plotRef, groupName),
-        onPoint: setHoverFromPoint(plotRef, groupName),
+        onPoint: setHoverFromPoint(plotRef, groupName, profileLookup),
     };
 };

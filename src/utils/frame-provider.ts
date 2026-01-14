@@ -6,7 +6,7 @@
  */
 
 
-import { useState } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import { CallTreeNode, Frame, FrameInfo } from '@speedscope/lib/profile';
 import { flattenRecursionAtom, hoveredAtom, profileGroupAtom, selectedAtom, viewModeAtom } from '@speedscope/app-state';
 import { FlamechartID, FlamechartViewState, SandwichViewState } from '@speedscope/app-state/profile-group';
@@ -16,6 +16,7 @@ import { noop } from "@speedscope/lib/utils";
 import { createGetCSSColorForFrame, getFrameToColorBucket } from "@speedscope/app-state/getters";
 import { RefObject } from "preact";
 import { getInvertedCallerProfile } from "@speedscope/views/inverted-caller-flamegraph-view";
+import { getGroupNames, getProfilesForGroup } from "@speedscope/app-state/utils";
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
 
@@ -46,6 +47,15 @@ interface FrameState {
     frame?: FrameInfo,
     /** The parent of the selected frame */
     parent?: CallTreeNode | null,
+}
+
+interface ProfileContext {
+    /** Absolute index of this profile within loaded profiles  */
+    globalIndex: number,
+    /** Map of operation names to their Frame objects representations */
+    nameToFrame: Map<string, Frame>;
+    /** Map of operation names to their CallTreeNode objects representations */
+    nameToNode: Map<string, CallTreeNode>;
 }
 
 
@@ -96,32 +106,31 @@ export function useFrameProvider() {
 }
 
 /** Callback for plot click event, selects corresponding frame/node in Speedscope */
-export function setSelectedFromClick(activeGroup: string) {
-    const activeProfileState = profileGroupAtom.getActiveProfile();
-    const activeProfile = activeProfileState?.profile;
+export function setSelectedFromClick(activeGroup: string, profileLookup: Map<string, ProfileContext[]>) {
 
-    if (!activeProfile || _isPlotActive(activeGroup)) {return;}
-
-    const nameToFrame = new Map<string, Frame>();
-    const nameToNode = new Map<string, CallTreeNode>();
-    activeProfile.forEachFrame((frame) => {
-        if (!isOpFrame(frame)) {return;}
-        const name = normalizeOpName(frame.name);
-        if (!nameToFrame.has(name)) {nameToFrame.set(name, frame);}
-    });
-    activeProfile.forEachCall(
-        (node) => {
-            const { frame } = node;
-            if (!isOpFrame(frame)) {return;}
-            const name = normalizeOpName(frame.name);
-            if (!nameToNode.has(name)) {nameToNode.set(name, node);}
-        },
-        () => {},
-    );
-
-    return (point: { name: string }) => {
+    return (point: { name: string, groupName?: string }) => {
         if (!point) {return;}
         const { name } = point;
+
+        const targetGroup = point.groupName ?? activeGroup;
+        const profileContexts = profileLookup.get(targetGroup);
+
+        if (!profileContexts || profileContexts.length === 0) {
+            console.warn(`No indexed data for group: ${targetGroup}`);
+            return;
+        }
+
+        // Find the first profile that contains selected operation
+        let targetContext: ProfileContext | undefined = profileContexts.find(context => context.nameToFrame.has(name));
+        if (!targetContext) {
+            console.warn(`Operation "${name}" not found in any profile of group "${targetGroup}"`);
+            [targetContext] = profileContexts;
+
+        }
+
+        const { globalIndex, nameToFrame, nameToNode } = targetContext;
+
+        profileGroupAtom.setProfileIndexToView(globalIndex);
 
         const frame = nameToFrame.get(name);
         if (frame) {profileGroupAtom.setSelectedFrame(frame);}
@@ -289,11 +298,52 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
     groupName: string,
 ) => {
     const redraw = () => plotRef.current?.redraw();
+    const profileLookup = useMemo<Map<string, ProfileContext[]>>(() => {
+
+        const profileGroup = profileGroupAtom.get();
+        if (!profileGroup) {return new Map();}
+
+        // Create a lookup that maps group to its profiles and operations they contain
+        const lookup = new Map<string, ProfileContext[]>();
+
+        const groupNames = getGroupNames();
+
+        groupNames.forEach(groupName => {
+            const groupProfiles = getProfilesForGroup(groupName);
+            const allProfiles = profileGroup.profiles;
+
+            const profileContexts: ProfileContext[]  = groupProfiles.map(profileWrapper => {
+                const globalIndex = allProfiles.indexOf(profileWrapper);
+                const nameToFrame = new Map<string, Frame>();
+                const nameToNode = new Map<string, CallTreeNode>();
+
+                profileWrapper.profile.forEachFrame((frame) => {
+                    if (!isOpFrame(frame)) {return;}
+                    const name = normalizeOpName(frame.name);
+                    if (!nameToFrame.has(name)) {nameToFrame.set(name, frame);}
+                });
+
+                profileWrapper.profile.forEachCall((node) => {
+                    if (!isOpFrame(node.frame)) {return;}
+                    const name = normalizeOpName(node.frame.name);
+                    if (!nameToNode.has(name)) {nameToNode.set(name, node);}
+                }, () => {});
+
+                return { globalIndex, nameToFrame, nameToNode };
+            });
+
+
+            lookup.set(groupName, profileContexts);
+        });
+
+        return lookup;
+    }, []);
+
     return {
         onFrameSelect: redraw,
         onProfileChange: redraw,
         onFrameHover: setAnnotationFromHover(plotRef, groupName),
-        useClick: () => setSelectedFromClick(groupName),
+        useClick: () => setSelectedFromClick(groupName, profileLookup),
         decorateSvgSeries: applyFrameColors(plotRef, groupName),
         onPoint: setHoverFromPoint(plotRef, groupName),
     };

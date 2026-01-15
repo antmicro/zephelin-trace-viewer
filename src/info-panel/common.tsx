@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2026 Analog Devices, Inc.
+ * Copyright (c) 2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,7 +16,7 @@ import { getGroupNames } from "@speedscope/app-state/utils";
 import { useMemo, useState } from "preact/hooks";
 import { TilingComponent } from "@/utils/tiling-component";
 import { CirclePlusIcon, CloseIcon } from "@/icons";
-import {getCSSColorByIdx } from "@/plots/utils";
+import { getCSSColorByIdx } from "@/plots/utils";
 
 interface PanelTemplateProps {
     /** Children embedded in the panel */
@@ -91,6 +91,10 @@ export default function PanelTemplate({
         return unfilteredGroupNames.filter(name => !!tilingComponent.dataProvider?.(name));
     }, [tilingComponent, unfilteredGroupNames]);
 
+    const groupsToColors = Object.fromEntries(
+        unfilteredGroupNames.map((name, index) => [name, getCSSColorByIdx(index, activeGroupsSt.length)]),
+    );
+
     const updateGroups = (newGroups: string[]) => {
         setActiveGroupsSt(newGroups);
         if (newGroups.length > 0) {
@@ -139,7 +143,7 @@ export default function PanelTemplate({
                                         ? () => handleRemoveDropdown(index)
                                         : undefined
                                     }
-                                    color={getCSSColorByIdx(index, activeGroupsSt.length)}
+                                    color={groupsToColors[group]}
                                 />
                             );
                         })}

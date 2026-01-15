@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,6 +13,7 @@
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
 
+import { getGroupNames } from "@speedscope/app-state/utils";
 import Plot, { PlotBaseProps } from './base-plot';
 
 /**
@@ -97,7 +98,16 @@ export abstract class LinePlot<D, T extends PlotBaseProps<D> = PlotBaseProps<D>>
                     .value(_ => color)
                     .data(data)(program);
             });
-        return this.props.plotData.map((_, idx) => createSeries(this.getWebglColorByIdx(idx)));
+        const groupNames = getGroupNames();
+
+        return this.props.plotData.map((_, idx) => {
+            if(this.props.activeGroups !== null) {
+                const curGroupName = this.props.activeGroups[idx];
+                const groupNameIndex = groupNames.findIndex((x) => x === curGroupName);
+                return createSeries(this.getWebglColorByIdx(groupNameIndex));
+            }
+            return createSeries(this.getWebglColorByIdx(idx));
+        });
         /* eslint-enable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,

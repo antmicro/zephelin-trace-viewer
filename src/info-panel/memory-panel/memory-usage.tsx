@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -69,6 +69,7 @@ function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |un
                     key={activeGroup}
                     ref={plotRef}
                     plotData={plotData.slice(2)}
+                    activeGroups={null}
                     addrToRange={addrToRange}
                     assignedMemory={assignedMemory}
                     memoryNameFunc={memoryRegionName}

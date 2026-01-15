@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -39,6 +39,7 @@ const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
                 key={activeGroups.join(",")}
                 ref={plotRef}
                 plotData={displayData}
+                activeGroups={activeGroups}
                 {...useTimestampCallbacks(plotRef)}
             />
         );

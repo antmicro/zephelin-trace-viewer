@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -44,6 +44,7 @@ function OpSizePlotWrapper({ activeGroup, theme, tilingComponent }: {
             key={activeGroup}
             ref={plotRef}
             plotData={displayData}
+            activeGroup={activeGroup}
             orient='horizontal'
             order='ascending'
             theme={theme}

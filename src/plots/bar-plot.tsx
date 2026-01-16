@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +12,7 @@
 
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
+import { getGroupNames } from "@speedscope/app-state/utils";
 import { getCSSColorByIdx } from './utils';
 
 import Plot, { PlotBaseProps } from './base-plot';
@@ -252,7 +253,13 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
                 _data: D[],
                 index: number,
             ) => {
-                const color = getCSSColorByIdx(index, this.plotData.length);
+                const groupNames = getGroupNames();
+                const color = getCSSColorByIdx(
+                    Array.isArray(this.props.activeGroup)
+                        ? groupNames.findIndex((x) => x === this.props.activeGroup[index])
+                        : groupNames.findIndex((x) => x === this.props.activeGroup),
+                    this.plotData.length,
+                );
                 decorateSvgSeries(color)(selection);
             });
 

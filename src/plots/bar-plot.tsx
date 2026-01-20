@@ -22,7 +22,7 @@ export enum Axis {
     Y = 'y',
 }
 
-const getOppositeAxis = (axis: Axis) => Object.values(Axis).find((a) => a !== axis)!;
+export const getOppositeAxis = (axis: Axis) => Object.values(Axis).find((a) => a !== axis)!;
 
 type Order = 'ascending' | 'descending';
 type Orient = 'vertical' | 'horizontal';
@@ -221,7 +221,12 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return this.props.orient ?? super._annotationOrientation();
     }
 
-    protected override _createSvgSeries() {
+
+    protected _applyThemeDecoration(
+        selection: d3.Selection<d3.BaseType, any, any, any>,
+        index: number,
+        opacity = 1,
+    ) {
         /* eslint-disable
             @typescript-eslint/no-unsafe-call,
             @typescript-eslint/no-unsafe-member-access,
@@ -229,51 +234,74 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
             @typescript-eslint/no-unsafe-argument,
             @typescript-eslint/no-unsafe-assignment
         */
+        const groupNames = getGroupNames();
+        const color = getCSSColorByIdx(
+            Array.isArray(this.props.activeGroup)
+                ? groupNames.findIndex((x) => x === this.props.activeGroup[index])
+                : groupNames.findIndex((x) => x === this.props.activeGroup),
+            this.plotData.length,
+        );
+
         const decorateSvgSeries = this.props.decorateSvgSeries
             ?? ((defaultColor: string) => (selection: d3.Selection<d3.BaseType, any, any, any>) => {
                 selection.select('path').attr('fill', defaultColor);
             });
 
-        // Define bar template
+        decorateSvgSeries(color)(selection);
+        selection.select('path').attr('opacity', opacity);
+    }
+
+    protected _createGroupedLayer(
+        valueAccessor: (d: D) => number,
+        opacity = 1,
+    ) {
         const barSeries = fc.seriesSvgBar().orient(this.orient);
 
-        // Define how bars should be grouped
         const groupedBar = fc.seriesSvgGrouped(barSeries)
             .xScale(this.xScale)
             .yScale(this.yScale)
-            .orient(this.orient)
             .crossValue((d: D) => {
                 const label = String(this._accessValue(d, getOppositeAxis(this._mainAxis)));
                 return this._uniqueLabels.indexOf(label);
             })
-            .mainValue((d: D) => (this._accessValue(d, this._mainAxis) as number) || 0)
-            // Apply proper collor to the bar inside selection
+            .mainValue(valueAccessor)
             .decorate((
                 selection: d3.Selection<d3.BaseType, any, any, any>,
                 _data: D[],
                 index: number,
             ) => {
-                const groupNames = getGroupNames();
-                const color = getCSSColorByIdx(
-                    Array.isArray(this.props.activeGroup)
-                        ? groupNames.findIndex((x) => x === this.props.activeGroup[index])
-                        : groupNames.findIndex((x) => x === this.props.activeGroup),
-                    this.plotData.length,
-                );
-                decorateSvgSeries(color)(selection);
+                this._applyThemeDecoration(selection, index, opacity);
             });
 
-        const finalGrouped = fc.autoBandwidth(groupedBar) as (
-            selection: d3.Selection<d3.BaseType, D[][], any, any>
-        ) => void;
+        return fc.autoBandwidth(groupedBar);
+    }
+
+    protected _defineSeriesGroups() {
+        // By default there is only one layer
+        return [
+            this._createGroupedLayer(
+                (d: D) => (this._accessValue(d, this._mainAxis) as number) || 0,
+            ),
+        ];
+    }
+
+    protected override _createSvgSeries() {
+        // Define groups of bars to be displayed
+        const groups = this._defineSeriesGroups();
+
+        // Create a container to hold the groups
+        const multiContainer = fc.seriesSvgMulti()
+            .xScale(this.xScale)
+            .yScale(this.yScale)
+            .series(groups);
 
         // Bind plotData to the chart and render it
         const seriesWrapper = (selection: d3.Selection<d3.BaseType, D[][], any, any>) => {
-            selection.datum(this.plotData).call(finalGrouped);
+            selection.datum(this.plotData).call(multiContainer);
         };
 
         // As seriesWrapper is a custom function we need to copy xScale and yScale functions so d3fs can process it
-        fc.rebind(seriesWrapper, finalGrouped, 'xScale', 'yScale');
+        fc.rebind(seriesWrapper, multiContainer, 'xScale', 'yScale');
 
         return [seriesWrapper];
         /* eslint-enable

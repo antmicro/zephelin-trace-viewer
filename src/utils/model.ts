@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -30,8 +30,12 @@ type OpType = string;
 
 // Represents name of a specific operator in execution graph
 type OpInstance = string
+interface OpDuration {
+    selfDuration: number,
+    totalDuration: number
+}
 // Describes execution times of an operator type grouped by an instance
-type OpTypeExecutionTimes = Map<OpInstance, number[]>;
+type OpTypeExecutionTimes = Map<OpInstance, OpDuration[]>;
 
 
 function opNameReplacer(_match: string, modelNum: string) {
@@ -67,13 +71,16 @@ function getOpExecutionTimes(groupName: string) {
             if (!isOpFrame(frame)) { return; }
             const { name, args: { begin: { tag: opType } } } = frame;
             const opInstance = normalizeOpName(name);
-            const duration = callNode.getSelfWeight();
-
+            const selfDuration = callNode.getSelfWeight();
+            const totalDuration = callNode.getTotalWeight();
             if (!opTypes.has(opType)) { opTypes.set(opType, new Map()); }
             const opTypeMapping = opTypes.get(opType)!;
             if (!opTypeMapping.has(opInstance)) { opTypeMapping.set(opInstance, []); }
             const opInstancesDurations = opTypeMapping.get(opInstance)!;
-            opInstancesDurations.push(duration);
+            opInstancesDurations.push({
+                selfDuration: selfDuration,
+                totalDuration: totalDuration,
+            });
         }, () => {});
     });
 
@@ -87,8 +94,27 @@ export function getOpExecutionData(groupName: string): { plotData: OpExecutionDa
     const plotData = Array.from(opExecutionTimes.values())
         .flatMap((opTypeExecutionTimes) => Array.from(opTypeExecutionTimes.entries()))
         .map(([name, durations]) => {
-            const total = durations.reduce((a, b) => a + b, 0);
-            return { name, duration: { total, average: total / durations.length } };
+            const sums = durations.reduce(
+                (acc, entry) => {
+                    acc.selfDuration += entry.selfDuration;
+                    acc.totalDuration += entry.totalDuration;
+                    return acc;
+                },
+                { selfDuration: 0, totalDuration: 0},
+            );
+            const count = durations.length;
+
+            return {
+                name,
+                selfDuration: {
+                    total: sums.selfDuration,
+                    average: count > 0 ? sums.selfDuration / count : 0,
+                },
+                totalDuration: {
+                    total: sums.totalDuration,
+                    average: count > 0 ? sums.totalDuration / count : 0,
+                },
+            };
         });
 
     if (!plotData.length) { return null; }
@@ -105,7 +131,7 @@ export function getOpTypeExecutionData(groupName: string): { plotData: OpExecuti
             const { count, total } = Array.from(opTypeExecutionTimes.values())
                 .reduce((acc, opInstanceTimes) => {
                     acc.count += opInstanceTimes.length;
-                    acc.total += opInstanceTimes.reduce((a, b) => a + b, 0);
+                    acc.total += opInstanceTimes.reduce((sum, entry) => sum + entry.selfDuration, 0);
                     return acc;
                 }, { count: 0, total: 0});
 

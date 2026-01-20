@@ -28,7 +28,7 @@ export class OpExecutionTimePlot<
 
     protected override _accessValue(e: OpExecutionData, axis: Axis) {
         const label = this.props.showTypeLabel ?  `${e.name} Type` : e.name;
-        return axis === this._mainAxis ? e.duration.average / 1e3 : label;
+        return axis === this._mainAxis ? e.selfDuration.average / 1e3 : label;
     }
 
     protected override _getLabel(axis: Axis) {
@@ -38,8 +38,8 @@ export class OpExecutionTimePlot<
     /** Create annotation title and note from an event */
     protected override _annotationNote(d: OpExecutionData) {
         const name = d.name;
-        const total = this.formatter.format(d.duration.total);
-        const average = this.formatter.format(d.duration.average);
+        const total = this.formatter.format(d.selfDuration.total);
+        const average = this.formatter.format(d.selfDuration.average);
         let note = `Average time: ${average}\nTotal time: ${total}`;
         if (d.sourceProfile) {
             note += `\nSource Profile: ${d.sourceProfile}`;

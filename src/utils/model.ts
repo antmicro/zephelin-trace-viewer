@@ -128,16 +128,30 @@ export function getOpTypeExecutionData(groupName: string): { plotData: OpExecuti
 
     const plotData = Array.from(opExecutionTimes.entries())
         .map(([opType, opTypeExecutionTimes]) => {
-            const { count, total } = Array.from(opTypeExecutionTimes.values())
+            const sums = Array.from(opTypeExecutionTimes.values())
                 .reduce((acc, opInstanceTimes) => {
                     acc.count += opInstanceTimes.length;
-                    acc.total += opInstanceTimes.reduce((sum, entry) => sum + entry.selfDuration, 0);
+                    opInstanceTimes.forEach(entry => {
+                        acc.selfTotal += entry.selfDuration;
+                        acc.totalTotal += entry.totalDuration;
+                    });
                     return acc;
-                }, { count: 0, total: 0});
+                }, {count: 0, selfTotal: 0, totalTotal: 0});
 
-            return { name: opType, duration: { total, average: total / count } };
+            const count = sums.count;
+
+            return {
+                name: opType,
+                selfDuration: {
+                    total: sums.selfTotal,
+                    average: count > 0 ? sums.selfTotal / count : 0,
+                },
+                totalDuration: {
+                    total: sums.totalTotal,
+                    average: count > 0 ? sums.totalTotal / count : 0,
+                },
+            };
         });
-
     if (!plotData.length) { return null; }
     return { plotData: [plotData] };
 }

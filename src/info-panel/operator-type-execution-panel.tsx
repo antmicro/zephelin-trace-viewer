@@ -33,7 +33,8 @@ const alignGroupData = (groups: OpExecutionData[][]): OpExecutionData[][] => {
         return masterOpList.map(name => {
             return groupLookup.get(name) ?? {
                 name,
-                duration: { total: 0, average: 0 },
+                selfDuration: { total: 0, average: 0 },
+                totalDuration: { total: 0, average: 0 },
             };
         });
     });

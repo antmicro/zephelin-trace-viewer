@@ -26,6 +26,7 @@ export const getOppositeAxis = (axis: Axis) => Object.values(Axis).find((a) => a
 
 type Order = 'ascending' | 'descending';
 type Orient = 'vertical' | 'horizontal';
+type SeriesLayer<D> = (selection: d3.Selection<d3.BaseType, D[][], any, any>) => void;
 
 export interface BarPlotProps<D> extends PlotBaseProps<D> {
     order?: Order,
@@ -221,7 +222,6 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return this.props.orient ?? super._annotationOrientation();
     }
 
-
     protected _applyThemeDecoration(
         selection: d3.Selection<d3.BaseType, any, any, any>,
         index: number,
@@ -254,7 +254,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
     protected _createGroupedLayer(
         valueAccessor: (d: D) => number,
         opacity = 1,
-    ) {
+    ): SeriesLayer<D> {
         const barSeries = fc.seriesSvgBar().orient(this.orient);
 
         const groupedBar = fc.seriesSvgGrouped(barSeries)
@@ -276,7 +276,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return fc.autoBandwidth(groupedBar);
     }
 
-    protected _defineSeriesGroups() {
+    protected _defineSeriesGroups(): SeriesLayer<D>[] {
         // By default there is only one layer
         return [
             this._createGroupedLayer(

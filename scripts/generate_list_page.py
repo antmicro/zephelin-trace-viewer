@@ -1,5 +1,5 @@
-# Copyright (c) 2025 Analog Devices, Inc.
-# Copyright (c) 2025 Antmicro <www.antmicro.com>
+# Copyright (c) 2025-2026 Analog Devices, Inc.
+# Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -66,6 +66,15 @@ if __name__ == "__main__":
         )
         for t in args.traces
     ]
+
+    if len(args.traces) > 1:
+        links.append(
+            A_TEMPLATE.format(
+                f"{args.trace_viewer_url}#profileURL={args.traces[-1].name}&profileURL={args.traces[-2].name}",
+                "multiple traces sample"
+            )
+        )
+
     print(links)
 
     page = HTML_TEMPLATE.format("\n".join(links))

@@ -91,6 +91,7 @@ function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |un
         <PanelTemplate
             tilingComponent={tilingComponent ?? null}
             allowGroupSelection={true}
+            toggleDot={false}
         >
             {renderContent}
         </PanelTemplate>

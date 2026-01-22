@@ -29,6 +29,8 @@ interface PanelTemplateProps {
     allowGroupSelection?: boolean,
     /** Toggle to allow multiple plots */
     allowMultiplePlots?: boolean,
+    /** Togle to display legend dot */
+    toggleDot?: boolean,
 
 }
 
@@ -38,14 +40,17 @@ interface SourceSelectorProps {
     onUpdate: (val: string) => void;
     onRemove?: () => void;
     color: string;
+    toggleDot?: boolean;
 }
 
-const SourceSelector = ({ value, options, onUpdate, onRemove, color}: SourceSelectorProps) => (
+const SourceSelector = ({ value, options, onUpdate, onRemove, color, toggleDot }: SourceSelectorProps) => (
     <div className={styles["selector-container"]}>
-        <span
-            className={styles["legend-indicator"]}
-            style={{ backgroundColor: color}}
-        />
+        {toggleDot && (
+            <span
+                className={styles["legend-indicator"]}
+                style={{ backgroundColor: color}}
+            />
+        )}
         <select
             className={styles["group-select"]}
             value={value}
@@ -77,6 +82,7 @@ export default function PanelTemplate({
     additionalContentClass,
     allowGroupSelection = false,
     allowMultiplePlots = false,
+    toggleDot = true,
 }: PanelTemplateProps) {
     if (!tilingComponent) {
         console.info("Tiling Component is not available");
@@ -144,6 +150,7 @@ export default function PanelTemplate({
                                         : undefined
                                     }
                                     color={groupsToColors[group]}
+                                    toggleDot={toggleDot}
                                 />
                             );
                         })}

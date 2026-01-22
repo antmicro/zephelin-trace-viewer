@@ -145,6 +145,7 @@ const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
         <PanelTemplate
             tilingComponent={tilingComponent ?? null}
             allowGroupSelection={true}
+            toggleDot={false}
         >
             {renderContent}
         </PanelTemplate>

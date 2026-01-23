@@ -10,20 +10,45 @@
  * The module with utilities for titling layout components.
  */
 
+import { TabNode , IJsonTabNode, ITabAttributes , Actions } from "flexlayout-react";
 import { loadingAtom, profileGroupAtom } from "@speedscope/app-state";
 import { Atom } from "@speedscope/lib/atom";
-import { IJsonTabNode, ITabAttributes } from "flexlayout-react";
 import { FunctionalComponent } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
 import { GroupDataCache } from "./cache";
 
+interface NodeConfig {
+    /** Additional field kept in nodes of the FlexLayout model */
+    sources?: string[]
+}
 
 export class TilingComponent<T> {
 
     /** The data used to initialize the component, calculated one when the trace is loaded */
     private data?: T | undefined = undefined;
+    private _initialGroupName = "";
 
-    public targetGroupName = "";
+    public get targetGroups(): string[] {
+        if (this.node) {
+            const config = this.node.getConfig() as NodeConfig | undefined;
+            return config?.sources ?? [this._initialGroupName];
+        }
+        return [this._initialGroupName];
+    }
+
+    public set targetGroups(newGroups: string[]) {
+        if (this.node) {
+            const layout = this.node.getModel();
+            const config = (this.node.getConfig() as NodeConfig | undefined) ?? {};
+            layout.doAction(
+                Actions.updateNodeAttributes(this.node.getId(), {
+                    config: {...config,  sources: newGroups },
+                }),
+            );
+        } else {
+            this._initialGroupName = newGroups[0];
+        }
+    }
 
     constructor(
         /** The title (unique for component type) of tile where the component is displayed */
@@ -40,6 +65,8 @@ export class TilingComponent<T> {
         public additionalProps: Omit<ITabAttributes, "name" | "component" | "config">,
         /** The function producing properties for the component */
         public fetcher?: (groupName: string) => (T | undefined | null),
+        /** Reference to the FlexLayout model representation of the panel */
+        public node?: TabNode,
     ) {}
 
     /** Wrapps properties producing function in caching mechanism */
@@ -70,7 +97,7 @@ export class TilingComponent<T> {
 
         const groupNames = getGroupNames();
 
-        const name = groupName ?? this.targetGroupName;
+        const name = groupName ?? this.targetGroups[0];
         let newData = name ? this.dataProvider(name) : null;
 
         // Select data from first suitable group
@@ -79,7 +106,7 @@ export class TilingComponent<T> {
                 const data = this.dataProvider(groupName);
                 if (data) {
                     newData = data;
-                    this.targetGroupName = groupName;
+                    this.targetGroups = [groupName];
                     break;
                 }
             }

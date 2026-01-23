@@ -89,7 +89,10 @@ export default function PanelTemplate({
         return null;
     }
 
-    const [activeGroupsSt, setActiveGroupsSt] = useState<string[]>([tilingComponent.targetGroupName]);
+
+    const [activeGroupsSt, setActiveGroupsSt] = useState<string[]>(() => {
+        return tilingComponent.targetGroups;
+    });
 
     const unfilteredGroupNames = getGroupNames();
 
@@ -103,9 +106,7 @@ export default function PanelTemplate({
 
     const updateGroups = (newGroups: string[]) => {
         setActiveGroupsSt(newGroups);
-        if (newGroups.length > 0) {
-            tilingComponent.setTargetGroup(newGroups[0]);
-        }
+        tilingComponent.targetGroups = newGroups;
     };
 
     const handleAddDropdown = () => {

@@ -187,7 +187,9 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
          *  without it panels of the same type would coupled.
          */
         const proto = Object.getPrototypeOf(template) as object;
-        const tilingComponent = Object.assign(Object.create(proto), template) as TilingComponent<unknown>;
+        const tilingComponent = Object.assign(Object.create(proto), template, {
+            node: node,
+        }) as TilingComponent<unknown>;
 
         const resizeNode = () => {
             if (node.isVisible()) {

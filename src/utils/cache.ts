@@ -24,6 +24,9 @@ export const GroupDataCache = {
         const entry = provider(groupName);
         _cache[title][groupName] = entry;
 
+        if (!entry) {
+            console.info("Problems with retreiving plot data");
+        }
         return entry;
     },
 

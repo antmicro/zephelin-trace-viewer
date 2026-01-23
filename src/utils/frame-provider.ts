@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -272,9 +272,8 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         const { current: plot } = plotRef;
         if (!plot) {return;}
 
-        plot.annotations.pop();
-
         if (!coord) {
+            plot.annotations.pop();
             console.debug("Missing coordinates");
             hoveredAtom.set(null);
             return;
@@ -284,6 +283,11 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         const x = plot.xScale.invert(coord.x as d3.NumberValue);
         const y = plot.yScale.invert(coord.y as d3.NumberValue);
         const d = plot._findClosestPoint(x, y);
+
+        // if annotation for the point is already drawn - skip redraw
+        if (d === plot.annotations[plot.annotations.length - 1]?._point) {return;}
+
+        plot.annotations.pop();
 
         if (d) {
             const activeProfileName = profileGroupAtom.getActiveProfile()?.profile.getName();
@@ -305,10 +309,7 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         plot._addAnnotation(d);
 
         if (_isPlotActive(activeGroup)) {return;}
-        const { onFrameHover } = plot.props;
-        if (onFrameHover) {hoveredAtom.unsubscribe(onFrameHover);}
         hoveredAtom.set(d ? { name: d.name } as Frame : null);
-        if (onFrameHover) {hoveredAtom.subscribe(onFrameHover);}
     };
 };
 
@@ -361,7 +362,6 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
 
     return {
         onFrameSelect: redraw,
-        onProfileChange: redraw,
         onFrameHover: setAnnotationFromHover(plotRef, groupName),
         useClick: () => setSelectedFromClick(groupName, profileLookup),
         decorateSvgSeries: applyFrameColors(plotRef, groupName),

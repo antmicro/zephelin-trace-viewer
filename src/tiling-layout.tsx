@@ -198,7 +198,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         node.setEventListener('resize', resizeNode);
         node.setEventListener('visibility', resizeNode);
         return (
-            <TilingPanel>
+            <TilingPanel key={node.getId()}>
                 <ComponentType
                     tilingComponent={tilingComponent}
                 />

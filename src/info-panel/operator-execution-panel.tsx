@@ -48,7 +48,7 @@ function OpExecutionTimePlotWrapper({ activeGroup, theme, tilingComponent }: {
             orient='horizontal'
             order='ascending'
             theme={theme}
-            {...useFrameCallbacks(plotRef, activeGroup)}
+            {...useFrameCallbacks(plotRef, activeGroup, theme)}
         />
     );
 }

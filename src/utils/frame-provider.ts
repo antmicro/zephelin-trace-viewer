@@ -56,6 +56,8 @@ interface ProfileContext {
     nameToFrame: Map<string, Frame>;
     /** Map of operation names to their CallTreeNode objects representations */
     nameToNode: Map<string, CallTreeNode>;
+    /** Map of operation names to their corresponding colors in Speedscope */
+    frameToColor: ((frame: Frame) => string) | null;
 }
 
 
@@ -193,6 +195,7 @@ type PlotPropsWithTheme<D> = PlotBaseProps<D> & { theme: Theme };
 export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
     activeGroup: string,
+    profileLookup: Map<string, ProfileContext[]>,
 ) => {
     if (_isPlotActive(activeGroup)) {return;}
     return (defaultColor: string) => {
@@ -222,11 +225,11 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
         };
 
         const getSelectedFrameName = () => {
-            const activeView = useView()?.activeView;
-            if (!activeView) {return;}
-            const name = 'hover' in activeView
-                ? activeView.selectedNode?.frame.name
-                : activeView.callerCallee?.selectedFrame.name;
+            const frameOrNode = selectedAtom.get();
+            if (!frameOrNode) {return;}
+            const name = frameOrNode instanceof Frame
+                ? frameOrNode.name
+                : frameOrNode.frame.name;
             if (name) {return normalizeOpName(name);}
         };
 
@@ -235,8 +238,13 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
             selection
                 .select('path')
                 .attr('fill', ({ name }: FrameEvent) => {
-                    const frame = nameToFrame.get(name);
-                    return frame ? getCSSColorForFrame(frame) : defaultColor;
+                    const ownerContext = profileLookup.get(activeGroup)?.find(c => c.nameToFrame.has(name));
+                    if (!ownerContext) {return defaultColor;}
+
+                    const frame = ownerContext.nameToFrame.get(name);
+                    if (!frame) {return defaultColor;}
+
+                    return ownerContext.frameToColor?.(frame) ?? defaultColor;
                 })
                 .attr('stroke-width', ({ name }: FrameEvent) => {
                     if (getHoveredFrameName() === name) {
@@ -317,6 +325,7 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
 export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
     groupName: string,
+    theme: Theme,
 ) => {
     const redraw = () => plotRef.current?.redraw();
     const profileLookup = useMemo<Map<string, ProfileContext[]>>(() => {
@@ -350,7 +359,10 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
                     if (!nameToNode.has(name)) {nameToNode.set(name, node);}
                 }, () => {});
 
-                return { globalIndex, nameToFrame, nameToNode };
+                const frameToColorBucket = getFrameToColorBucket(profileWrapper.profile);
+                const frameToColor = createGetCSSColorForFrame({theme, frameToColorBucket});
+
+                return { globalIndex, nameToFrame, nameToNode, frameToColor };
             });
 
 
@@ -364,7 +376,7 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
         onFrameSelect: redraw,
         onFrameHover: setAnnotationFromHover(plotRef, groupName),
         useClick: () => setSelectedFromClick(groupName, profileLookup),
-        decorateSvgSeries: applyFrameColors(plotRef, groupName),
+        decorateSvgSeries: applyFrameColors(plotRef, groupName, profileLookup),
         onPoint: setHoverFromPoint(plotRef, groupName, profileLookup),
     };
 };

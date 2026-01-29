@@ -69,7 +69,7 @@ export class TilingComponent<T> {
         public node?: TabNode,
     ) {}
 
-    /** Wrapps properties producing function in caching mechanism */
+    /** Wraps properties producing function in caching mechanism */
     public dataProvider = (groupName: string): (T | undefined | null) => {
         if (!this.fetcher) {return null;}
 
@@ -93,7 +93,7 @@ export class TilingComponent<T> {
      * Calculates new data (if dataProvider is available) and sets availability accordingly.
      */
     calculateData(groupName?: string) {
-        if (!this.dataProvider) {return;}
+        if (!this.fetcher) {return;}
 
         const groupNames = getGroupNames();
 

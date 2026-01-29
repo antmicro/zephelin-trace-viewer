@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -34,7 +34,7 @@ enum AnnotationSide {
 }
 
 /** The properties of threshold type annotation */
-export interface ThresholdAnnotationProps {
+export interface ThresholdAnnotationProps<D> {
     x: number,
     y: number,
     dx: number,
@@ -130,7 +130,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     /** The d3fc-svg element with internal state of zoom */
     d3fcSvgNode: Element & {__zoom?: d3.ZoomTransform};
     /** The object storing currently displayed annotations */
-    annotations: ThresholdAnnotationProps[] = [];
+    annotations: ThresholdAnnotationProps<D>[] = [];
 
     /** The callback executed when the plot container is resized */
     protected resizeObserver = new ResizeObserver((entries) => {
@@ -234,7 +234,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
      * @param index The index of series that will receive the data.
      * @param _series The array with objects creating chart.
      */
-    protected _webglMapping(d: { data: (D[])[], annotations: ThresholdAnnotationProps[], }, index: number, _series: object[]): D[] {
+    protected _webglMapping(d: { data: (D[])[], annotations: ThresholdAnnotationProps<D>[], }, index: number, _series: object[]): D[] {
         return d.data[index];
     }
     /**
@@ -246,7 +246,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
      * @param _index The index of series that will receive the data.
      * @param _series The array with objects creating chart.
      */
-    protected _svgMapping(data: { data: (D[])[], annotations: ThresholdAnnotationProps[] }, index: number, _series: object[], isAnnotation: boolean): ThresholdAnnotationProps[] | D[] {
+    protected _svgMapping(data: { data: (D[])[], annotations: ThresholdAnnotationProps<D>[] }, index: number, _series: object[], isAnnotation: boolean): ThresholdAnnotationProps<D>[] | D[] {
         return isAnnotation ? data.annotations : data.data[index];
     }
 
@@ -586,7 +586,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             this.series.svgPlotArea(
                 fc.seriesSvgMulti()
                     .series(svgSeries)
-                    .mapping((data: { data: D[][], annotations: ThresholdAnnotationProps[] }, index: number, series: object[]) => {
+                    .mapping((data: { data: D[][], annotations: ThresholdAnnotationProps<D>[] }, index: number, series: object[]) => {
                         return this._svgMapping(data, index, series, index >= svgSeries.length);
                     }) as SvgPlotAreaComponent,
             );
@@ -596,7 +596,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             this.series.svgAnnotationPlotArea(
                 fc.seriesSvgMulti().series([annotations])
                     .mapping(
-                        (data: { data: D[][], annotations: ThresholdAnnotationProps[] }) => data.annotations,
+                        (data: { data: D[][], annotations: ThresholdAnnotationProps<D>[] }) => data.annotations,
                     ) as SvgPlotAreaComponent,
             );
         }

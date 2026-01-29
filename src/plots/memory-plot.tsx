@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025 Analog Devices, Inc.
- * Copyright (c) 2025 Antmicro <www.antmicro.com>
+ * Copyright (c) 2025-2026 Analog Devices, Inc.
+ * Copyright (c) 2025-2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -96,7 +96,7 @@ export class TotalMemoryPlot extends LinePlot<MemoryPlotData, TotalMemoryPlotPro
         return `Usage [%] (${this.props.totalMemory} B total)`;
     }
 
-    protected override _webglMapping(d: {data: (MemoryPlotData[])[], annotations: ThresholdAnnotationProps[]}, index: number): MemoryPlotData[] | {ts: number, base: number}[] {
+    protected override _webglMapping(d: {data: (MemoryPlotData[])[], annotations: ThresholdAnnotationProps<MemoryPlotData>[]}, index: number): MemoryPlotData[] | {ts: number, base: number}[] {
         if (index >= d.data.length) {
             const b = Object.values(this.props.addrToRange)[index % d.data.length][0];
             return [

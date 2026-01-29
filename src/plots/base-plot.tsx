@@ -19,11 +19,12 @@ import { CartesianChart, WebglPlotAreaComponent, SvgPlotAreaComponent } from '@d
 import { Selection } from 'd3-selection';
 
 import { StatelessComponent } from '@speedscope/lib/preact-helpers';
-import { hoveredAtom, profileGroupAtom, selectedAtom, timestampHoveredAtom } from '@speedscope/app-state';
+import { profileGroupAtom, timestampHoveredAtom } from '@speedscope/app-state';
 import seriesSvgAnnotation from './series-annotation';
 import axisLabelHide from './axis-label-hide';
 import "@styles/plots.scss";
 import { getCSSColorByIdx } from './utils';
+import { hoveredAtom, selectedAtom } from '@/speedscope';
 
 type ScaleType = d3.ScaleContinuousNumeric<any, any, never>;
 
@@ -217,8 +218,8 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         };
 
         const { useClick, useDoubleClick } = this.props;
-        if (useClick) setupClickEvent(useClick(), 'click');
-        if (useDoubleClick) setupClickEvent(useDoubleClick(), 'dblclick');
+        if (useClick) {setupClickEvent(useClick(), 'click');}
+        if (useDoubleClick) {setupClickEvent(useDoubleClick(), 'dblclick');}
     }
 
     /**

@@ -8,17 +8,17 @@
 
 import { useMemo, useState } from "preact/hooks";
 import { CallTreeNode, Frame, FrameInfo } from '@speedscope/lib/profile';
-import { flattenRecursionAtom, hoveredAtom, profileGroupAtom, selectedAtom, viewModeAtom } from '@speedscope/app-state';
-import { FlamechartID, FlamechartViewState, SandwichViewState } from '@speedscope/app-state/profile-group';
+import { profileGroupAtom, viewModeAtom } from '@speedscope/app-state';
+import { FlamechartViewState, SandwichViewState } from '@speedscope/app-state/profile-group';
 import { ViewMode } from '@speedscope/lib/view-mode';
 import { Theme } from "@speedscope/views/themes/theme";
 import { noop } from "@speedscope/lib/utils";
 import { createGetCSSColorForFrame, getFrameToColorBucket } from "@speedscope/app-state/getters";
 import { RefObject } from "preact";
-import { getInvertedCallerProfile } from "@speedscope/views/inverted-caller-flamegraph-view";
 import { getGroupNames, getProfilesForGroup } from "@speedscope/app-state/utils";
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
+import { hoveredAtom, indexToViewAtom, selectedAtom } from "@/speedscope";
 
 /** Provides the view selected in the Speedscope */
 export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState | SandwichViewState } | null {
@@ -61,19 +61,11 @@ interface ProfileContext {
 }
 
 
-/** Checks if the currently selected group is a port of  active profile in Speedscope */
-const _isPlotActive = (activeGroup: string): boolean => {
-    const activeProfileState = profileGroupAtom.getActiveProfile();
-    const activeProfile = activeProfileState?.profile;
-
-    return activeProfile?.getGroupName() !== activeGroup;
-};
-
-/** Provides the frame selected in the Speedscope, returns statefull object */
+/** Provides the frame selected in the Speedscope, returns stateful object */
 export function useFrameProvider() {
     const [frameSt, setFrameSt] = useState<FrameState | undefined>(undefined);
     selectedAtom.subscribe(() => {
-        const selectedNode = selectedAtom.get();
+        const selectedNode = selectedAtom.get()?.frameOrNode;
         if (selectedNode === null) {
             setFrameSt(undefined);
             return;
@@ -88,19 +80,12 @@ export function useFrameProvider() {
             setFrameSt(undefined);
             return;
         }
-        const { viewMode } = view;
-        if (viewMode === ViewMode.SANDWICH_VIEW && selectedNode instanceof Frame) {
-            // inverted caller profile is memorized, so it will not be recalculated here
-            const callerProf = getInvertedCallerProfile({profile, frame: selectedNode, flattenRecursion: flattenRecursionAtom.get()});
-            const callers = callerProf.getAppendOrderCalltreeRoot().children[0].children;
+        if (selectedNode instanceof Frame) {
+            const callers = profile.getAppendOrderCalltreeRoot().children[0].children;
             // Choosing first caller as MODEL events should be a child of only one INFERENCE event
             setFrameSt({frame: selectedNode, parent: callers[0]});
-        } else if (viewMode !== ViewMode.SANDWICH_VIEW && selectedNode instanceof CallTreeNode) {
-            setFrameSt({frame: selectedNode?.frame, parent: selectedNode?.parent});
         } else {
-            setFrameSt(undefined);
-            console.debug("Mismatch between viewMode and selected node type, setting frame state to undefined");
-            return;
+            setFrameSt(selectedNode ? {frame: selectedNode?.frame, parent: selectedNode?.parent} : undefined);
         }
     });
 
@@ -108,7 +93,7 @@ export function useFrameProvider() {
 }
 
 /** Callback for plot click event, selects corresponding frame/node in Speedscope */
-export function setSelectedFromClick(activeGroup: string, profileLookup: Map<string, ProfileContext[]>) {
+export function setSelectedFromClick(activeGroup: string, profileLookup: Map<string, ProfileContext[]>, focus = false) {
 
     return (point: { name: string, groupName?: string }) => {
         if (!point) {return;}
@@ -132,19 +117,9 @@ export function setSelectedFromClick(activeGroup: string, profileLookup: Map<str
 
         const { globalIndex, nameToFrame, nameToNode } = targetContext;
 
-        profileGroupAtom.setProfileIndexToView(globalIndex);
-
-        const frame = nameToFrame.get(name);
-        if (frame) {profileGroupAtom.setSelectedFrame(frame);}
-
-        const node = nameToNode.get(name);
-        const viewMode = viewModeAtom.get();
-        const flamechartID = ({
-            [ViewMode.CHRONO_FLAME_CHART]: FlamechartID.CHRONO,
-            [ViewMode.LEFT_HEAVY_FLAME_GRAPH]: FlamechartID.LEFT_HEAVY,
-        } as { [key in keyof typeof ViewMode]?: FlamechartID })[viewMode];
-
-        if (node && flamechartID) {profileGroupAtom.setSelectedNode(flamechartID, node);}
+        if (focus) {indexToViewAtom.set(() => globalIndex);}
+        const maybeFrameOrNode = nameToNode.get(name) ?? nameToFrame.get(name) ?? null;
+        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex });
     };
 }
 
@@ -167,22 +142,15 @@ export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseP
 
         plot.annotations.pop();
 
-        if (_isPlotActive(activeGroup)) {
-            plot.redraw();
-            return;
-        }
-
         const hovered = hoveredAtom.get();
         if (!hovered) {
             plot.redraw();
             return;
         }
 
-        const hoveredFrame = 'frame' in hovered
-            ? hovered.frame
-            : hovered;
+        if (hovered.source !== activeGroup) {return;}
 
-        const hoveredName = normalizeOpName(hoveredFrame.name);
+        const hoveredName = normalizeOpName(hovered.node);
         const d = plot.plotData?.flat().find(({ name }) => name === hoveredName);
         if (d) {plot._addAnnotation(d);}
         else {plot.redraw();}
@@ -197,22 +165,9 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
     activeGroup: string,
     profileLookup: Map<string, ProfileContext[]>,
 ) => {
-    if (_isPlotActive(activeGroup)) {return;}
     return (defaultColor: string) => {
         const { current: plot } = plotRef;
         if (!plot) {return noop;}
-
-        const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
-        if (!activeProfile) {return noop;}
-        const frameToColorBucket = getFrameToColorBucket(activeProfile);
-        const getCSSColorForFrame = createGetCSSColorForFrame({theme: plot.props.theme, frameToColorBucket});
-
-        const nameToFrame = new Map<string, Frame>();
-        activeProfile.forEachFrame((frame) => {
-            if (!isOpFrame(frame)) {return;}
-            const name = normalizeOpName(frame.name);
-            if (!nameToFrame.has(name)) {nameToFrame.set(name, frame);}
-        });
 
         const getHoveredFrameName = () => {
             const [annotation] = plot.annotations;
@@ -225,7 +180,7 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
         };
 
         const getSelectedFrameName = () => {
-            const frameOrNode = selectedAtom.get();
+            const frameOrNode = selectedAtom.get()?.frameOrNode;
             if (!frameOrNode) {return;}
             const name = frameOrNode instanceof Frame
                 ? frameOrNode.name
@@ -316,8 +271,7 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
 
         plot._addAnnotation(d);
 
-        if (_isPlotActive(activeGroup)) {return;}
-        hoveredAtom.set(d ? { name: d.name } as Frame : null);
+        hoveredAtom.set(d ? { node: d.name, source: activeGroup } : null);
     };
 };
 
@@ -376,6 +330,7 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
         onFrameSelect: redraw,
         onFrameHover: setAnnotationFromHover(plotRef, groupName),
         useClick: () => setSelectedFromClick(groupName, profileLookup),
+        useDoubleClick: () => setSelectedFromClick(groupName, profileLookup, true),
         decorateSvgSeries: applyFrameColors(plotRef, groupName, profileLookup),
         onPoint: setHoverFromPoint(plotRef, groupName, profileLookup),
     };

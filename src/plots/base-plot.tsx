@@ -82,6 +82,7 @@ export interface PlotBaseProps<D> {
     onFrameSelect?: () => void
     onProfileChange?: () => void,
     useClick?: () => ((point: D) => void) | undefined,
+    useDoubleClick?: () => ((point: D) => void) | undefined,
     decorateSvgSeries?: (defaultColor: string) => (selection: d3.Selection<any, any, any, any>) => void,
 }
 
@@ -203,19 +204,21 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             svg.select("g.multi > g:has(g .annotation)").attr("clip-path", null);
         }
 
-        const { useClick } = this.props;
-        if (useClick) {
-            const onClick = useClick();
-            if (onClick) {
-                svg.on('click', () => {
+        const setupClickEvent = (callback: ((point: D) => void) | undefined, listener: string) => {
+            if (callback) {
+                svg.on(listener, () => {
                     const [annotation] = this.annotations;
                     if (!annotation) {return;}
                     const { x, y } = annotation;
                     const point = this._findClosestPoint(x, y);
-                    if (point) {onClick(point);}
+                    if (point) {callback(point);}
                 });
             }
-        }
+        };
+
+        const { useClick, useDoubleClick } = this.props;
+        if (useClick) setupClickEvent(useClick(), 'click');
+        if (useDoubleClick) setupClickEvent(useDoubleClick(), 'dblclick');
     }
 
     /**
@@ -527,7 +530,7 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         ).yOrient("left")
             .xTickFormat(this._xTickFormat())
             .decorate((sel: Selection<d3.BaseType, any, any, any>) => {
-                const s = sel.enter()
+                let s = sel.enter()
                     .select(svgSeries.length > 0 ? "d3fc-svg.plot-area" : "d3fc-canvas.plot-area")
                     .on("measure.range", (event: {detail: {width: number, height: number}}) => {
                         this.xScaleBase.range([0, event.detail.width]);
@@ -536,6 +539,9 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
                 if (zoom) {
                     s.call(zoom);
+                }
+                if (svgSeries.length > 0) {
+                    s = s.on("dblclick.zoom", null);
                 }
                 if (pointer) {
                     /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */

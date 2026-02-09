@@ -73,7 +73,7 @@ export function DragTooltip({draggedElement}: {draggedElement: HTMLDivElement}) 
     );
 }
 
-function createDragEvent(name: "dragenter" | "dragover" | "dragleave" | "drop", originalEvent?: MouseEvent) {
+function createDragEvent(name: "dragenter" | "dragover" | "dragleave" | "dragend" | "drop", originalEvent?: MouseEvent) {
     return new DragEvent(name, originalEvent ? {clientX: originalEvent.clientX, clientY: originalEvent.clientY} : {});
 }
 
@@ -132,6 +132,7 @@ export const TilingComponentButton = memo(({component, tilingRef, setCustomDragg
         case "Escape":
             cleanupListeners();
             layoutRef()?.dispatchEvent(createDragEvent("dragleave"));
+            layoutRef()?.dispatchEvent(createDragEvent("dragend"));
             break;
         }
     };

@@ -5997,13 +5997,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flexlayout-react@npm:^0.8.17":
+"flexlayout-react@npm:0.8.17":
   version: 0.8.17
   resolution: "flexlayout-react@npm:0.8.17"
   peerDependencies:
     react: ^18.0.0 || ^19.0.0
     react-dom: ^18.0.0 || ^19.0.0
   checksum: 10c0/ddfb7ae0df462f99b61fe6ca8d6ca94fdf5274fdbb503f7bb57dd12f2faa509469b335c22a8443a55a005f024ecc192bc3260aca0cea908723aaa10b48ec895f
+  languageName: node
+  linkType: hard
+
+"flexlayout-react@patch:flexlayout-react@npm%3A0.8.17#~/.yarn/patches/flexlayout-react-npm-0.8.17-d59e2a8052.patch":
+  version: 0.8.17
+  resolution: "flexlayout-react@patch:flexlayout-react@npm%3A0.8.17#~/.yarn/patches/flexlayout-react-npm-0.8.17-d59e2a8052.patch::version=0.8.17&hash=c0fb22"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  checksum: 10c0/c40a709a49e2c5d8078c7264e984af2d99669f460d79a5e326aace9bf3c84e536b03c42cafe2e82aa4511ca73c85b076528ee639cf9a17ccce2c6183736b7b97
   languageName: node
   linkType: hard
 
@@ -9984,7 +9994,7 @@ __metadata:
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-jsonc: "npm:^2.20.1"
     eslint-plugin-unused-imports: "npm:^4.1.4"
-    flexlayout-react: "npm:^0.8.17"
+    flexlayout-react: "patch:flexlayout-react@npm%3A0.8.17#~/.yarn/patches/flexlayout-react-npm-0.8.17-d59e2a8052.patch"
     preact: "npm:^10.25.3"
     prettier: "npm:^3.6.2"
     react-click-away-listener: "npm:^2.4.0"

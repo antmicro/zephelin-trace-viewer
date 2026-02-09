@@ -20,7 +20,7 @@
 		"d3": "^7.9.0",
 		"d3-svg-annotation": "^2.5.1",
 		"d3fc": "patch:d3fc@npm%3A15.2.13#~/.yarn/patches/d3fc-npm-15.2.13-99863f16a4.patch",
-		"flexlayout-react": "^0.8.17",
+		"flexlayout-react": "patch:flexlayout-react@npm%3A0.8.17#~/.yarn/patches/flexlayout-react-npm-0.8.17-d59e2a8052.patch",
 		"preact": "^10.25.3",
 		"react-click-away-listener": "^2.4.0",
 		"speedscope": "workspace:*"

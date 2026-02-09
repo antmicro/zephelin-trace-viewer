@@ -1,0 +1,23 @@
+diff --git a/dist/index.js b/dist/index.js
+index 2a1d4d6d38c4c9f17a8426f259937d3204377d56..ad9d7dfb2d1c96cbe3362dd41e5abf1694796c92 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -5772,6 +5772,10 @@ const _LayoutInternal = class _LayoutInternal extends React.Component {
+         this.clearDragLocal();
+       }
+     });
++    __publicField(this, "onDragEnd", (event) => {
++      this.clearDragMain();
++      this.dragEnterCount = 0;
++    });
+     __publicField(this, "onDrop", (event) => {
+       if (this.dragging) {
+         event.preventDefault();
+@@ -5921,6 +5925,7 @@ const _LayoutInternal = class _LayoutInternal extends React.Component {
+         onDragEnter: this.onDragEnterRaw,
+         onDragLeave: this.onDragLeaveRaw,
+         onDragOver: this.onDragOver,
++        onDragEnd: this.onDragEnd,
+         onDrop: this.onDrop,
+         children: [
+           /* @__PURE__ */ jsx("div", { ref: this.moveablesRef, className: this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_MOVEABLES) }, "__moveables__"),

@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@bokeh/bokehjs": "^3.7.3",
 		"@d3fc/d3fc-chart": "patch:@d3fc/d3fc-chart@npm%3A5.1.9#~/.yarn/patches/@d3fc-d3fc-chart-npm-5.1.9-43f8ce229d.patch",
+		"aphrodite": "2.1.0",
 		"d3": "^7.9.0",
 		"d3-svg-annotation": "^2.5.1",
 		"d3fc": "patch:d3fc@npm%3A15.2.13#~/.yarn/patches/d3fc-npm-15.2.13-99863f16a4.patch",

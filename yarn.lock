@@ -9974,6 +9974,7 @@ __metadata:
     "@types/d3": "npm:^7"
     "@typescript-eslint/eslint-plugin": "npm:^8.33.1"
     "@typescript-eslint/parser": "npm:^8.33.1"
+    aphrodite: "npm:2.1.0"
     d3: "npm:^7.9.0"
     d3-svg-annotation: "npm:^2.5.1"
     d3fc: "patch:d3fc@npm%3A15.2.13#~/.yarn/patches/d3fc-npm-15.2.13-99863f16a4.patch"

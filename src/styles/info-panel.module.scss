@@ -41,6 +41,10 @@
             align-items: center;
         }
 
+        .selector-wrapper {
+            position: relative;
+        }
+
         .selector-container {
             display: flex;
             align-items: center;
@@ -48,7 +52,6 @@
             border: 1px solid var(--colors-gray-2, #333);
             border-radius: 0.3em;
             padding-left: 0.5em;
-            overflow: hidden;
             transition: border-color 0.2s ease;
 
             &:hover {
@@ -69,6 +72,7 @@
 
             .group-select {
                 background: transparent;
+                user-select: none;
                 color: inherit;
                 border: none;
                 padding: 2px 0.5em;
@@ -101,6 +105,19 @@
 
                     svg path {
                         stroke: var(--danger-color, #ff4d4d);
+                    }
+                }
+            }
+
+            .profile-select-outer {
+                left: 0 !important;
+                box-sizing: border-box;
+
+                .profile-select-box {
+                    padding-bottom: 0 !important;
+
+                    .profile-row {
+                        padding-left: 1.7em !important;
                     }
                 }
             }

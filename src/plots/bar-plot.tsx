@@ -58,8 +58,9 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
     protected abstract _annotationNote(d: D): { title: string, note: string};
 
     protected _getAxisType(axis: Axis): 'string' | 'number' {
+        if (this.props.plotData.length === 0) { return 'number'; }
         const [plotData] = this.props.plotData;
-        const [e] = plotData;
+        const e = plotData[0];
         const value = this._accessValue(e, axis);
         const type = typeof value;
 
@@ -96,6 +97,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         const descending = this.props.order === 'descending' ? 1 : 0;
         const orderSign = Math.pow(-1, 1 + descending);
 
+        if (this.props.plotData.length === 0) { return this.props.plotData; }
         const plotData = this.props.plotData;
         const plotData0 = [...plotData[0]];
 

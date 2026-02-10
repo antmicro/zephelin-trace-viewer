@@ -21,7 +21,7 @@ import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
 import { DragTooltip, TilingComponentButton } from "./tiling-component-button";
 import { ButtonsContainer } from "./buttons-container";
-import { getAllComponents } from "@/utils/tiling-component";
+import { getComponentsAtom, TilingComponent } from "@/utils/tiling-component";
 import { TilingLayoutProps } from "@/tiling-layout";
 import CirclePlusIcon from "@/icons/circle-plus";
 import LogoIcon from "@/icons/logo";
@@ -40,6 +40,7 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
+    const registeredComponents: Record<string, TilingComponent<any>> = useAtom(getComponentsAtom());
 
     profileGroupAtom.subscribe(() => {
         setTraceLoadedSt((profileGroupAtom.get()?.profiles.length ?? 0) > 0);
@@ -57,6 +58,7 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
     );
 
     const loader = useSpeedscopeLoader();
+    const tilingComponents = Object.values(registeredComponents);
 
     return (
         <div id={style["top-bar"]}>
@@ -82,7 +84,7 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
             </div>
             <div id={style["right-buttons"]}>
                 {(traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
-                    {getAllComponents().map(v => <TilingComponentButton component={v} tilingRef={tilingRef} setCustomDraggingSt={setCustomDraggingSt} />)}
+                    {tilingComponents.map(v => <TilingComponentButton component={v} tilingRef={tilingRef} setCustomDraggingSt={setCustomDraggingSt} />)}
                 </ButtonsContainer> : null }
                 {customDraggingSt ? <DragTooltip draggedElement={customDraggingSt} /> : null}
             </div>

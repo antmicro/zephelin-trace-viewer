@@ -127,18 +127,10 @@ export class TilingComponent<T> {
             ...this.additionalProps,
         };
     }
-
-    /**
-     * Set the target group for the component.
-     */
-    setTargetGroup(groupName: string) {
-        this.targetGroupName = groupName;
-
-    }
 }
 
 /** The object storing all registered components */
-const REGISTERED_COMPONENTS: Record<string, TilingComponent<any>> = {};
+const REGISTERED_COMPONENTS = new Atom<Record<string, TilingComponent<any>>>({}, 'registered-components');
 
 
 /** The name of CSS class which enables overflow for tiles, used for overflowing annotations */
@@ -156,7 +148,7 @@ export default <T extends object>(
     title: string, options: Partial<Omit<TilingComponent<T>, "title" | "component" | "available" | "instances" | "data">> = {},
 ): TilingComponent<T> | undefined => {
     // Make sure the title is unique
-    if (title in REGISTERED_COMPONENTS) {
+    if (title in REGISTERED_COMPONENTS.get()) {
         console.error(`Title '${title}' already used - it has to be unique`);
         return;
     }
@@ -192,7 +184,10 @@ export default <T extends object>(
     if (profileGroupAtom.get()) {setTimeout(load);}
 
     // Register component
-    REGISTERED_COMPONENTS[title] = tilingComponent;
+    REGISTERED_COMPONENTS.set({
+        ...REGISTERED_COMPONENTS.get(),
+        [title]: tilingComponent,
+    });
 
     return tilingComponent;
 };
@@ -202,12 +197,19 @@ export default <T extends object>(
  * Returns registered component with given title.
  */
 export function getTilingComponent(title: string): TilingComponent<any> | undefined {
-    return REGISTERED_COMPONENTS[title];
+    return REGISTERED_COMPONENTS.get()[title];
 }
 
 /**
  * Returns all registered component.
  */
 export function getAllComponents() {
-    return Object.values(REGISTERED_COMPONENTS);
+    return Object.values(REGISTERED_COMPONENTS.get());
+}
+
+/**
+ * Returns atomic register of the components, which can be used as reactive state.
+ */
+export function getComponentsAtom() {
+    return REGISTERED_COMPONENTS;
 }

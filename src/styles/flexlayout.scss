@@ -52,6 +52,14 @@
     z-index: v.$annotation-z-index + 1 !important;
 }
 
+.flexlayout__tabset {
+    border: 2px transparent solid;
+
+    &[data-focused="y"] {
+        border: 2px var(--colors-gray-2) solid;
+    }
+}
+
 .flexlayout__tabset_tabbar_outer.flexlayout__tabset_tabbar_outer_top {
     background-color: var(--colors-gray-bg);
     height: 30px;

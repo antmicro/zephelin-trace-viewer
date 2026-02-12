@@ -14,7 +14,7 @@ import { JSX , ComponentChild, RefObject } from "preact";
 
 import { memo, useImperativeHandle, useRef } from "preact/compat";
 import { Action, Actions, DockLocation, IJsonModel, ITabRenderValues, Layout, Model, Node, Orientation, TabNode, TabSetNode } from "flexlayout-react";
-import { loadingAtom, profileGroupAtom } from "@speedscope/app-state";
+import { focusedPanelAtom, loadingAtom, profileGroupAtom } from "@speedscope/app-state";
 
 import style from "@styles/app.module.scss";
 import { MutableRef } from "preact/hooks";
@@ -200,7 +200,7 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         node.setEventListener('resize', resizeNode);
         node.setEventListener('visibility', resizeNode);
         return (
-            <TilingPanel key={node.getId()}>
+            <TilingPanel key={node.getId()} node={node}>
                 <ComponentType
                     tilingComponent={tilingComponent}
                 />
@@ -267,6 +267,24 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
             } else {
                 n.updateAttrs({enableDrag: true});
             }
+        } else if (a.type === Actions.SET_ACTIVE_TABSET) {
+            const nodes = Array.from(document.querySelectorAll('[data-layout-path]').values());
+            const tabSets = nodes.filter((n: Element) => n.getAttribute("data-layout-path")?.match(/ts[0-9]+$/));
+
+            const tabSet = model.getNodeById(a.data.tabsetNode as string) as TabSetNode;
+            tabSets.forEach((n: Element) => {
+                if (tabSet.getPath() === n.getAttribute("data-layout-path")) {
+                    n.setAttribute("data-focused", "y");
+                } else {
+                    n.setAttribute("data-focused", "n");
+                }
+            });
+
+            const selectedNode = tabSet.getSelectedNode();
+            if (selectedNode === undefined) {
+                return a;
+            }
+            focusedPanelAtom.set(selectedNode.getId());
         }
         return a;
     };

@@ -195,6 +195,9 @@ interface HoverState {
 /** Stores global state pointing to selected node. */
 export const hoveredAtom = new Atom<HoverState | null>(null, 'hovered');
 
+/** Tracks which groups are active in each flamegraph. */
+export const activeGroupAtom = new Atom<Record<string, string | undefined>>({}, 'active-group');
+
 /*
  * Atom does not notify listeners if the value was the same.
  * Speedscope instances are not in sync with this atom, therefore sometimes they might have the same value, sometimes not.
@@ -245,7 +248,15 @@ const Speedscope = memo((): JSX.Element => {
         const viewModeAtom = new Atom<ViewMode>(ViewMode.CHRONO_FLAME_CHART, `viewMode-${uuid}`);
 
         // Atom-state sync
-        const setInstanceState = () => profileGroupStateSet(instanceProfileGroupAtom.get());
+        const setInstanceState = () => {
+            profileGroupStateSet(instanceProfileGroupAtom.get());
+            if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
+                activeGroupAtom.set({
+                    ...activeGroupAtom.get(),
+                    [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()
+                });
+            }
+        }
         const setViewModeState = () => setViewMode(viewModeAtom.get());
 
         // Sync on import
@@ -329,6 +340,12 @@ const Speedscope = memo((): JSX.Element => {
                 },
                 setProfileIndexToView: (indexToView: number) => {
                     instanceProfileGroupAtom.setProfileIndexToView(indexToView);
+                    if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
+                        activeGroupAtom.set({
+                            ...activeGroupAtom.get(),
+                            [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()
+                        });
+                    }
                     syncSelectedFrameOrNode();
                 },
                 setViewMode: (state) => viewModeAtom.set(state),

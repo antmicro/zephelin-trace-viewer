@@ -18,7 +18,8 @@ import { RefObject } from "preact";
 import { getGroupNames, getProfilesForGroup } from "@speedscope/app-state/utils";
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
-import { hoveredAtom, indexToViewAtom, selectedAtom } from "@/speedscope";
+import { hoveredAtom, indexToViewAtom, selectedAtom, activeGroupAtom } from "@/speedscope";
+import { useAtom } from '@speedscope/lib/atom';
 
 /** Provides the view selected in the Speedscope */
 export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState | SandwichViewState } | null {
@@ -171,6 +172,8 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
     activeGroup: string,
     profileLookup: Map<string, ProfileContext[]>,
 ) => {
+    const groupAtom = useAtom(activeGroupAtom);
+
     return (defaultColor: string) => {
         const { current: plot } = plotRef;
         if (!plot) {return noop;}
@@ -202,8 +205,12 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
         return (selection: d3.Selection<d3.BaseType, any, any, any>) => {
             selection
                 .select('path')
-                .attr('fill', ({ name }: FrameEvent) => {
-                    const ownerContext = profileLookup.get(activeGroup)?.find(c => c.nameToFrame.has(name));
+                .attr('fill', (fe: FrameEvent) => {
+                    const {name, groupName} = fe;
+                    if (!(Object.values(groupAtom).includes(groupName))) {
+                        return defaultColor;
+                    }
+                    const ownerContext = profileLookup.get(groupName)?.find(c => c.nameToFrame.has(name));
                     if (!ownerContext) {return defaultColor;}
 
                     const frame = ownerContext.nameToFrame.get(name);

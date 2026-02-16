@@ -30,25 +30,27 @@ export interface OpExecutionTimeProps {
 }
 
 
-function OpExecutionTimePlotWrapper({ activeGroup, theme, tilingComponent }: {
-    activeGroup: string,
+function OpExecutionTimePlotWrapper({ activeGroups, theme, tilingComponent }: {
+    activeGroups: string[],
     theme: Theme,
     tilingComponent: TilingComponent<OpExecutionTimeProps>
 }) {
     const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
-    const data = tilingComponent.dataProvider?.(activeGroup);
-    const displayData = data?.plotData ?? [];
+
+    const displayData = activeGroups.map(name =>
+        tilingComponent.dataProvider?.(name)?.plotData.flat() ?? [],
+    );
 
     return (
         <OpExecutionTimePlot
-            key={activeGroup}
+            key={activeGroups.join(",")}
             ref={plotRef}
             plotData={displayData}
-            activeGroup={activeGroup}
+            activeGroups={activeGroups}
             orient='horizontal'
             order='ascending'
             theme={theme}
-            {...useFrameCallbacks(plotRef, activeGroup, theme)}
+            {...useFrameCallbacks(plotRef, activeGroups, theme)}
         />
     );
 }
@@ -57,15 +59,15 @@ function OpExecutionTimePlotWrapper({ activeGroup, theme, tilingComponent }: {
 function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
     const theme = useTheme();
 
-    const renderPlot = (activeGroup: string) => {
+    const renderPlot = (activeGroups: string[]) => {
 
         const profileGroup = useAtom(profileGroupAtom);
         const activeProfileIndex = profileGroup?.indexToView;
 
         return  (
             <OpExecutionTimePlotWrapper
-                key={`${activeGroup}:${activeProfileIndex }`}
-                activeGroup={activeGroup}
+                key={`${activeGroups.join(",")}:${activeProfileIndex}`}
+                activeGroups={activeGroups}
                 theme={theme}
                 tilingComponent={tilingComponent}
             />
@@ -75,6 +77,7 @@ function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
         <PanelTemplate
             tilingComponent={tilingComponent}
             allowGroupSelection={true}
+            allowMultiplePlots={true}
         >
             {renderPlot}
         </PanelTemplate>

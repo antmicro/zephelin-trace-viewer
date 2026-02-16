@@ -93,13 +93,13 @@ export function useFrameProvider() {
 }
 
 /** Callback for plot click event, selects corresponding frame/node in Speedscope */
-export function setSelectedFromClick(activeGroup: string, profileLookup: Map<string, ProfileContext[]>, focus = false) {
+export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<string, ProfileContext[]>, focus = false) {
 
     return (point: { name: string, groupName?: string }) => {
         if (!point) {return;}
         const { name } = point;
 
-        const targetGroup = point.groupName ?? activeGroup;
+        const targetGroup = point.groupName;
         const profileContexts = profileLookup.get(targetGroup);
 
         if (!profileContexts || profileContexts.length === 0) {

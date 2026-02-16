@@ -173,14 +173,16 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
         const { current: plot } = plotRef;
         if (!plot) {return noop;}
 
-        const getHoveredFrameName = () => {
+        const getHoveredFrameAttrs = () => {
             const [annotation] = plot.annotations;
-            if (!annotation) {return;}
+            if (!annotation) {return [null, null];}
             const { x, y } = annotation;
-            const { name } = plot._findClosestPoint(x, y) ?? {};
+            const point = plot._findClosestPoint(x, y) ?? {};
+            const { name, groupName } = point;
             if (name) {
-                return normalizeOpName(name);
+                return [normalizeOpName(name), groupName];
             }
+            return [null, null];
         };
 
         const getSelectedFrameName = () => {
@@ -206,16 +208,19 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
                     return ownerContext.frameToColor?.(frame) ?? defaultColor;
                 })
                 .attr('stroke-width', ({ name }: FrameEvent) => {
-                    if (getHoveredFrameName() === name) {
+                    if (getHoveredFrameAttrs()[0] === name) {
                         return 4;
                     } else if (getSelectedFrameName() === name) {
                         return 2;
                     }
                     return null;
                 })
-                .attr('stroke', ({ name }: FrameEvent) => {
+                .attr('stroke', (fe: FrameEvent) => {
+                    const {name, groupName} = fe;
                     const isSelected = getSelectedFrameName() === name;
-                    const isHovered = getHoveredFrameName() === name;
+                    const [hoveredName, hoveredGroupName] = getHoveredFrameAttrs();
+                    const isHovered = hoveredName === name && hoveredGroupName === groupName;
+
                     if (isSelected && isHovered) {
                         return plot.props.theme.selectionPrimaryColor;
                     } else if (isSelected) {

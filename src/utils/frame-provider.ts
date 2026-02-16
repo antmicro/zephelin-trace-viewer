@@ -134,7 +134,7 @@ interface FrameEvent {
 /** Callback for Speedscope frame hover event, sets plot annotations according to hovered frame/node */
 export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseProps<D>>(
     plotRef: RefObject<Plot<D, T>>,
-    activeGroup: string,
+    activeGroups: string[],
 ) => {
     return () => {
         if (!plotRef.current) {return;}
@@ -148,10 +148,14 @@ export const setAnnotationFromHover = <D extends FrameEvent, T extends PlotBaseP
             return;
         }
 
-        if (hovered.source !== activeGroup) {return;}
+        if (!(activeGroups.includes(hovered.source))) {return;}
 
         const hoveredName = normalizeOpName(hovered.node);
-        const d = plot.plotData?.flat().find(({ name }) => name === hoveredName);
+        const index = activeGroups.indexOf(hovered.source);
+        if(index === -1){
+            return;
+        }
+        const d = plot.plotData?.[index].find(({ name }) => name === hoveredName);
         if (d) {plot._addAnnotation(d);}
         else {plot.redraw();}
     };
@@ -271,7 +275,7 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
 
         plot._addAnnotation(d);
 
-        hoveredAtom.set(d ? { node: d.name, source: activeGroup } : null);
+        hoveredAtom.set(d ? { node: d.name, source: d.groupName } : null);
     };
 };
 

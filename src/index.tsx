@@ -47,6 +47,19 @@ if (tracesBaked) {
         .catch(e => console.error(e));
 }
 
+interface Message {
+    command: string;
+    data: unknown;
+}
+window.addEventListener('message', (event) => {
+    const message = event.data as Message;
+    if (message?.command === 'reloadTrace' && typeof message.data === 'string') {
+        useSpeedscopeLoader(false)
+            .loadProfile(() => importProfilesFromBase64('tracefile', message.data))
+            .catch(e => console.error(e));
+    }
+});
+
 // Configure Speedscope - only once before application starts
 configureSpeedscope();
 

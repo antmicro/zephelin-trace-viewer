@@ -1,0 +1,48 @@
+{
+	"name": "zephelin-trace-viewer",
+	"displayName": "Zephelin Trace Viewer",
+	"description": "Visualize Zephyr RTOS trace files inside VS Code",
+	"version": "0.0.1",
+	"publisher": "adi",
+	"license": "Apache-2.0",
+	"engines": {
+		"vscode": "^1.85.0"
+	},
+	"categories": [
+		"Visualization"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"contributes": {
+		"customEditors": [
+			{
+				"viewType": "zephelinTraceViewer",
+				"displayName": "Zephelin Trace Viewer",
+				"selector": [
+					{
+						"filenamePattern": "*.tef"
+					}
+				],
+				"priority": "default"
+			},
+			{
+				"viewType": "zephelinTraceViewer",
+				"displayName": "Zephelin Trace Viewer",
+				"selector": [
+					{
+						"filenamePattern": "*.json"
+					}
+				],
+				"priority": "option"
+			}
+		]
+	},
+	"scripts": {
+		"build": "node esbuild.js",
+		"watch": "node esbuild.js --watch"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.85.0",
+		"esbuild": "^0.24.0"
+	}
+}

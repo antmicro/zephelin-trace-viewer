@@ -16,9 +16,15 @@ dist-ssr
 .yarn/install-state.gz
 .vite/
 
+# Extension build output
+extension/out
+extension/node_modules
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea
 .DS_Store
 *.suo

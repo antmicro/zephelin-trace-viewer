@@ -11,7 +11,9 @@
 		"dev": "vite",
 		"build": "vite build --base=./",
 		"build-singlefile": "vite build --base=./ --mode=single-file",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"build:ext": "cd extension && npm run build",
+		"build:all": "yarn build && yarn build:ext"
 	},
 	"dependencies": {
 		"@bokeh/bokehjs": "^3.7.3",

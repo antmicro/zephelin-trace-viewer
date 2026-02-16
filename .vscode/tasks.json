@@ -1,0 +1,34 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Webapp",
+			"type": "shell",
+			"command": "yarn build",
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Build Extension",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"cwd": "${workspaceFolder}/extension"
+			},
+			"group": "build",
+			"dependsOn": "Build Webapp",
+			"problemMatcher": ["$tsc"]
+		},
+		{
+			"label": "Watch Extension",
+			"type": "shell",
+			"command": "npm run watch",
+			"options": {
+				"cwd": "${workspaceFolder}/extension"
+			},
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": ["$tsc-watch"]
+		}
+	]
+}

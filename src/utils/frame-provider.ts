@@ -25,6 +25,8 @@ export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState
     const activeProfile = profileGroupAtom.getActiveProfile();
     if (!activeProfile) {return null;}
 
+    const groupName = activeProfile?.profile?.groupName;
+
     const viewMode = viewModeAtom.get();
     let activeView: FlamechartViewState | SandwichViewState;
     switch (viewMode) {
@@ -38,7 +40,7 @@ export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState
         activeView = activeProfile.sandwichViewState;
         break;
     }
-    return { viewMode, activeView };
+    return { viewMode, activeView, groupName };
 }
 
 
@@ -119,7 +121,7 @@ export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<
 
         if (focus) {indexToViewAtom.set(() => globalIndex);}
         const maybeFrameOrNode = nameToNode.get(name) ?? nameToFrame.get(name) ?? null;
-        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex });
+        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex, groupName: point.groupName });
     };
 }
 
@@ -185,13 +187,15 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
             return [null, null];
         };
 
-        const getSelectedFrameName = () => {
+        const getSelectedFrameAttrs = () => {
             const frameOrNode = selectedAtom.get()?.frameOrNode;
-            if (!frameOrNode) {return;}
+            const groupName = selectedAtom.get()?.groupName;
+            if (!frameOrNode) {return [null, null];}
             const name = frameOrNode instanceof Frame
                 ? frameOrNode.name
                 : frameOrNode.frame.name;
-            if (name) {return normalizeOpName(name);}
+            if (name) {return [normalizeOpName(name), groupName];}
+            return [null, null];
         };
 
 
@@ -210,14 +214,17 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
                 .attr('stroke-width', ({ name }: FrameEvent) => {
                     if (getHoveredFrameAttrs()[0] === name) {
                         return 4;
-                    } else if (getSelectedFrameName() === name) {
+                    } else if (getSelectedFrameAttrs()[0] === name) {
                         return 2;
                     }
                     return null;
                 })
                 .attr('stroke', (fe: FrameEvent) => {
                     const {name, groupName} = fe;
-                    const isSelected = getSelectedFrameName() === name;
+
+                    const [selectedName, selectedGroupName] = getSelectedFrameAttrs();
+                    const isSelected = selectedName === name && selectedGroupName === groupName;
+
                     const [hoveredName, hoveredGroupName] = getHoveredFrameAttrs();
                     const isHovered = hoveredName === name && hoveredGroupName === groupName;
 

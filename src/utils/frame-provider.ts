@@ -114,7 +114,6 @@ export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<
         if (!targetContext) {
             console.warn(`Operation "${name}" not found in any profile of group "${targetGroup}"`);
             [targetContext] = profileContexts;
-
         }
 
         const { globalIndex, nameToFrame, nameToNode } = targetContext;
@@ -168,7 +167,7 @@ type PlotPropsWithTheme<D> = PlotBaseProps<D> & { theme: Theme };
 /** Plot decoration callback, sets SVG colors according to Speedscope theme  */
 export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
-    activeGroup: string,
+    activeGroups: string[],
     profileLookup: Map<string, ProfileContext[]>,
 ) => {
     const groupAtom = useAtom(activeGroupAtom);
@@ -309,7 +308,7 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
 /** Creates frame/node plot callbacks, linking selection, hover, colors with Speedscope and other plots */
 export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
-    groupName: string,
+    activeGroups: string[],
     theme: Theme,
 ) => {
     const redraw = () => plotRef.current?.redraw();
@@ -359,10 +358,10 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
 
     return {
         onFrameSelect: redraw,
-        onFrameHover: setAnnotationFromHover(plotRef, groupName),
-        useClick: () => setSelectedFromClick(groupName, profileLookup),
-        useDoubleClick: () => setSelectedFromClick(groupName, profileLookup, true),
-        decorateSvgSeries: applyFrameColors(plotRef, groupName, profileLookup),
-        onPoint: setHoverFromPoint(plotRef, groupName, profileLookup),
+        onFrameHover: setAnnotationFromHover(plotRef, activeGroups),
+        useClick: () => setSelectedFromClick(activeGroups, profileLookup),
+        useDoubleClick: () => setSelectedFromClick(activeGroups, profileLookup, true),
+        decorateSvgSeries: applyFrameColors(plotRef, activeGroups, profileLookup),
+        onPoint: setHoverFromPoint(plotRef, activeGroups, profileLookup),
     };
 };

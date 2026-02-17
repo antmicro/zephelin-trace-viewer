@@ -199,8 +199,14 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         };
         node.setEventListener('resize', resizeNode);
         node.setEventListener('visibility', resizeNode);
+        const doAction  = (action: Action) => {
+            const outcome = onAction(action);
+            if (outcome !== undefined) {
+                model.doAction(outcome);
+            }
+        };
         return (
-            <TilingPanel key={node.getId()} node={node}>
+            <TilingPanel key={node.getId()} node={node} doAction={doAction}>
                 <ComponentType
                     tilingComponent={tilingComponent}
                 />

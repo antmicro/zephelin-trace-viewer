@@ -28,6 +28,12 @@ export interface NodeConfig {
     savedViewStates?: Record<string, { configSpaceViewportRect: Rect }>;
 }
 
+interface KeyboardShortcut {
+    ctrl?: boolean
+    shift?: boolean
+    key: string
+}
+
 export class TilingComponent<T> {
 
     /** The data used to initialize the component, calculated one when the trace is loaded */
@@ -73,6 +79,8 @@ export class TilingComponent<T> {
         public fetcher?: (groupName: string) => (T | undefined | null),
         /** Reference to the FlexLayout model representation of the panel */
         public node?: TabNode,
+        /** Keyboard shortcuts used for panel autofocusing */
+        public keyboardShortcuts?: KeyboardShortcut[],
     ) {}
 
     /** Wraps properties producing function in caching mechanism */
@@ -159,6 +167,28 @@ export default <T extends object>(
         return;
     }
 
+    if (options.keyboardShortcuts) {
+        // Try to find collisions in keyboard shortcuts
+        const conflicts: [KeyboardShortcut, TilingComponent<any>][] = [];
+        options.keyboardShortcuts.forEach((currentShortcut) => {
+            Object.values(REGISTERED_COMPONENTS.get()).forEach((otherComponent) => {
+                otherComponent.keyboardShortcuts?.forEach((otherShortcut) => {
+                    const equal = currentShortcut.ctrl === otherShortcut.ctrl
+                        && currentShortcut.shift === otherShortcut.shift
+                        && currentShortcut.key === otherShortcut.key;
+                    if (equal) {conflicts.push([currentShortcut, otherComponent]);}
+                });
+            });
+        });
+
+        // Report conflicts if found
+        if (conflicts.length) {
+            console.error(`Tiling component '${title} has conflicting keyboard shortcuts:`);
+            conflicts.forEach(([shortcut, component]) => console.error(`${JSON.stringify(shortcut)} (${component.title})`));
+            return;
+        }
+    }
+
     // Set defaults
     options.additionalProps ??= {};
     options.additionalProps.minWidth ??= 100;
@@ -175,6 +205,8 @@ export default <T extends object>(
         options.maxInstances ?? 10,
         options.additionalProps,
         options.dataProvider,
+        undefined,
+        options.keyboardShortcuts,
     );
 
     const load = () => {

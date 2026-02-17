@@ -10,28 +10,30 @@
  * The Speedscope component with adjustments like default dark theme and custom welcome message.
  */
 
-import { Fragment, JSX, VNode } from 'preact';
+import { ComponentChildren, Fragment, JSX, VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
-import { ApplicationContainer } from '@speedscope/views/application-container';
-import { customWelcomeMessagesAtom, dragActiveAtom, errorAtom, flattenRecursionAtom, hashParamsAtom, loadingAtom, profileGroupAtom, toolbarConfigAtom, viewModeAtom } from '@speedscope/app-state';
+import { customWelcomeMessagesAtom, dragActiveAtom, errorAtom, hashParamsAtom, loadingAtom, profileGroupAtom, toolbarConfigAtom, viewModeAtom } from '@speedscope/app-state';
 import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
 import style from '@styles/app.module.scss';
-import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'preact/compat';
+import { memo, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'preact/compat';
 import { ProfileLoader } from '@speedscope/lib/profile-loader';
 import { Atom, useAtom } from '@speedscope/lib/atom';
 import { getCanvasContext, getProfileToView } from '@speedscope/app-state/getters';
 import { Rect, Vec2 } from '@speedscope/lib/math';
 import { FlamechartID, FlamechartViewState, ProfileGroupAtom, ProfileGroupState, ProfileState } from '@speedscope/app-state/profile-group';
-import { ApplicationProps } from '@speedscope/views/application';
-import { CallTreeNode, Frame } from '@speedscope/lib/profile';
+import { Application, ApplicationProps } from '@speedscope/views/application';
+import { CallTreeNode, Frame, Profile } from '@speedscope/lib/profile';
 import { ActiveProfileState } from '@speedscope/app-state/active-profile-state';
 import { ViewMode } from '@speedscope/lib/view-mode';
 import { noop } from '@speedscope/lib/utils';
 import { Actions } from 'flexlayout-react';
+import { ProfileSearchResults } from '@speedscope/lib/profile-search';
+import { ProfileSearchContext } from '@speedscope/views/search-view';
 import tilingComponent, { TilingComponent, NodeConfig } from './utils/tiling-component';
+import { FocusContext } from './utils/tiling-panel';
 
 
 interface SelectTraceMessageProps {
@@ -201,6 +203,36 @@ export const hoveredAtom = new Atom<HoverState | null>(null, 'hovered');
 /** Tracks which groups are active in each flamegraph. */
 export const activeGroupAtom = new Atom<Record<string, string | undefined>>({}, 'active-group');
 
+export interface ProfileSearch {
+    getResults(): ProfileSearchResults | null
+    getQuery(): string
+    setActive(value: boolean): void
+    setQuery(query: string): void
+}
+
+export const ProfileSearchContextProvider = ({activeProfileState, children}: {activeProfileState: ActiveProfileState | null, children: ComponentChildren}) => {
+    const profile: Profile | null = activeProfileState ? activeProfileState.profile : null;
+    const [searchIsActive, setSearchIsActive] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState<string>('');
+
+    const searchResults = useMemo(() => {
+        if (!profile || !searchIsActive || searchQuery.length === 0) {
+            return null;
+        }
+        return new ProfileSearchResults(profile, searchQuery);
+    }, [searchIsActive, searchQuery, profile]);
+
+    const getResults = () => searchResults;
+    const getQuery = () => searchQuery;
+    const isActive = () => searchIsActive;
+    const setActive = setSearchIsActive;
+    const setQuery = setSearchQuery;
+
+    return (
+        <ProfileSearchContext.Provider value={{ getResults, getQuery, isActive, setActive, setQuery }}>{children}</ProfileSearchContext.Provider>
+    );
+};
+
 /*
  * Atom does not notify listeners if the value was the same.
  * Speedscope instances are not in sync with this atom, therefore sometimes they might have the same value, sometimes not.
@@ -220,8 +252,6 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         () => (canvas ? getCanvasContext({theme, canvas}) : null),
         [theme, canvas],
     );
-
-    const flattenRecursion = useAtom(flattenRecursionAtom);
 
     const config = tilingComponent?.node?.getConfig() as NodeConfig | undefined;
     const activeIndex = config?.activeGroupIndex;
@@ -257,6 +287,7 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         return initialState;
     });
 
+    const [flattenRecursion, setFlattenRecursion] = useState<boolean>(false);
     const activeProfileState = getActiveProfileState(flattenRecursion, profileGroupState);
 
     const [viewMode, setViewMode] = useState(ViewMode.CHRONO_FLAME_CHART);
@@ -468,18 +499,52 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         };
     }, []);
 
+    const isPanelFocused = useContext(FocusContext);
+    const isFocused = (ev: KeyboardEvent) => {
+        const saveProfile = ev.key === 's' && (ev.ctrlKey || ev.metaKey);
+        const browseForFile = ev.key === 'o' && (ev.ctrlKey || ev.metaKey);
+        const allowed = !saveProfile && !browseForFile;
+        return isPanelFocused(allowed ? ev : undefined) && allowed;
+    };
+
     return (
         <div className={style['speedscope-container']}>
-            <ApplicationContainer
-                glCanvas={canvas}
-                canvasContext={canvasContext}
-                setGLCanvas={setGLCanvas}
-                viewMode={viewMode}
-                profileGroup={profileGroupState}
-                activeProfileState={activeProfileState}
+            <ProfileSearchContextProvider  activeProfileState={activeProfileState}>
+                <Application
+                // Global
+                    hashParams={useAtom(hashParamsAtom)}
+                    loading={useAtom(loadingAtom)}
+                    error={useAtom(errorAtom)}
+                    dragActive={useAtom(dragActiveAtom)}
+                    customWelcomeMessage={useAtom(customWelcomeMessagesAtom)}
+                    setLoading={(value) => loadingAtom.set(value)}
+                    setError={(value) => errorAtom.set(value)}
+                    setDragActive={(value) => dragActiveAtom.set(value)}
+                    setProfileGroup={profileGroupAtom.setProfileGroup}
 
-                {...appSetters}
-            />
+                    // Instance-specific
+                    glCanvas={canvas}
+                    canvasContext={canvasContext}
+                    viewMode={viewMode}
+                    profileGroup={profileGroupState}
+                    activeProfileState={activeProfileState}
+                    theme={theme}
+                    flattenRecursion={flattenRecursion}
+                    isFocused={isFocused}
+                    setGLCanvas={setGLCanvas}
+                    setFlattenRecursion={setFlattenRecursion}
+
+                    // Instance-specific, overridden by `appSetters`
+                    setViewMode={(value) => viewModeAtom.set(value)}
+                    setProfileIndexToView={profileGroupAtom.setProfileIndexToView}
+                    setSelectedNode={profileGroupAtom.setSelectedNode}
+                    setSelectedFrame={profileGroupAtom.setSelectedFrame}
+                    setConfigSpaceViewportRect={profileGroupAtom.setConfigSpaceViewportRect}
+                    setFlamechartHoveredNode={profileGroupAtom.setFlamechartHoveredNode}
+                    setLogicalSpaceViewportSize={profileGroupAtom.setLogicalSpaceViewportSize}
+                    {...appSetters}
+                />
+            </ProfileSearchContextProvider>
         </div>
     );
 // Override comparison function to hardly ever reload the Speedscope

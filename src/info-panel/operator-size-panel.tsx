@@ -30,25 +30,27 @@ export interface OpSizeProps {
     tilingComponent: TilingComponent<OpSizeProps>
 }
 
-function OpSizePlotWrapper({ activeGroup, theme, tilingComponent }: {
-    activeGroup: string,
+function OpSizePlotWrapper({ activeGroups, theme, tilingComponent }: {
+    activeGroups: string[],
     theme: Theme,
     tilingComponent: TilingComponent<OpSizeProps>
 }) {
     const plotRef = useRef<OpSizePlot<OpSizeData, BarPlotProps<OpSizeData> & { theme: Theme }>>(null);
-    const data = tilingComponent.dataProvider?.(activeGroup);
-    const displayData = data?.plotData ?? [];
+
+    const displayData = activeGroups.map(name =>
+        tilingComponent.dataProvider?.(name)?.plotData.flat() ?? [],
+    );
 
     return (
         <OpSizePlot
-            key={activeGroup}
+            key={activeGroups.join(",")}
             ref={plotRef}
             plotData={displayData}
-            activeGroup={activeGroup}
+            activeGroups={activeGroups}
             orient='horizontal'
             order='ascending'
             theme={theme}
-            {...useFrameCallbacks(plotRef, activeGroup, theme)}
+            {...useFrameCallbacks(plotRef, activeGroups, theme)}
         />
     );
 }
@@ -60,11 +62,11 @@ function OpSizePanel({ tilingComponent }: OpSizeProps) {
     const profileGroup = useAtom(profileGroupAtom);
     const activeProfileIndex = profileGroup?.indexToView;
 
-    const renderPlot = (activeGroup: string) => {
+    const renderPlot = (activeGroups: string[]) => {
         return  (
             <OpSizePlotWrapper
-                key={`${activeGroup}:${activeProfileIndex }`}
-                activeGroup={activeGroup}
+                key={`${activeGroups.join(",")}:${activeProfileIndex}`}
+                activeGroups={activeGroups}
                 theme={theme}
                 tilingComponent={tilingComponent}
             />
@@ -74,6 +76,7 @@ function OpSizePanel({ tilingComponent }: OpSizeProps) {
         <PanelTemplate
             tilingComponent={tilingComponent}
             allowGroupSelection={true}
+            allowMultiplePlots={true}
         >
             {renderPlot}
         </PanelTemplate>

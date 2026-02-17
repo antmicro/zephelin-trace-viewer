@@ -10,7 +10,7 @@
  * The module implementing drag&drop feature that loads traces into Speedscope.
  */
 
-import { useRef } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import { memo } from 'preact/compat';
 import { VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
@@ -43,8 +43,6 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, chi
     const borderRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
     let timeouts: NodeJS.Timeout[] = [];
-
-    const loader = useSpeedscopeLoader();
 
     // Functions toggling drag&drop effects
     const setDrag = () => {
@@ -82,6 +80,8 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, chi
         e.stopImmediatePropagation();
     };
     const drop = (e: DragEvent) => {
+        const loader = useSpeedscopeLoader(false);
+
         if (onDropStart) {onDropStart();}
         unsetDrag();
         e.preventDefault();
@@ -91,6 +91,19 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, chi
             .then(onDropEnd)
             .catch((err) => {console.error("Trace load failed:", err); onDropAbort?.();});
     };
+
+    // Handle loading-related keyboard events independently from Speedscope panels
+    const handleLoaderKeydownEvents = (ev: KeyboardEvent) => {
+        const loader = useSpeedscopeLoader(false);
+        loader.onWindowKeyDown(ev)
+            .then(onDropEnd)
+            .catch((err) => {console.error("Trace load failed:", err); onDropAbort?.();});
+    };
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleLoaderKeydownEvents);
+        return () => window.removeEventListener('keydown', handleLoaderKeydownEvents);
+    });
 
     return (
         <div

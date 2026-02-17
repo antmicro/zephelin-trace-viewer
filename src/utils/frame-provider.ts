@@ -250,7 +250,7 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
 /** Callback for plot point event, sets hovered frame/node in Speedscope */
 export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithTheme<D>>(
     plotRef: RefObject<Plot<D, T>>,
-    activeGroup: string,
+    activeGroups: string[],
     profileLookup: Map<string, ProfileContext[]>,
 ) => {
     return ([coord]: { x: number, y: number }[]) => {
@@ -275,20 +275,29 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         plot.annotations.pop();
 
         if (d) {
-            const activeProfileName = profileGroupAtom.getActiveProfile()?.profile.getName();
+            const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
+            const activeProfileName = activeProfile?.getName();
+            const activeProfileGroupName = activeProfile?.getGroupName();
 
-            const contexts = profileLookup.get(activeGroup) ?? [];
+            const contexts = profileLookup.get(d.groupName) ?? [];
             const ownerContext = contexts.find(c => c.nameToFrame.has(d.name));
-            const allProfiles = profileGroupAtom.get()?.profiles;
-            const ownerProfileName = (ownerContext && allProfiles)
-                ? allProfiles[ownerContext.globalIndex].profile.getName()
-                : undefined;
 
-            const displaySource = (ownerProfileName && ownerProfileName !== activeProfileName)
+            const allProfiles = profileGroupAtom.get()?.profiles;
+            const ownerProfile = (ownerContext && allProfiles)
+                ? allProfiles[ownerContext.globalIndex].profile
+                : undefined;
+            const ownerProfileName = ownerProfile?.getName();
+            const ownerProfileGroupName = ownerProfile?.getGroupName();
+
+            const displaySource = (
+                ownerProfileName && (
+                    ownerProfileName !== activeProfileName ||
+                    ownerProfileGroupName !== activeProfileGroupName
+                )
+            )
                 ? ownerProfileName
                 : undefined;
             d.sourceProfile = displaySource;
-
         }
 
         plot._addAnnotation(d);

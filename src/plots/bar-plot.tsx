@@ -250,9 +250,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         */
         const groupNames = getGroupNames();
         const color = getCSSColorByIdx(
-            this.props.activeGroups
-                ? groupNames.findIndex((group) => group === this.props.activeGroups[index])
-                : groupNames.findIndex((group) => group === this.props.activeGroup),
+            groupNames.findIndex((group) => group === this.props.activeGroups[index]),
             this.plotData.length,
         );
 

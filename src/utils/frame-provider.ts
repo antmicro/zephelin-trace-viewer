@@ -63,7 +63,6 @@ interface ProfileContext {
     frameToColor: ((frame: Frame) => string) | null;
 }
 
-
 /** Provides the frame selected in the Speedscope, returns stateful object */
 export function useFrameProvider() {
     const [frameSt, setFrameSt] = useState<FrameState | undefined>(undefined);

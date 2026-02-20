@@ -181,6 +181,8 @@ interface SelectionState {
     frameOrNode: Frame | CallTreeNode
     /** Profile index which contains the given frame/node */
     indexToView: number
+    /** Group name associated with the frame/node */
+    groupName?: string
 }
 
 /** Stores global state pointing to selected node. */
@@ -190,7 +192,7 @@ interface HoverState {
     /** Hovered node name */
     node: string,
     /** Hovered node group */
-    source: string,
+    source: string
 }
 /** Stores global state pointing to selected node. */
 export const hoveredAtom = new Atom<HoverState | null>(null, 'hovered');
@@ -253,10 +255,10 @@ const Speedscope = memo((): JSX.Element => {
             if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
                 activeGroupAtom.set({
                     ...activeGroupAtom.get(),
-                    [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()
+                    [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
                 });
             }
-        }
+        };
         const setViewModeState = () => setViewMode(viewModeAtom.get());
 
         // Sync on import
@@ -343,7 +345,7 @@ const Speedscope = memo((): JSX.Element => {
                     if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
                         activeGroupAtom.set({
                             ...activeGroupAtom.get(),
-                            [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()
+                            [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
                         });
                     }
                     syncSelectedFrameOrNode();

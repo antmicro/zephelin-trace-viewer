@@ -16,17 +16,17 @@ import { noop } from "@speedscope/lib/utils";
 import { createGetCSSColorForFrame, getFrameToColorBucket } from "@speedscope/app-state/getters";
 import { RefObject } from "preact";
 import { getGroupNames, getProfilesForGroup } from "@speedscope/app-state/utils";
+import { useAtom } from '@speedscope/lib/atom';
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
 import { hoveredAtom, indexToViewAtom, selectedAtom, activeGroupAtom } from "@/speedscope";
-import { useAtom } from '@speedscope/lib/atom';
 
 /** Provides the view selected in the Speedscope */
-export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState | SandwichViewState } | null {
+export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState | SandwichViewState, groupName?: string } | null {
     const activeProfile = profileGroupAtom.getActiveProfile();
     if (!activeProfile) {return null;}
 
-    const groupName = activeProfile?.profile?.groupName;
+    const groupName = activeProfile?.profile?.getGroupName();
 
     const viewMode = viewModeAtom.get();
     let activeView: FlamechartViewState | SandwichViewState;
@@ -120,7 +120,7 @@ export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<
 
         if (focus) {indexToViewAtom.set(() => globalIndex);}
         const maybeFrameOrNode = nameToNode.get(name) ?? nameToFrame.get(name) ?? null;
-        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex, groupName: point.groupName });
+        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex, groupName: targetGroup });
     };
 }
 
@@ -128,8 +128,10 @@ export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<
 interface FrameEvent {
     /** Name of the frame/node */
     name: string,
-    /** Name of the profil the frame comes from */
-    sourceProfile?: string
+    /** Name of the profile the frame comes from */
+    sourceProfile?: string,
+    /** Group name associated with the frame/node */
+    groupName?: string
 }
 
 /** Callback for Speedscope frame hover event, sets plot annotations according to hovered frame/node */
@@ -182,7 +184,7 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
             const { x, y } = annotation;
             const point = plot._findClosestPoint(x, y) ?? {};
             const { name, groupName } = point;
-            if (name) {
+            if (name && typeof name === "string" && typeof groupName === "string") {
                 return [normalizeOpName(name), groupName];
             }
             return [null, null];

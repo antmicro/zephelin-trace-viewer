@@ -32,6 +32,7 @@ export interface BarPlotProps<D> extends PlotBaseProps<D> {
     order?: Order,
     orient?: Orient,
     decorateSvgSeries?: (defaultColor: string) => (selection: d3.Selection<d3.BaseType, any, any, any>) => void;
+    activeGroups?: string[],
 }
 
 /**
@@ -53,13 +54,13 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         return this._plotData;
     }
 
-    protected _assignGroupNames (plotData: D[]) {
+    protected _assignGroupNames (plotData: D[][]): (D & {groupName?: string})[][] {
         if (this.props.activeGroups) {
             return plotData.map((series, id) =>
                 series.map(data => ({
                     ...data,
-                    groupName: this.props.activeGroups[id]
-                }))
+                    groupName: this.props.activeGroups[id],
+                })),
             );
         }
         return plotData;

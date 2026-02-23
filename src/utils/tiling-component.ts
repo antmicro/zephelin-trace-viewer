@@ -17,9 +17,12 @@ import { FunctionalComponent } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
 import { GroupDataCache } from "./cache";
 
-interface NodeConfig {
-    /** Additional field kept in nodes of the FlexLayout model */
-    sources?: string[]
+/** Additional fields kept in nodes of the FlexLayout model */
+export interface NodeConfig {
+    /** List of active groups displayed on info panels */
+    sources?: string[],
+    /** Index of actvie group on a Flamegraph */
+    activeGroupIndex?: int;
 }
 
 export class TilingComponent<T> {

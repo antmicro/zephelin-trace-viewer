@@ -30,7 +30,8 @@ import { CallTreeNode, Frame } from '@speedscope/lib/profile';
 import { ActiveProfileState } from '@speedscope/app-state/active-profile-state';
 import { ViewMode } from '@speedscope/lib/view-mode';
 import { noop } from '@speedscope/lib/utils';
-import tilingComponent from './utils/tiling-component';
+import { Actions } from 'flexlayout-react';
+import tilingComponent, { TilingComponent, NodeConfig } from './utils/tiling-component';
 
 
 interface SelectTraceMessageProps {
@@ -207,8 +208,12 @@ export const activeGroupAtom = new Atom<Record<string, string | undefined>>({}, 
  */
 export const indexToViewAtom = new Atom<() => number>(() => 0, 'indexToView');
 
+interface SpeedscopeProps {
+    tilingComponent?: TilingComponent<any>;
+}
+
 /** Element representing Speedscope app */
-const Speedscope = memo((): JSX.Element => {
+const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
     const theme = useTheme();
     const [canvas, setGLCanvas] = useState<HTMLCanvasElement | null>(null);
     const canvasContext = useMemo(
@@ -217,7 +222,17 @@ const Speedscope = memo((): JSX.Element => {
     );
 
     const flattenRecursion = useAtom(flattenRecursionAtom);
-    const [profileGroupState, profileGroupStateSet] = useState<ProfileGroupState>(cloneProfile(profileGroupAtom.get()));
+
+    const config = tilingComponent?.node?.getConfig() as NodeConfig | undefined;
+    const activeIndex = config?.activeGroupIndex as number | undefined;
+    const [profileGroupState, profileGroupStateSet] = useState<ProfileGroupState>(() => {
+        const initialState = cloneProfile(profileGroupAtom.get());
+        if (initialState && activeIndex !== undefined) {
+            initialState.indexToView = activeIndex;
+        }
+        return initialState;
+    });
+
     const activeProfileState = getActiveProfileState(flattenRecursion, profileGroupState);
 
     const [viewMode, setViewMode] = useState(ViewMode.CHRONO_FLAME_CHART);
@@ -351,6 +366,16 @@ const Speedscope = memo((): JSX.Element => {
                             ...activeGroupAtom.get(),
                             [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
                         });
+                    }
+                    const node = tilingComponent?.node;
+                    if (node) {
+                        const layout = node.getModel();
+                        const config = (node.getConfig() as NodeConfig) ?? {};
+                        layout.doAction(
+                            Actions.updateNodeAttributes(node.getId(), {
+                                config: {...config, activeGroupIndex: indexToView},
+                            }),
+                        );
                     }
                     syncSelectedFrameOrNode();
                 },

@@ -325,8 +325,10 @@ const Speedscope = memo((): JSX.Element => {
                 setSelectedFrame: (frame: Frame | null) => {
                     const indexToView = instanceProfileGroupAtom.get()?.indexToView;
 
+                    const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
+
                     selectedAtom.unsubscribe(syncSelectedFrameOrNode);
-                    selectedAtom.set((frame && indexToView !== undefined) ? { frameOrNode: frame, indexToView } : null);
+                    selectedAtom.set((frame && indexToView !== undefined) ? { frameOrNode: frame, indexToView, groupName: groupName } : null);
                     selectedAtom.subscribe(syncSelectedFrameOrNode);
 
                     instanceProfileGroupAtom.setSelectedFrame(frame);
@@ -334,8 +336,10 @@ const Speedscope = memo((): JSX.Element => {
                 setSelectedNode: (id: FlamechartID, selectedNode: CallTreeNode | null) => {
                     const indexToView = instanceProfileGroupAtom.get()?.indexToView;
 
+                    const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
+
                     selectedAtom.unsubscribe(syncSelectedFrameOrNode);
-                    selectedAtom.set((selectedNode && indexToView !== undefined) ? { frameOrNode: selectedNode, indexToView } : null);
+                    selectedAtom.set((selectedNode && indexToView !== undefined) ? { frameOrNode: selectedNode, indexToView, groupName: groupName } : null);
                     selectedAtom.subscribe(syncSelectedFrameOrNode);
 
                     instanceProfileGroupAtom.setSelectedNode(id, selectedNode);

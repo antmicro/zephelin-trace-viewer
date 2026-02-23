@@ -93,7 +93,6 @@ const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
             <>
                 <div className={styles['ram-overview-content']}>
                     <TotalMemoryPlot
-                        key={activeGroup}
                         ref={plotRef}
                         plotData={plotData}
                         addrToRange={addrToRange}

@@ -66,7 +66,6 @@ function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |un
         return (
             <div className={styles['memory-usage-content']}>
                 <MemoryUsagePlot
-                    key={activeGroup}
                     ref={plotRef}
                     plotData={plotData.slice(2)}
                     activeGroups={null}

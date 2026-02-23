@@ -36,7 +36,7 @@ const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
 
         return (
             <DieTempPlot
-                key={activeGroups.join(",")}
+                key={`plot-count-${activeGroups.length}`}
                 ref={plotRef}
                 plotData={displayData}
                 activeGroups={activeGroups}

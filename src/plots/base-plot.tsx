@@ -289,6 +289,28 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     }
 
     /**
+     * Recalculates domains and resets zoom state for new data
+     */
+    private _updateScaleDomains() {
+        const newXScale = this._createXScale();
+        const newYScale = this._createYScale();
+
+        this.xScale.domain(newXScale.domain());
+        this.yScale.domain(newYScale.domain());
+
+        this.xScaleBase.domain(this.xScale.domain());
+        this.yScaleBase.domain(this.yScale.domain());
+        this._xScaleInitial.domain(this.xScale.domain());
+        this._yScaleInitial.domain(this.yScale.domain());
+
+        if (this.d3fcSvgNode) {
+            this.d3fcSvgNode.__zoom = d3.zoomIdentity;
+        }
+
+        this.annotations = [];
+    }
+
+    /**
      * Adds annotation based on provided datapoint.
      */
     public _addAnnotation(d: D | null | undefined) {
@@ -638,6 +660,17 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         if (onFrameSelect) {selectedAtom.subscribe(onFrameSelect);}
         if (onProfileChange) {profileGroupAtom.subscribe(onProfileChange);}
         // Register resize observer which redraws the plot
+    }
+
+    componentDidUpdate(prevProps: T): void {
+        const dataChanged = prevProps.plotData !== this.props.plotData;
+
+        if (dataChanged) {
+            this._updateScaleDomains();
+            this._createSeries();
+        }
+
+        this.redraw();
     }
 
     componentWillUnmount(): void {

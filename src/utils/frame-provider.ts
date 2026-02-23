@@ -276,9 +276,8 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
         plot.annotations.pop();
 
         if (d) {
-            const activeProfile = profileGroupAtom.getActiveProfile()?.profile;
-            const activeProfileName = activeProfile?.getName();
-            const activeProfileGroupName = activeProfile?.getGroupName();
+            const activeGroupsDict = activeGroupAtom.get();
+            const currentlyVisibleGroups = Object.values(activeGroupsDict);
 
             const contexts = profileLookup.get(d.groupName) ?? [];
             const ownerContext = contexts.find(c => c.nameToFrame.has(d.name));
@@ -291,10 +290,8 @@ export const setHoverFromPoint = <D extends FrameEvent, T extends PlotPropsWithT
             const ownerProfileGroupName = ownerProfile?.getGroupName();
 
             const displaySource = (
-                ownerProfileName && (
-                    ownerProfileName !== activeProfileName ||
-                    ownerProfileGroupName !== activeProfileGroupName
-                )
+                ownerProfileName &&
+                    (!currentlyVisibleGroups.includes(ownerProfileGroupName))
             )
                 ? ownerProfileName
                 : undefined;

@@ -52,7 +52,7 @@ function OpTypeExecutionTimePanel({ tilingComponent }: OpTypeExecutionTimeProps)
 
         return (
             <OpExecutionTimePlot
-                key={activeGroups.join(",")}
+                key={`plot-count-${activeGroups.length}`}
                 plotData={displayData}
                 activeGroups={activeGroups}
                 orient='horizontal'

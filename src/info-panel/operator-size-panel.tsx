@@ -43,7 +43,6 @@ function OpSizePlotWrapper({ activeGroups, theme, tilingComponent }: {
 
     return (
         <OpSizePlot
-            key={activeGroups.join(",")}
             ref={plotRef}
             plotData={displayData}
             activeGroups={activeGroups}
@@ -65,7 +64,7 @@ function OpSizePanel({ tilingComponent }: OpSizeProps) {
     const renderPlot = (activeGroups: string[]) => {
         return  (
             <OpSizePlotWrapper
-                key={`${activeGroups.join(",")}:${activeProfileIndex}`}
+                key={`${activeGroups.length}-${activeProfileIndex}`}
                 activeGroups={activeGroups}
                 theme={theme}
                 tilingComponent={tilingComponent}

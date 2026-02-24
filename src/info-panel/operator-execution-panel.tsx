@@ -43,7 +43,6 @@ function OpExecutionTimePlotWrapper({ activeGroups, theme, tilingComponent }: {
 
     return (
         <OpExecutionTimePlot
-            key={activeGroups.join(",")}
             ref={plotRef}
             plotData={displayData}
             activeGroups={activeGroups}
@@ -66,7 +65,7 @@ function OpExecutionTimePanel({ tilingComponent }: OpExecutionTimeProps ) {
 
         return  (
             <OpExecutionTimePlotWrapper
-                key={`${activeGroups.join(",")}:${activeProfileIndex}`}
+                key={`${activeGroups.length}-${activeProfileIndex}`}
                 activeGroups={activeGroups}
                 theme={theme}
                 tilingComponent={tilingComponent}

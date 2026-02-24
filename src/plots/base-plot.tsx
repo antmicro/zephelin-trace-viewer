@@ -671,7 +671,9 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
         if (dataChanged) {
             this._updateScaleDomains();
-            this._createSeries();
+            if (prevProps.plotData?.length !== this.props.plotData?.length) {
+                this._createSeries();
+            }
         }
 
         this.redraw();

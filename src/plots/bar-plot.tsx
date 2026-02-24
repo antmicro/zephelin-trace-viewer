@@ -48,9 +48,22 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         [Axis.X]: this._getAxisType(Axis.X),
         [Axis.Y]: this._getAxisType(Axis.Y),
     };
-    public readonly _plotData = this._assignGroupNames(this._sortPlotData());
+
+    private _lastPlotDataProps?: D[][];
+    private _lastActiveGroupsProps?: string[];
+
+    protected _plotData?: (D & {groupName?: string})[][];
 
     public override get plotData() {
+        if (
+            this.props.plotData !== this._lastPlotDataProps ||
+            this.props.activeGroups !== this._lastActiveGroupsProps ||
+            !this._plotData
+        ) {
+            this._plotData = this._assignGroupNames(this._sortPlotData());
+            this._lastPlotDataProps = this.props.plotData;
+            this._lastActiveGroupsProps = this.props.activeGroups;
+        }
         return this._plotData;
     }
 

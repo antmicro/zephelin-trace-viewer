@@ -136,6 +136,11 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
     /** The object storing currently displayed annotations */
     annotations: ThresholdAnnotationProps<D>[] = [];
 
+    private _handleTimestampHover = () => this.props.onTimestampHover?.();
+    private _handleFrameHover = () => this.props.onFrameHover?.();
+    private _handleFrameSelect = () => this.props.onFrameSelect?.();
+    private _handleProfileChange = () => this.props.onProfileChange?.();
+
     /** The callback executed when the plot container is resized */
     protected resizeObserver = new ResizeObserver((entries) => {
         const [event] = entries;
@@ -654,11 +659,10 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             }
         }
         this.annotationSvgElement = this.containerRef.current?.getElementsByClassName("annotation-plot-area")[0];
-        const { onTimestampHover, onFrameHover, onFrameSelect, onProfileChange } = this.props;
-        if (onTimestampHover) {timestampHoveredAtom.subscribe(onTimestampHover);}
-        if (onFrameHover) {hoveredAtom.subscribe(onFrameHover);}
-        if (onFrameSelect) {selectedAtom.subscribe(onFrameSelect);}
-        if (onProfileChange) {profileGroupAtom.subscribe(onProfileChange);}
+        timestampHoveredAtom.subscribe(this._handleTimestampHover);
+        hoveredAtom.subscribe(this._handleFrameHover);
+        selectedAtom.subscribe(this._handleFrameSelect);
+        profileGroupAtom.subscribe(this._handleProfileChange);
         // Register resize observer which redraws the plot
     }
 
@@ -675,11 +679,10 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
     componentWillUnmount(): void {
         this.containerRef.current?.remove();
-        const { onTimestampHover, onFrameHover, onFrameSelect, onProfileChange } = this.props;
-        if (onTimestampHover) {timestampHoveredAtom.unsubscribe(onTimestampHover);}
-        if (onFrameHover) {hoveredAtom.unsubscribe(onFrameHover);}
-        if (onFrameSelect) {selectedAtom.unsubscribe(onFrameSelect);}
-        if (onProfileChange) {profileGroupAtom.unsubscribe(onProfileChange);}
+        timestampHoveredAtom.unsubscribe(this._handleTimestampHover);
+        hoveredAtom.unsubscribe(this._handleFrameHover);
+        selectedAtom.unsubscribe(this._handleFrameSelect);
+        profileGroupAtom.unsubscribe(this._handleProfileChange);
     }
 
     render(): JSX.Element {

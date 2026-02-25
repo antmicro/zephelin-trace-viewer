@@ -224,11 +224,35 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
     const flattenRecursion = useAtom(flattenRecursionAtom);
 
     const config = tilingComponent?.node?.getConfig() as NodeConfig | undefined;
-    const activeIndex = config?.activeGroupIndex as number | undefined;
+    const activeIndex = config?.activeGroupIndex;
     const [profileGroupState, profileGroupStateSet] = useState<ProfileGroupState>(() => {
         const initialState = cloneProfile(profileGroupAtom.get());
         if (initialState && activeIndex !== undefined) {
             initialState.indexToView = activeIndex;
+        }
+
+        const savedViewStates = config?.savedViewStates;
+        if (savedViewStates) {
+            const deserializeViewport = (savedRect: Rect ): Rect => {
+                if (!savedRect?.origin || !savedRect?.size) {return Rect.empty;}
+                return new Rect(
+                    new Vec2(Number(savedRect.origin.x), Number(savedRect.origin.y)),
+                    new Vec2(Number(savedRect.size.x), Number(savedRect.size.y)),
+                );
+            };
+            // Recreate pan and zoom based on state saved in flexlayout
+            initialState?.profiles.forEach(p => {
+                if (savedViewStates[FlamechartID.CHRONO]) {
+                    p.chronoViewState.configSpaceViewportRect = deserializeViewport(
+                        savedViewStates[FlamechartID.CHRONO].configSpaceViewportRect,
+                    );
+                }
+                if (savedViewStates[FlamechartID.LEFT_HEAVY]) {
+                    p.leftHeavyViewState.configSpaceViewportRect = deserializeViewport(
+                        savedViewStates[FlamechartID.LEFT_HEAVY].configSpaceViewportRect,
+                    );
+                }
+            });
         }
         return initialState;
     });
@@ -335,61 +359,88 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         // Set initial selected node
         syncSelectedFrameOrNode();
 
-        appSettersSet(
-            {
-                setSelectedFrame: (frame: Frame | null) => {
-                    const indexToView = instanceProfileGroupAtom.get()?.indexToView;
+        let panSaveTimeout: NodeJS.Timeout;
+        // Save state every 300ms to make sure user stopped panning
+        const saveViewportToLayoutDebounced = (id: FlamechartID, rect: Rect) => {
+            clearTimeout(panSaveTimeout);
+            panSaveTimeout = setTimeout(() => {
+                const node = tilingComponent?.node;
+                if (node) {
+                    const layout = node.getModel();
+                    const nodeConfig = (node.getConfig() as NodeConfig) ?? {};
 
-                    const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
+                    layout.doAction(
+                        Actions.updateNodeAttributes(node.getId(), {
+                            config: {
+                                ...nodeConfig,
+                                savedViewStates: {
+                                    ...nodeConfig.savedViewStates,
+                                    [id]: { configSpaceViewportRect: rect },
+                                },
+                            },
+                        }),
+                    );
+                }
+            }, 300);
+        };
 
-                    selectedAtom.unsubscribe(syncSelectedFrameOrNode);
-                    selectedAtom.set((frame && indexToView !== undefined) ? { frameOrNode: frame, indexToView, groupName: groupName } : null);
-                    selectedAtom.subscribe(syncSelectedFrameOrNode);
+        appSettersSet({
+            setSelectedFrame: (frame: Frame | null) => {
+                const indexToView = instanceProfileGroupAtom.get()?.indexToView;
 
-                    instanceProfileGroupAtom.setSelectedFrame(frame);
-                },
-                setSelectedNode: (id: FlamechartID, selectedNode: CallTreeNode | null) => {
-                    const indexToView = instanceProfileGroupAtom.get()?.indexToView;
+                const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
 
-                    const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
+                selectedAtom.unsubscribe(syncSelectedFrameOrNode);
+                selectedAtom.set((frame && indexToView !== undefined) ? { frameOrNode: frame, indexToView, groupName: groupName } : null);
+                selectedAtom.subscribe(syncSelectedFrameOrNode);
 
-                    selectedAtom.unsubscribe(syncSelectedFrameOrNode);
-                    selectedAtom.set((selectedNode && indexToView !== undefined) ? { frameOrNode: selectedNode, indexToView, groupName: groupName } : null);
-                    selectedAtom.subscribe(syncSelectedFrameOrNode);
-
-                    instanceProfileGroupAtom.setSelectedNode(id, selectedNode);
-                },
-                setProfileIndexToView: (indexToView: number) => {
-                    instanceProfileGroupAtom.setProfileIndexToView(indexToView);
-                    if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
-                        activeGroupAtom.set({
-                            ...activeGroupAtom.get(),
-                            [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
-                        });
-                    }
-                    const node = tilingComponent?.node;
-                    if (node) {
-                        const layout = node.getModel();
-                        const config = (node.getConfig() as NodeConfig) ?? {};
-                        layout.doAction(
-                            Actions.updateNodeAttributes(node.getId(), {
-                                config: {...config, activeGroupIndex: indexToView},
-                            }),
-                        );
-                    }
-                    syncSelectedFrameOrNode();
-                },
-                setViewMode: (state) => viewModeAtom.set(state),
-                setFlamechartHoveredNode: (id, hover) => {
-                    const activeProfile = instanceProfileGroupAtom.getActiveProfile();
-                    if (!activeProfile) {return;}
-
-                    hoveredAtom.set(hover && { node: hover.node.frame.name, source: activeProfile.profile.getGroupName()});
-                    instanceProfileGroupAtom.setFlamechartHoveredNode(id, hover);
-                },
-                setConfigSpaceViewportRect: instanceProfileGroupAtom.setConfigSpaceViewportRect,
-                setLogicalSpaceViewportSize: instanceProfileGroupAtom.setLogicalSpaceViewportSize,
+                instanceProfileGroupAtom.setSelectedFrame(frame);
             },
+            setSelectedNode: (id: FlamechartID, selectedNode: CallTreeNode | null) => {
+                const indexToView = instanceProfileGroupAtom.get()?.indexToView;
+
+                const groupName = instanceProfileGroupAtom.getActiveProfile().profile.getGroupName();
+
+                selectedAtom.unsubscribe(syncSelectedFrameOrNode);
+                selectedAtom.set((selectedNode && indexToView !== undefined) ? { frameOrNode: selectedNode, indexToView, groupName: groupName } : null);
+                selectedAtom.subscribe(syncSelectedFrameOrNode);
+
+                instanceProfileGroupAtom.setSelectedNode(id, selectedNode);
+            },
+            setProfileIndexToView: (indexToView: number) => {
+                instanceProfileGroupAtom.setProfileIndexToView(indexToView);
+                if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
+                    activeGroupAtom.set({
+                        ...activeGroupAtom.get(),
+                        [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
+                    });
+                }
+                const node = tilingComponent?.node;
+                if (node) {
+                    const layout = node.getModel();
+                    const config = (node.getConfig() as NodeConfig) ?? {};
+                    layout.doAction(
+                        Actions.updateNodeAttributes(node.getId(), {
+                            config: {...config, activeGroupIndex: indexToView},
+                        }),
+                    );
+                }
+                syncSelectedFrameOrNode();
+            },
+            setViewMode: (state) => viewModeAtom.set(state),
+            setFlamechartHoveredNode: (id, hover) => {
+                const activeProfile = instanceProfileGroupAtom.getActiveProfile();
+                if (!activeProfile) {return;}
+
+                hoveredAtom.set(hover && { node: hover.node.frame.name, source: activeProfile.profile.getGroupName()});
+                instanceProfileGroupAtom.setFlamechartHoveredNode(id, hover);
+            },
+            setConfigSpaceViewportRect: (id: FlamechartID, rect: Rect) => {
+                instanceProfileGroupAtom.setConfigSpaceViewportRect(id, rect);
+                saveViewportToLayoutDebounced(id, rect);
+            },
+            setLogicalSpaceViewportSize: instanceProfileGroupAtom.setLogicalSpaceViewportSize,
+        },
         );
 
 
@@ -401,6 +452,7 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         viewModeAtom.subscribe(syncSelectedFrameOrNode);
 
         return () => {
+            clearTimeout(panSaveTimeout);
             instanceProfileGroupAtom.unsubscribe(setInstanceState);
             viewModeAtom.unsubscribe(setViewModeState);
             loadingAtom.unsubscribe(syncProfiles);

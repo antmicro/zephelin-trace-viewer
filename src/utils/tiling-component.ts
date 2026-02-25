@@ -15,14 +15,17 @@ import { loadingAtom, profileGroupAtom } from "@speedscope/app-state";
 import { Atom } from "@speedscope/lib/atom";
 import { FunctionalComponent } from "preact";
 import { getGroupNames } from "@speedscope/app-state/utils";
+import { Rect } from '@speedscope/lib/math';
 import { GroupDataCache } from "./cache";
 
 /** Additional fields kept in nodes of the FlexLayout model */
 export interface NodeConfig {
     /** List of active groups displayed on info panels */
     sources?: string[],
-    /** Index of actvie group on a Flamegraph */
-    activeGroupIndex?: int;
+    /** Index of active group on a flamegraph */
+    activeGroupIndex?: number;
+    /** Saved state of a flamegraph */
+    savedViewStates?: Record<string, { configSpaceViewportRect: Rect }>;
 }
 
 export class TilingComponent<T> {

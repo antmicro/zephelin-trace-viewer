@@ -555,4 +555,7 @@ export default tilingComponent(Speedscope, "Flamegraph", {
         minHeight: 400,
         minWidth: 540,
     },
+    keyboardShortcuts: [
+        { ctrl: true, key: "f"},
+    ],
 })!;

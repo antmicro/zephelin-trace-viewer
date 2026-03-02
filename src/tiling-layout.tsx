@@ -25,7 +25,7 @@ import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/t
 import { getDraggedButtonTitle } from "./top-bar/tiling-component-button";
 import { GroupDataCache } from "./utils/cache";
 import { PanelIcon, MaximizeIcon, CloseIcon } from "@/icons";
-import TilingPanel from "@/utils/tiling-panel";
+import TilingPanel, { GlobalShortcutContext} from "@/utils/tiling-panel";
 
 
 const InfoPanel = panels.InfoPanel;
@@ -84,6 +84,41 @@ const initLayout: IJsonModel = {
  */
 const MAX_NODES_IN_ROW_FOR_SPAWNING = 3;
 
+const isShortcutMatching = (component: TilingComponent<any>, ev: KeyboardEvent) => {
+    return !!component.keyboardShortcuts?.some((shortcut) => {
+        const ctrlMatch =
+            shortcut.ctrl === undefined ||
+            shortcut.ctrl === ev.ctrlKey ||
+            shortcut.ctrl === ev.metaKey;
+        const shiftMatch = shortcut.shift === undefined || shortcut.shift === ev.shiftKey;
+        return ctrlMatch && shiftMatch && shortcut.key === ev.key;
+    });
+};
+
+const getBestNodeInstance = (model: Model, componentName: string, currentFocusedId: string | null): TabNode | undefined => {
+    const siblingNodes: TabNode[] = [];
+
+    // Get all candidates
+    model.visitNodes((n) => {
+        if (n instanceof TabNode && n.getComponent() === componentName) {
+            siblingNodes.push(n);
+        }
+    });
+    if (siblingNodes.length === 0) {
+        return undefined;
+    }
+
+    // Select the already focused node
+    let bestNode = siblingNodes.find(n => n.getId() === currentFocusedId);
+
+    // Select first visible node
+    bestNode ??= siblingNodes.find(n => n.isVisible());
+
+    // Select first hidden node
+    bestNode ??= siblingNodes[0];
+
+    return bestNode;
+};
 
 /**
  * The tiling manager layout based on FlexLayout library.
@@ -199,14 +234,9 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         };
         node.setEventListener('resize', resizeNode);
         node.setEventListener('visibility', resizeNode);
-        const doAction  = (action: Action) => {
-            const outcome = onAction(action);
-            if (outcome !== undefined) {
-                model.doAction(outcome);
-            }
-        };
+
         return (
-            <TilingPanel key={node.getId()} node={node} doAction={doAction}>
+            <TilingPanel key={node.getId()} node={node}>
                 <ComponentType
                     tilingComponent={tilingComponent}
                 />
@@ -295,26 +325,47 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
         return a;
     };
 
+    const handleGlobalShortcut = (ev: KeyboardEvent) => {
+        for (const component of getAllComponents()) {
+            if (isShortcutMatching(component, ev)) {
+                const bestNode = getBestNodeInstance(model, component.title, focusedPanelAtom.get());
+
+                if (bestNode) {
+                    const tabsetNode = bestNode.getParent();
+                    if (tabsetNode) {
+                        model.doAction(Actions.setActiveTabset(tabsetNode.getId()));
+                        model.doAction(Actions.selectTab(bestNode.getId()));
+                        focusedPanelAtom.set(bestNode.getId());
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+
     const onRenderTab = (_node: TabNode, renderValues: ITabRenderValues) => {
         renderValues.leading = <PanelIcon />;
     };
 
     return (
         <div id={style['tiling-layout']}>
-            <Layout
-                ref={ref}
-                icons={{
-                    close: <CloseIcon />,
-                    maximize: <MaximizeIcon />,
-                }}
-                model={model}
-                factory={factory}
-                popoutWindowName="Zephelin Trace Viewer"
-                realtimeResize={true}
-                onExternalDrag={onExternalDrag}
-                onAction={onAction}
-                onRenderTab={onRenderTab}
-            />
+            <GlobalShortcutContext.Provider value={handleGlobalShortcut}>
+                <Layout
+                    ref={ref}
+                    icons={{
+                        close: <CloseIcon />,
+                        maximize: <MaximizeIcon />,
+                    }}
+                    model={model}
+                    factory={factory}
+                    popoutWindowName="Zephelin Trace Viewer"
+                    realtimeResize={true}
+                    onExternalDrag={onExternalDrag}
+                    onAction={onAction}
+                    onRenderTab={onRenderTab}
+                />
+            </GlobalShortcutContext.Provider>
         </div>
     );
 // Override props comparison to avoid unnecessary reloads

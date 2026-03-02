@@ -11,96 +11,33 @@
  */
 
 
-import { memo } from "preact/compat";
+import { memo, useContext } from "preact/compat";
 import { createContext, VNode } from "preact";
 import style from "@styles/app.module.scss";
 import { focusedPanelAtom } from "@speedscope/app-state";
 import { useAtom } from "@speedscope/lib/atom";
-import { Action, Actions, TabNode, Model } from "flexlayout-react";
-import { getTilingComponent, TilingComponent } from "./tiling-component";
+import { TabNode } from "flexlayout-react";
 
+export const GlobalShortcutContext = createContext<(ev: KeyboardEvent) => boolean>(() => false);
 export const FocusContext = createContext<(ev?: KeyboardEvent) => boolean>(() => false);
 
 interface TilingPanelProps {
     node: TabNode
-    doAction: (action: Action) => void
     children: VNode,
 }
 
-const isShortcutMatching = (component: TilingComponent<any>, ev: KeyboardEvent) => {
-    return !!component.keyboardShortcuts?.some((shortcut) => {
-        const ctrlMatch =
-            shortcut.ctrl === undefined ||
-            shortcut.ctrl === ev.ctrlKey ||
-            shortcut.ctrl === ev.metaKey;
-        const shiftMatch = shortcut.shift === undefined || shortcut.shift === ev.shiftKey;
-        return ctrlMatch && shiftMatch && shortcut.key === ev.key;
-    });
-};
-
-const getBestNodeInstance = (model: Model, componentName: string, currentFocusedId: string | null): TabNode | undefined => {
-    const siblingNodes: TabNode[] = [];
-
-    // Get all candidates
-    model.visitNodes((n) => {
-        if (n instanceof TabNode && n.getComponent() === componentName) {
-            siblingNodes.push(n);
-        }
-    });
-    if (siblingNodes.length === 0) {
-        return undefined;
-    }
-
-    // Select the already focused node
-    let bestNode = siblingNodes.find(n => n.getId() === currentFocusedId);
-
-    // Select first visible node
-    bestNode ??= siblingNodes.find(n => n.isVisible());
-
-    // Select first hidden node
-    bestNode ??= siblingNodes[0];
-
-    return bestNode;
-};
-
-// TODO (@achmutov): FocusContext along with its infra should be moved upper in the DOM, and only pass focusedPanel string in this component
-export default memo(({node, children, doAction}: TilingPanelProps) => {
+export default memo(({node, children}: TilingPanelProps) => {
     const focusedPanel = useAtom(focusedPanelAtom);
     const nodeId = node.getId();
 
-    const autoFocus = (ev: KeyboardEvent) => {
-        const nodeComponent = node.getComponent();
-        if (!nodeComponent) {return false;}
-
-        const currentComponent = getTilingComponent(nodeComponent);
-        if (!currentComponent || !isShortcutMatching(currentComponent, ev)) {return false;}
-
-        const model = node.getModel();
-        const bestNode = getBestNodeInstance(model, nodeComponent, focusedPanelAtom.get());
-
-        if (nodeId !== bestNode?.getId()) {
-            return false;
-        }
-
-        const tabsetNode = node.getParent();
-        if (!tabsetNode) {return false;}
-
-        // "Focus"
-        doAction(Actions.setActiveTabset(tabsetNode.getId()));
-
-        // Select tab if it was hidden
-        doAction(Actions.selectTab(node.getId()));
-
-        return true;
-    };
+    const globalShortcutHandler = useContext(GlobalShortcutContext);
 
     const isFocused = (ev?: KeyboardEvent) => {
-        let result = false;
 
-        // If event is set, try to autofocus
-        if (ev) {result = autoFocus(ev);}
+        // Focused component catches the event and passes it to globalShortcutHandler
+        if (ev) { globalShortcutHandler(ev);}
 
-        return result || focusedPanelAtom.get() === nodeId;
+        return focusedPanelAtom.get() === nodeId;
     };
 
     return (

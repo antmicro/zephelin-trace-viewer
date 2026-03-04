@@ -2,6 +2,10 @@
 	"name": "zephelin-trace-viewer",
 	"displayName": "Zephelin Trace Viewer",
 	"description": "Visualize Zephyr RTOS trace files inside VS Code",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/antmicro/zephelin-trace-viewer.git"
+	},
 	"version": "0.0.1",
 	"publisher": "adi",
 	"license": "Apache-2.0",
@@ -39,10 +43,12 @@
 	},
 	"scripts": {
 		"build": "node esbuild.js",
-		"watch": "node esbuild.js --watch"
+		"watch": "node esbuild.js --watch",
+		"package": "yarn build && vsce package --no-dependencies"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.85.0",
+		"@vscode/vsce": "^3.7.1",
 		"esbuild": "^0.24.0"
 	}
 }

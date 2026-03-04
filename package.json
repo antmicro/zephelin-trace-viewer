@@ -2,7 +2,8 @@
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"third-party/*"
+		"third-party/*",
+		"extension"
 	],
 	"scripts": {
 		"eslint": "eslint src --fix",
@@ -12,8 +13,9 @@
 		"build": "vite build --base=./",
 		"build-singlefile": "vite build --base=./ --mode=single-file",
 		"preview": "vite preview",
-		"build:ext": "cd extension && npm run build",
-		"build:all": "yarn build && yarn build:ext"
+		"build:ext": "yarn --cwd extension build",
+		"build:all": "yarn build && yarn build:ext",
+		"build:vsix": "yarn build:all && shx cp -r ./dist ./extension/dist && yarn --cwd extension package"
 	},
 	"dependencies": {
 		"@bokeh/bokehjs": "^3.7.3",
@@ -42,6 +44,7 @@
 		"eslint-plugin-unused-imports": "^4.1.4",
 		"prettier": "^3.6.2",
 		"sass-embedded": "^1.89.1",
+		"shx": "0.4.0",
 		"stylelint": "^16.23.1",
 		"stylelint-config-recommended-scss": "^15.0.1",
 		"stylelint-prettier": "^5.0.3",

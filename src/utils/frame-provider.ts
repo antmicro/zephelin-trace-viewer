@@ -19,7 +19,7 @@ import { getGroupNames, getProfilesForGroup } from "@speedscope/app-state/utils"
 import { useAtom } from '@speedscope/lib/atom';
 import { isOpFrame, normalizeOpName } from "./model";
 import Plot, { PlotBaseProps } from "@/plots/base-plot";
-import { hoveredAtom, indexToViewAtom, selectedAtom, activeGroupAtom } from "@/speedscope";
+import { hoveredAtom, indexToViewAtom, selectedAtom, activeGroupAtom, lastActiveSpeedscopeAtom } from "@/speedscope";
 
 /** Provides the view selected in the Speedscope */
 export function useView(): { viewMode: ViewMode, activeView: FlamechartViewState | SandwichViewState, groupName?: string } | null {
@@ -120,7 +120,12 @@ export function setSelectedFromClick(activeGroups: string[], profileLookup: Map<
 
         if (focus) {indexToViewAtom.set(() => globalIndex);}
         const maybeFrameOrNode = nameToNode.get(name) ?? nameToFrame.get(name) ?? null;
-        selectedAtom.set(maybeFrameOrNode && { frameOrNode: maybeFrameOrNode, indexToView: globalIndex, groupName: targetGroup });
+        selectedAtom.set(maybeFrameOrNode && {
+            frameOrNode: maybeFrameOrNode,
+            indexToView: globalIndex,
+            groupName: targetGroup,
+            targetUuid: focus ? lastActiveSpeedscopeAtom.get() : null,
+        });
     };
 }
 

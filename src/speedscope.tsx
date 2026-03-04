@@ -13,7 +13,7 @@
 import { ComponentChildren, Fragment, JSX, VNode } from 'preact';
 import { useTheme } from '@speedscope/views/themes/theme';
 import { ColorScheme, colorSchemeAtom } from '@speedscope/app-state/color-scheme';
-import { customWelcomeMessagesAtom, dragActiveAtom, errorAtom, hashParamsAtom, loadingAtom, profileGroupAtom, toolbarConfigAtom, viewModeAtom } from '@speedscope/app-state';
+import { customWelcomeMessagesAtom, dragActiveAtom, errorAtom, focusedPanelAtom, hashParamsAtom, loadingAtom, profileGroupAtom, toolbarConfigAtom, viewModeAtom } from '@speedscope/app-state';
 import { darkTheme } from '@speedscope/views/themes/dark-theme';
 import { lightTheme } from '@speedscope/views/themes/light-theme';
 
@@ -186,6 +186,8 @@ interface SelectionState {
     indexToView: number
     /** Group name associated with the frame/node */
     groupName?: string
+    /** Id of selected speedscope instance */
+    targetUuid?: string | null
 }
 
 /** Stores global state pointing to selected node. */
@@ -202,6 +204,9 @@ export const hoveredAtom = new Atom<HoverState | null>(null, 'hovered');
 
 /** Tracks which groups are active in each flamegraph. */
 export const activeGroupAtom = new Atom<Record<string, string | undefined>>({}, 'active-group');
+
+/** Tracks which speedscope instantce was most reacently selected. */
+export const lastActiveSpeedscopeAtom = new Atom<string | null>(null, 'lastActiveSpeedscope');
 
 export interface ProfileSearch {
     getResults(): ProfileSearchResults | null
@@ -303,8 +308,18 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         return selectedNode;
     }, [profileGroupState]);
 
+    const isPanelFocused = useContext(FocusContext);
+
     useLayoutEffect(() => {
         const uuid = crypto.randomUUID();
+
+        const checkFocus = () => {
+            if (isPanelFocused()) {
+                lastActiveSpeedscopeAtom.set(uuid);
+            }
+        };
+        focusedPanelAtom.subscribe(checkFocus);
+        checkFocus();
 
         /*
          * `Atom` is used instead of `useState<ProfileGroupState>` to have
@@ -348,6 +363,7 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
 
         // Sync view if e.g. other panel requests
         const syncIndexToView = () => {
+            if (lastActiveSpeedscopeAtom.get() !== uuid) { return; }
             instanceProfileGroupAtom.setProfileIndexToView(indexToViewAtom.get()());
         };
 
@@ -359,6 +375,10 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
          */
         const syncSelectedFrameOrNode = () => {
             const selectedState = selectedAtom.get();
+
+            if (selectedState?.targetUuid && selectedState.targetUuid !== uuid) {
+                return;
+            }
             const activeProfile = instanceProfileGroupAtom.getActiveProfile();
             if (!activeProfile) {return;}
 
@@ -499,7 +519,6 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         };
     }, []);
 
-    const isPanelFocused = useContext(FocusContext);
     const isFocused = (ev: KeyboardEvent) => {
         const saveProfile = ev.key === 's' && (ev.ctrlKey || ev.metaKey);
         const browseForFile = ev.key === 'o' && (ev.ctrlKey || ev.metaKey);

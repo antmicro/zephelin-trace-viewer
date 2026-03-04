@@ -207,11 +207,20 @@ export const applyFrameColors = <D extends FrameEvent, T extends PlotPropsWithTh
                 .select('path')
                 .attr('fill', (fe: FrameEvent) => {
                     const {name, groupName} = fe;
-                    if (!(Object.values(groupAtom).includes(groupName))) {
-                        return defaultColor;
-                    }
+
+                    const profileGroup = profileGroupAtom.get();
+                    const allProfiles = profileGroup.profiles;
+
                     const ownerContext = profileLookup.get(groupName)?.find(c => c.nameToFrame.has(name));
                     if (!ownerContext) {return defaultColor;}
+
+                    if (!(
+                        Object.values(groupAtom).some(el =>
+                            el?.groupName === groupName &&
+                        el?.name === allProfiles[ownerContext.globalIndex].profile.name,
+                        ))) {
+                        return defaultColor;
+                    }
 
                     const frame = ownerContext.nameToFrame.get(name);
                     if (!frame) {return defaultColor;}

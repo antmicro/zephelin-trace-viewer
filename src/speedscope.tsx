@@ -288,15 +288,24 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
          */
         const viewModeAtom = new Atom<ViewMode>(ViewMode.CHRONO_FLAME_CHART, `viewMode-${uuid}`);
 
+        const updateActiveGroupAtom = () => {
+            if (activeGroupAtom.get()[uuid]?.groupName !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName() ||
+                activeGroupAtom.get()[uuid]?.name !== instanceProfileGroupAtom.getActiveProfile()?.profile.getName()
+            ) {
+                activeGroupAtom.set({
+                    ...activeGroupAtom.get(),
+                    [uuid]: {
+                        groupName: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
+                        name: instanceProfileGroupAtom.getActiveProfile()?.profile.getName(),
+                    },
+                });
+            }
+        };
+
         // Atom-state sync
         const setInstanceState = () => {
             profileGroupStateSet(instanceProfileGroupAtom.get());
-            if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
-                activeGroupAtom.set({
-                    ...activeGroupAtom.get(),
-                    [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
-                });
-            }
+            updateActiveGroupAtom();
         };
         const setViewModeState = () => setViewMode(viewModeAtom.get());
 
@@ -409,12 +418,7 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
             },
             setProfileIndexToView: (indexToView: number) => {
                 instanceProfileGroupAtom.setProfileIndexToView(indexToView);
-                if (activeGroupAtom.get()[uuid] !== instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName()) {
-                    activeGroupAtom.set({
-                        ...activeGroupAtom.get(),
-                        [uuid]: instanceProfileGroupAtom.getActiveProfile()?.profile.getGroupName(),
-                    });
-                }
+                updateActiveGroupAtom();
                 const node = tilingComponent?.node;
                 if (node) {
                     const layout = node.getModel();

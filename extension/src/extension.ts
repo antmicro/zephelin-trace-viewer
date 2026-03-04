@@ -79,7 +79,9 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
 	 */
 	private getDistPath(): string {
 		const extensionRoot = this.context.extensionPath;
-		return path.join(extensionRoot, '..', 'dist');
+		return this.context.extensionMode === vscode.ExtensionMode.Development ?
+			path.join(extensionRoot, '..', 'dist'):
+			path.join(extensionRoot, 'dist');
 	}
 
 	/**

@@ -459,6 +459,8 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
             indexToViewAtom.unsubscribe(syncIndexToView);
             selectedAtom.unsubscribe(syncSelectedFrameOrNode);
             viewModeAtom.unsubscribe(syncSelectedFrameOrNode);
+            const { [uuid]: _, ...rest } = activeGroupAtom.get();
+            activeGroupAtom.set(rest);
         };
     }, []);
 

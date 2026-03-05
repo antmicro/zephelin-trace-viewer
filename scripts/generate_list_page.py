@@ -70,7 +70,7 @@ if __name__ == "__main__":
     if len(args.traces) > 1:
         links.append(
             A_TEMPLATE.format(
-                f"{args.trace_viewer_url}#profileURL={args.traces[-1].name}&profileURL={args.traces[-2].name}",
+                f"{args.trace_viewer_url}#profileURL={args.traces[-1].name}&profileURL={args.traces[-3].name}",
                 "multiple traces sample"
             )
         )

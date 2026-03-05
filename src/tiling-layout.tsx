@@ -304,23 +304,30 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
                 n.updateAttrs({enableDrag: true});
             }
         } else if (a.type === Actions.SET_ACTIVE_TABSET) {
-            const nodes = Array.from(document.querySelectorAll('[data-layout-path]').values());
-            const tabSets = nodes.filter((n: Element) => n.getAttribute("data-layout-path")?.match(/ts[0-9]+$/));
-
             const tabSet = model.getNodeById(a.data.tabsetNode as string) as TabSetNode;
-            tabSets.forEach((n: Element) => {
-                if (tabSet.getPath() === n.getAttribute("data-layout-path")) {
-                    n.setAttribute("data-focused", "y");
-                } else {
-                    n.setAttribute("data-focused", "n");
-                }
-            });
+            const selectedNode = tabSet.getSelectedNode() as TabNode | undefined;
 
-            const selectedNode = tabSet.getSelectedNode();
             if (selectedNode === undefined) {
                 return a;
             }
-            focusedPanelAtom.set(selectedNode.getId());
+
+            if (selectedNode.getComponent() === "Flamegraph") {
+                const nodes = Array.from(document.querySelectorAll('[data-layout-path]').values());
+                const tabSets = nodes.filter((n: Element) => n.getAttribute("data-layout-path")?.match(/ts[0-9]+$/));
+
+                tabSets.forEach((n: Element) => {
+                    if (tabSet.getPath() === n.getAttribute("data-layout-path")) {
+                        n.setAttribute("data-focused", "y");
+                    } else {
+                        n.setAttribute("data-focused", "n");
+                    }
+                });
+
+                focusedPanelAtom.set(selectedNode.getId());
+                return a;
+            }
+
+            return undefined;
         }
         return a;
     };

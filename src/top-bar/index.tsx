@@ -15,7 +15,7 @@ import { useState } from "preact/hooks";
 import { memo } from "preact/compat";
 
 import { useAtom } from "@speedscope/lib/atom";
-import { errorAtom, profileGroupAtom } from "@speedscope/app-state";
+import { errorAtom, profileGroupAtom, rawTefEventsAtom } from "@speedscope/app-state";
 
 import style from '@styles/top-bar.module.scss';
 import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
@@ -60,6 +60,9 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
     const loader = useSpeedscopeLoader();
     const tilingComponents = Object.values(registeredComponents);
 
+    const rawTefEvents = useAtom(rawTefEventsAtom);
+    const hasTefData = rawTefEvents && rawTefEvents.length > 0;
+
     return (
         <div id={style["top-bar"]}>
             <div id={style["left-buttons"]}>
@@ -67,9 +70,20 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
                     <button onClick={() => loader.browseForFile()}>
                         <ImportIcon /><p>Import trace</p>
                     </button>
-                    {traceLoadedSt && !isErrorSt ? <button onClick={loader.saveFile}>
-                        <ExportIcon /><p>Export trace</p>
-                    </button> : null}
+                    {traceLoadedSt && !isErrorSt ? (
+                        <>
+                            <button onClick={loader.saveSpeedscopeFile}>
+                                <ExportIcon />
+                                <p>Export trace</p>
+                            </button>
+
+                            {hasTefData ? (
+                                <button onClick={loader.saveTEFFile}>
+                                    <ExportIcon /><p>Export trace (with model metadata)</p>
+                                </button>
+                            ) : null}
+                        </>
+                    ) : null}
                     <hr />
                     <a href="https://github.com/antmicro/zephelin-trace-viewer">
                         <GitIcon /><p>Repository</p>

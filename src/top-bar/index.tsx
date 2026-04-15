@@ -44,7 +44,7 @@ interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
 
 
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClick, isStreaming=false, onToggleStreaming}: TopBarProps): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=false, onToggleStreaming}: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
@@ -112,20 +112,9 @@ export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClic
                 >
                     {isStreaming ? "Stop Streaming" : "Start Streaming"}
                 </button>
-
-                {eventCount > 0 && (
-                    <>
-                        <span className={style["live-buffer-text"]}>
-                            Live Buffer: {eventCount}
-                        </span>
-                        <button
-                            onClick={onSnapshotClick}
-                            className={`${style["action-button"]} ${style.sanpshot}`}
-                        >
-                            Render Snapshot
-                        </button>
-                    </>
-                )}
+                <span className={style["live-buffer-text"]}>
+                    Live Buffer: {eventCount}
+                </span>
             </div>
 
             <div id={style["right-buttons"]}>

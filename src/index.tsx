@@ -144,30 +144,27 @@ export function App() {
         setIsStreaming(!isStreaming);
     };
 
-    const loadLiveSnapshot = () => {
-        if (liveEvents.length === 0) {
-            console.warn("No events in the buffer");
-            return;
-        }
+    useEffect(() => {
+        if (liveEvents.length > 0) {
 
-        console.log(`Injecting snapshot of ${liveEvents.length} events` );
+            const traceData = {
+                traceEvents: liveEvents,
+                displayTimeUnit: "ns",
+                systemTraceEvents: "Trace from Zephelin Server",
+            };
 
-        const traceData = {
-            traceEvents: liveEvents,
-            displayTimeUnit: "ns",
-            systemTraceEvents: "Trace from Zephelin Server",
+            rawTefEventsAtom.set(liveEvents);
+
+            const jsonString = JSON.stringify(traceData);
+            const asciiData = btoa(jsonString);
+
+            useSpeedscopeLoader(false)
+                .loadProfile(() => importProfilesFromBase64('Live Trace Snapshot', asciiData))
+                .then(() => setWelcomeSt(false))
+                .catch(e => console.error("Snapshot injection failed:", e));
         };
 
-        rawTefEventsAtom.set(liveEvents);
-
-        const jsonString = JSON.stringify(traceData);
-        const asciiData = btoa(jsonString);
-
-        useSpeedscopeLoader(false)
-            .loadProfile(() => importProfilesFromBase64('Live Trace Snapshot', asciiData))
-            .then(() => setWelcomeSt(false))
-            .catch(e => console.error("Snapshot injection failed:", e));
-    };
+    }, [eventCount]);
 
     const displayWelcome = ((welcomeSt || isErrorSt) && (!tracesBaked));
 
@@ -178,7 +175,6 @@ export function App() {
                     tilingRef={tilingRef}
                     displayTitle={!displayWelcome}
                     eventCount={eventCount}
-                    onSnapshotClick={loadLiveSnapshot}
                     isStreaming={isStreaming}
                     onToggleStreaming={handleToggleStreaming}
                 />

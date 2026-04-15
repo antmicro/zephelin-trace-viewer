@@ -32,11 +32,15 @@ import { useSpeedscopeLoader } from "@/speedscope";
 interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
     /** Whether title should be displayed */
     displayTitle?: boolean,
+    /** Ammount of receiced ecents */
+    eventCount?: number,
+    /** Render gather events */
+    onSnapshotClick?: () => void,
 }
 
 
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClick}: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
@@ -96,6 +100,24 @@ export default memo(({tilingRef, displayTitle=true}: TopBarProps): JSX.Element =
             <div id={style["top-title"]} hidden={!displayTitle}>
                 Zephelin Trace Viewer
             </div>
+
+            <div id={style["live-controls"]}>
+
+                {eventCount > 0 && (
+                    <>
+                        <span className={style["live-buffer-text"]}>
+                            Live Buffer: {eventCount}
+                        </span>
+                        <button
+                            onClick={onSnapshotClick}
+                            className={`${style["action-button"]} ${style.sanpshot}`}
+                        >
+                            Render Snapshot
+                        </button>
+                    </>
+                )}
+            </div>
+
             <div id={style["right-buttons"]}>
                 {(traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>
                     {tilingComponents.map(v => <TilingComponentButton component={v} tilingRef={tilingRef} setCustomDraggingSt={setCustomDraggingSt} />)}

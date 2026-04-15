@@ -84,6 +84,38 @@
         text-transform: capitalize;
     }
 
+    #live-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-left: auto;
+        margin-right: 20px;
+
+        .live-buffer-text {
+            color: var(--colors-white);
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .action-button {
+            padding: 4px 12px;
+            color: var(--colors-white);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+
+            &.snapshot {
+                background-color: var(--colors-green);
+                &:hover {
+                    background-color: var(--colors-green-2);
+                }
+            }
+        }
+    }
+
     #right-buttons {
         height: 100%;
 

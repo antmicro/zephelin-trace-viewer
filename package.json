@@ -15,7 +15,8 @@
 		"preview": "vite preview",
 		"build:ext": "yarn --cwd extension build",
 		"build:all": "yarn build && yarn build:ext",
-		"build:vsix": "yarn build:all && shx cp -r ./dist ./extension/dist && yarn --cwd extension package"
+		"build:vsix": "yarn build:all && shx cp -r ./dist ./extension/dist && yarn --cwd extension package",
+		"publish:vsix": "yarn build:all && shx cp -r ./dist ./extension/dist && shx cp -r ./README.md ./LICENSE ./extension/ && yarn --cwd extension publish"
 	},
 	"dependencies": {
 		"@bokeh/bokehjs": "^3.7.3",

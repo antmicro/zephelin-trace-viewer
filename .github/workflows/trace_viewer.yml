@@ -23,7 +23,7 @@ jobs:
           yarn lint
           git diff --exit-code
 
-  build-and-deploy:
+  build-and-deploy-gh-pages:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,3 +55,32 @@ jobs:
           git commit -am "update ${{ github.sha }}"
           git push -u origin +HEAD:gh-pages
           rm -rf .git
+
+  build-and-deploy-vscode-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Prepare dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          corepack enable
+          yarn
+      - name: Update package version
+        run: |
+          VERSION=$(git describe | sed 's|v\([^-]\+\)-\([[:digit:]]\+\).*|\1.\2|')
+          cp extension/package.json temp.json
+          jq --tab ".version = \"${VERSION}\"" temp.json > extension/package.json
+          rm temp.json
+      - name: Publish VSCode Extension
+        run: |
+          yarn publish:vsix -p ${{ secrets.VSC_MARKETPLACE_TOKEN }}
+      - name: Upload VSIX package
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: vsix-package
+          path: extension/*.vsix

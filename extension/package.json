@@ -7,7 +7,8 @@
 		"url": "https://github.com/antmicro/zephelin-trace-viewer.git"
 	},
 	"version": "0.0.1",
-	"publisher": "adi",
+	"publisher": "Antmicro",
+	"icon": "img/zephelin.png",
 	"license": "Apache-2.0",
 	"engines": {
 		"vscode": "^1.85.0"
@@ -44,7 +45,8 @@
 	"scripts": {
 		"build": "node esbuild.js",
 		"watch": "node esbuild.js --watch",
-		"package": "yarn build && vsce package --no-dependencies"
+		"package": "yarn build && vsce package --no-dependencies",
+		"publish": "yarn package && vsce publish --no-dependencies \"$@\""
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.85.0",

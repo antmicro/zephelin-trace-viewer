@@ -32,15 +32,19 @@ import { useSpeedscopeLoader } from "@/speedscope";
 interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
     /** Whether title should be displayed */
     displayTitle?: boolean,
-    /** Ammount of receiced ecents */
+    /** Amount of received events */
     eventCount?: number,
     /** Render gather events */
     onSnapshotClick?: () => void,
+    /** Whether live streaming is currently active */
+    isStreaming?: boolean,
+    /** Toggle the live stream state */
+    onToggleStreaming?: () => void,
 }
 
 
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClick}: TopBarProps): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClick, isStreaming=false, onToggleStreaming}: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
@@ -102,6 +106,12 @@ export default memo(({tilingRef, displayTitle=true, eventCount=0, onSnapshotClic
             </div>
 
             <div id={style["live-controls"]}>
+                <button
+                    onClick={onToggleStreaming}
+                    className={`${style["action-button"]} ${isStreaming ? style["stop-stream"] : style["start-stream"]}`}
+                >
+                    {isStreaming ? "Stop Streaming" : "Start Streaming"}
+                </button>
 
                 {eventCount > 0 && (
                     <>

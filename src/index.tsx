@@ -88,18 +88,22 @@ export function App() {
     const [liveEvents, setLiveEvents] = useState<Record<string, unknown>[]>([]);
     const [eventCount, setEventCount] = useState<number>(0);
 
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
+
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
         const socket = io();
         socketRef.current = socket;
 
-        socket.on('connect', () => console.log('Connected to Zephelin backend'));
+        socket.on('connect', () => {
+            console.log('Connected to Zephelin backend');
 
-        socket.emit("rpc_request", {
-            jsonrpc: "2.0",
-            method: "trace.connect",
-            id: Date.now(),
+            socket.emit("rpc_request", {
+                jsonrpc: "2.0",
+                method: "trace.connect",
+                id: Date.now(),
+            });
         });
 
         socket.on('rpc_notification', (data: RpcNotification) => {
@@ -123,6 +127,22 @@ export function App() {
             socket.disconnect();
         };
     }, []);
+
+    const handleToggleStreaming = () => {
+        if (!socketRef.current) {return;}
+
+        const targetMethod = isStreaming ? "trace.stream_stop" : "trace.stream_start";
+
+        console.log(`Sending RPC: ${targetMethod}`);
+
+        socketRef.current.emit("rpc_request", {
+            jsonrpc: "2.0",
+            method: targetMethod,
+            id: Date.now(),
+        });
+
+        setIsStreaming(!isStreaming);
+    };
 
     const loadLiveSnapshot = () => {
         if (liveEvents.length === 0) {
@@ -159,6 +179,8 @@ export function App() {
                     displayTitle={!displayWelcome}
                     eventCount={eventCount}
                     onSnapshotClick={loadLiveSnapshot}
+                    isStreaming={isStreaming}
+                    onToggleStreaming={handleToggleStreaming}
                 />
                 <DragDropLayout id={style["tiling-container"]} enabled={!displayWelcome}>
                     <Suspense fallback={<LoadingScreen />}>

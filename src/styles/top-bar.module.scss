@@ -113,6 +113,24 @@
                     background-color: var(--colors-green-2);
                 }
             }
+
+            &.start-stream {
+                background-color: var(--colors-green);
+                border-color: var(--colors-green);
+                &:hover {
+                    background-color: var(--colors-green-2);
+                    border-color: var(--colors-green-2);
+                }
+            }
+
+            &.stop-stream {
+                background-color: var(--colors-red);
+                border-color: var(--colors-red);
+                &:hover {
+                    background-color: var(--colors-red-2);
+                    border-color: var(--colors-red-2);
+                }
+            }
         }
     }
 

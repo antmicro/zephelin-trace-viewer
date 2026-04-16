@@ -28,6 +28,8 @@
 		"flexlayout-react": "patch:flexlayout-react@npm%3A0.8.17#~/.yarn/patches/flexlayout-react-npm-0.8.17-d59e2a8052.patch",
 		"preact": "^10.25.3",
 		"react-click-away-listener": "^2.4.0",
+		"socket.io": "^4.8.3",
+		"socket.io-client": "^4.8.3",
 		"speedscope": "workspace:*"
 	},
 	"devDependencies": {

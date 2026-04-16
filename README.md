@@ -44,3 +44,5 @@ yarn
 ## Documentation
 
 Documentation for Zephelin Trace Viewer is present in [Zephelin documentation](https://antmicro.github.io/zephelin).
+
+For links to example traces, check [Zephelin's documentation on Trace Viewer usage](https://antmicro.github.io/zephelin/visual_interface.html#usage) and [previews for Zephelin's samples](https://antmicro.github.io/zephelin/examples.html).

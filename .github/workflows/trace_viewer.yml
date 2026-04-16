@@ -43,7 +43,7 @@ jobs:
           name: zephelin-trace-viewer
           path: dist
       - name: Deploy to Github Pages
-        if: github.event_name == 'push' && github.repository == 'antmicro/zephelin-trace-viewer'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'antmicro/zephelin-trace-viewer'
         run: |
           cd dist
           touch .nojekyll
@@ -75,7 +75,11 @@ jobs:
           cp extension/package.json temp.json
           jq --tab ".version = \"${VERSION}\"" temp.json > extension/package.json
           rm temp.json
+      - name: Build VSCode Extension
+        run: |
+          yarn build:vsix
       - name: Publish VSCode Extension
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'antmicro/zephelin-trace-viewer'
         run: |
           yarn publish:vsix -p ${{ secrets.VSC_MARKETPLACE_TOKEN }}
       - name: Upload VSIX package

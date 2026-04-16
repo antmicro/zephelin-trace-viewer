@@ -14058,9 +14058,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zephelin-trace-viewer@workspace:extension":
+"zephelin-trace@workspace:extension":
   version: 0.0.0-use.local
-  resolution: "zephelin-trace-viewer@workspace:extension"
+  resolution: "zephelin-trace@workspace:extension"
   dependencies:
     "@types/vscode": "npm:^1.85.0"
     "@vscode/vsce": "npm:^3.7.1"

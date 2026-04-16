@@ -1,6 +1,6 @@
 {
-	"name": "zephelin-trace-viewer",
-	"displayName": "Zephelin Trace Viewer",
+	"name": "zephelin-trace",
+	"displayName": "Zephelin Trace",
 	"description": "Visualize Zephyr RTOS trace files inside VS Code",
 	"repository": {
 		"type": "git",

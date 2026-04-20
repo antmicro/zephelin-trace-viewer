@@ -40,11 +40,14 @@ interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
     isStreaming?: boolean,
     /** Toggle the live stream state */
     onToggleStreaming?: () => void,
+    /** Trigger backend full buffer collection */
+    onCollectTrace?: () => void,
 }
 
 
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=false, onToggleStreaming}: TopBarProps): JSX.Element => {
+export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=false, onToggleStreaming, onCollectTrace,
+}: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
     const isErrorSt = useAtom<boolean>(errorAtom);
@@ -111,6 +114,13 @@ export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=fa
                     className={`${style["action-button"]} ${isStreaming ? style["stop-stream"] : style["start-stream"]}`}
                 >
                     {isStreaming ? "Stop Streaming" : "Start Streaming"}
+                </button>
+                <button
+                    onClick={onCollectTrace}
+                    className={style["action-button"]}
+                    title="Pull the complete trace buffer"
+                >
+                    Collect
                 </button>
                 <span className={style["live-buffer-text"]}>
                     Live Buffer: {eventCount}

@@ -11,14 +11,29 @@ import { importProfilesFromBase64 } from '@speedscope/lib/profile-loader';
 import { rawTefEventsAtom } from '@speedscope/app-state';
 import { useSpeedscopeLoader } from '../speedscope';
 
+export type TraceEvent = Record<string, unknown> & { ph?: string };
+
 export interface RpcNotification {
     jsonrpc: string;
     method: string;
     params: {
-        events: Record<string, unknown>[];
+        events?: TraceEvent[];
         overlap_count?: number;
         total_count: number;
     };
+}
+
+export interface RpcResponse {
+    result?: {
+        status: string;
+        message?: string;
+        data?: {
+            events: TraceEvent[];
+            overlap_count?: number;
+            total_count: number;
+        };
+    };
+    error?: string;
 }
 
 export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
@@ -41,20 +56,45 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             });
         });
 
+        const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
+            setLiveEvents(prevEvents => {
+                if (prevEvents.length === 0) { return incomingEvents; }
+
+                const newMetadata = incomingEvents.filter(e => e.ph === 'M');
+                const newTrace = incomingEvents.filter(e => e.ph !== 'M');
+
+                const safeIndex = Math.max(0, prevEvents.length - overlap);
+                const safePreviousEvents = prevEvents.slice(0, safeIndex);
+
+                return [...newMetadata, ...safePreviousEvents, ...newTrace];
+            });
+            setEventCount(totalCount);
+        };
+
         socket.on('rpc_notification', (data: RpcNotification) => {
-            if (data.method === 'trace.events') {
-                const newEvents = data.params.events;
-                const overlap = data.params.overlap_count ?? 0;
-
-                setLiveEvents(prevEvents => {
-                    if (prevEvents.length === 0) {return newEvents;}
-
-                    const safeIndex = Math.max(0, prevEvents.length - overlap);
-                    const safePreviousEvents = prevEvents.slice(0, safeIndex);
-
-                    return [...safePreviousEvents, ...newEvents];
-                });
+            if (data.method === 'trace.events' && data.params.events) {
+                processIncomingTrace(
+                    data.params.events,
+                    data.params.overlap_count ?? 0,
+                    data.params.total_count,
+                );
+            }
+            else if (data.method === 'trace.status') {
                 setEventCount(data.params.total_count);
+            }
+        });
+
+        socket.on('rpc_response', (data: RpcResponse) => {
+            if (data?.result?.status === 'success') {
+                if (data.result.data?.events) {
+                    processIncomingTrace(
+                        data.result.data.events,
+                        data.result.data.overlap_count ?? 0,
+                        data.result.data.total_count,
+                    );
+                }
+            } else if (data?.error || data?.result?.status === 'error') {
+                console.error("Backend Error:", data.error ?? data.result.message);
             }
         });
 
@@ -79,6 +119,17 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         setIsStreaming(!isStreaming);
     };
 
+    const triggerCollect = () => {
+        if (!socketRef.current) {return;}
+        console.log("Sending RPC: trace.collect");
+
+        socketRef.current.emit("rpc_request", {
+            jsonrpc: "2.0",
+            method: "trace.collect",
+            id: Date.now(),
+        });
+    };
+
     useEffect(() => {
         if (liveEvents.length > 0) {
 
@@ -99,11 +150,12 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 .catch(e => console.error("Snapshot injection failed:", e));
         };
 
-    }, [eventCount, liveEvents, setWelcomeSt]);
+    }, [liveEvents, setWelcomeSt]);
 
     return {
         eventCount,
         isStreaming,
         toggleStreaming,
+        triggerCollect,
     };
 }

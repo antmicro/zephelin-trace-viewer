@@ -101,16 +101,27 @@
         .action-button {
             padding: 4px 12px;
             color: var(--colors-white);
-            border: none;
+            background-color: var(--colors-gray-4);
+            border: 1px solid var(--colors-gray-3);
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+
+            &:hover {
+                background-color: var(--colors-gray-3);
+            }
+
+            &:active {
+                opacity: 0.8;
+            }
 
             &.snapshot {
                 background-color: var(--colors-green);
+                border-color: var(--colors-green);
                 &:hover {
                     background-color: var(--colors-green-2);
+                    border-color: var(--colors-green-2);
                 }
             }
 

@@ -40,6 +40,8 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const [liveEvents, setLiveEvents] = useState<Record<string, unknown>[]>([]);
     const [eventCount, setEventCount] = useState<number>(0);
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
+
+    const hasMetadataRef = useRef<boolean>(false);
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
@@ -68,7 +70,10 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
                 return [...newMetadata, ...safePreviousEvents, ...newTrace];
             });
-            setEventCount(totalCount);
+
+            if (totalCount !== undefined) {
+                setEventCount(totalCount);
+            }
         };
 
         socket.on('rpc_notification', (data: RpcNotification) => {
@@ -132,6 +137,15 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
     useEffect(() => {
         if (liveEvents.length > 0) {
+
+            if (!hasMetadataRef.current) {
+                hasMetadataRef.current = true;
+                socketRef.current.emit("rpc_request", {
+                    jsonrpc: "2.0",
+                    method: "trace.metadata",
+                    id: Date.now(),
+                });
+            }
 
             const traceData = {
                 traceEvents: liveEvents,

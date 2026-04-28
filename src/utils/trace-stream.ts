@@ -37,11 +37,11 @@ export interface RpcResponse {
 }
 
 export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
-    const [liveEvents, setLiveEvents] = useState<Record<string, unknown>[]>([]);
     const [eventCount, setEventCount] = useState<number>(0);
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [isConnected, setIsConnected] = useState<boolean>(false);
 
+    const liveEventsRef = useRef<TraceEvent[]>([]);
     const hasMetadataRef = useRef<boolean>(false);
     const socketRef = useRef<Socket | null>(null);
 
@@ -66,21 +66,48 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         });
 
         const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
-            setLiveEvents(prevEvents => {
-                if (prevEvents.length === 0) { return incomingEvents; }
+            if (incomingEvents.length === 0) { return incomingEvents; }
 
-                const newMetadata = incomingEvents.filter(e => e.ph === 'M');
-                const newTrace = incomingEvents.filter(e => e.ph !== 'M');
+            const prevEvents = liveEventsRef.current;
+            const newMetadata = incomingEvents.filter(e => e.ph === 'M');
+            const newTrace = incomingEvents.filter(e => e.ph !== 'M');
 
-                const safeIndex = Math.max(0, prevEvents.length - overlap);
-                const safePreviousEvents = prevEvents.slice(0, safeIndex);
+            const safeIndex = Math.max(0, prevEvents.length - overlap);
+            const safePreviousEvents = prevEvents.slice(0, safeIndex);
 
-                return [...newMetadata, ...safePreviousEvents, ...newTrace];
-            });
+            const updatedEvents = [...newMetadata, ...safePreviousEvents, ...newTrace];
+            liveEventsRef.current = updatedEvents;
+
+            rawTefEventsAtom.set(updatedEvents);
+
+            if (!hasMetadataRef.current) {
+                hasMetadataRef.current = true;
+                socketRef.current.emit("rpc_request", {
+                    jsonrpc: "2.0",
+                    method: "trace.metadata",
+                    id: Date.now(),
+                });
+            }
+
+            const traceData = {
+                traceEvents: updatedEvents,
+                displayTimeUnit: "ns",
+                systemTraceEvents: "Trace from Zephelin Server",
+            };
+
+
+            const jsonString = JSON.stringify(traceData);
+            const asciiData = btoa(jsonString);
+
+            useSpeedscopeLoader(false)
+                .loadProfile(() => importProfilesFromBase64('Live Trace Snapshot', asciiData))
+                .then(() => setWelcomeSt(false))
+                .catch(e => console.error("Snapshot injection failed:", e));
 
             if (totalCount !== undefined) {
                 setEventCount(totalCount);
             }
+
         };
 
         socket.on('rpc_notification', (data: RpcNotification) => {
@@ -113,7 +140,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         return () => {
             socket.disconnect();
         };
-    }, []);
+    }, [setWelcomeSt]);
 
     const toggleStreaming = () => {
         if (!socketRef.current) {return;}
@@ -141,37 +168,6 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             id: Date.now(),
         });
     };
-
-    useEffect(() => {
-        if (liveEvents.length > 0) {
-
-            if (!hasMetadataRef.current) {
-                hasMetadataRef.current = true;
-                socketRef.current.emit("rpc_request", {
-                    jsonrpc: "2.0",
-                    method: "trace.metadata",
-                    id: Date.now(),
-                });
-            }
-
-            const traceData = {
-                traceEvents: liveEvents,
-                displayTimeUnit: "ns",
-                systemTraceEvents: "Trace from Zephelin Server",
-            };
-
-            rawTefEventsAtom.set(liveEvents);
-
-            const jsonString = JSON.stringify(traceData);
-            const asciiData = btoa(jsonString);
-
-            useSpeedscopeLoader(false)
-                .loadProfile(() => importProfilesFromBase64('Live Trace Snapshot', asciiData))
-                .then(() => setWelcomeSt(false))
-                .catch(e => console.error("Snapshot injection failed:", e));
-        };
-
-    }, [liveEvents, setWelcomeSt]);
 
     return {
         eventCount,

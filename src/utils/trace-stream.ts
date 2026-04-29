@@ -7,8 +7,8 @@
 
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
-import { importProfilesFromBase64 } from '@speedscope/lib/profile-loader';
 import { rawTefEventsAtom } from '@speedscope/app-state';
+import { importProfilesFromRaw } from '@speedscope/lib/profile-loader';
 import { useSpeedscopeLoader } from '../speedscope';
 
 export type TraceEvent = Record<string, unknown> & { ph?: string };
@@ -95,13 +95,9 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 systemTraceEvents: "Trace from Zephelin Server",
             };
 
-
-            const jsonString = JSON.stringify(traceData);
-            const asciiData = btoa(jsonString);
-
             useSpeedscopeLoader(false)
-                .loadProfile(() => importProfilesFromBase64('Live Trace Snapshot', asciiData))
                 .then(() => setWelcomeSt(false))
+                .loadProfile(() => importProfilesFromRaw('Live Trace Snapshot', traceData))
                 .catch(e => console.error("Snapshot injection failed:", e));
 
             if (totalCount !== undefined) {

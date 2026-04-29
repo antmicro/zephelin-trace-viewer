@@ -169,8 +169,7 @@ export abstract class BarPlot<D, T extends BarPlotProps<D> = BarPlotProps<D>> ex
         case 'number':
             return axis === Axis.X ? super._xTickFormat() : super._yTickFormat();
         case 'string':
-            const labels = this._uniqueLabels;
-            return (i: number) => labels[i] ?? '';
+            return (i: number) => this._uniqueLabels[i] ?? '';
         };
     }
 

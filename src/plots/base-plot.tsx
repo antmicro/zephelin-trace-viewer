@@ -673,6 +673,18 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
             this._updateScaleDomains();
             if (prevProps.plotData?.length !== this.props.plotData?.length) {
                 this._createSeries();
+            } else {
+                const xTickValues = this._xTickValues();
+                if (xTickValues) { this.series.xTickValues(xTickValues); }
+
+                const yTickValues = this._yTickValues();
+                if (yTickValues) { this.series.yTickValues(yTickValues); }
+
+                const xTickFormat = this._xTickFormat();
+                if (xTickFormat) { this.series.xTickFormat(xTickFormat); }
+
+                const yTickFormat = this._yTickFormat();
+                if (yTickFormat) { this.series.yTickFormat(yTickFormat); }
             }
         }
 

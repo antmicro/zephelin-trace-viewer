@@ -34,6 +34,7 @@ import { ProfileSearchResults } from '@speedscope/lib/profile-search';
 import { ProfileSearchContext } from '@speedscope/views/search-view';
 import tilingComponent, { TilingComponent, NodeConfig } from './utils/tiling-component';
 import { FocusContext } from './utils/tiling-panel';
+import { liveTraceTickAtom } from './utils/trace-stream';
 
 
 interface SelectTraceMessageProps {

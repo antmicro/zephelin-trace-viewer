@@ -14,6 +14,7 @@ import { Theme, useTheme } from '@speedscope/views/themes/theme';
 import { useRef } from 'preact/compat';
 import { useAtom } from '@speedscope/lib/atom';
 import { profileGroupAtom } from '@speedscope/app-state';
+import { liveTraceTickAtom } from '../utils/trace-stream';
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { getOpExecutionData } from '@/utils/model';
@@ -36,6 +37,8 @@ function OpExecutionTimePlotWrapper({ activeGroups, theme, tilingComponent }: {
     tilingComponent: TilingComponent<OpExecutionTimeProps>
 }) {
     const plotRef = useRef<OpExecutionTimePlot<OpExecutionData, BarPlotProps<OpExecutionData> & { theme: Theme }>>(null);
+
+    useAtom(liveTraceTickAtom);
 
     const displayData = activeGroups.map(name =>
         tilingComponent.dataProvider?.(name)?.plotData.flat() ?? [],

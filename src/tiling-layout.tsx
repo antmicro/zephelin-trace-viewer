@@ -19,6 +19,7 @@ import { focusedPanelAtom, loadingAtom, profileGroupAtom } from "@speedscope/app
 import style from "@styles/app.module.scss";
 import { MutableRef } from "preact/hooks";
 import Speedscope from "./speedscope";
+import { liveTraceTickAtom } from './utils/trace-stream';
 // Import all panels to make sure they are registered
 import * as panels from "./info-panel";
 import { TilingComponent, getAllComponents, getTilingComponent } from "./utils/tiling-component";
@@ -246,6 +247,11 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
 
     // Actions when new trace is loaded
     const initialLoad = () => {
+        const tick = liveTraceTickAtom.get();
+        const isLiveUpdate = tick > 0;
+
+        if (isLiveUpdate) {return;}
+
         // Check if loading of a trace has started
         if (loadingAtom.get()) {
             GroupDataCache.clear();

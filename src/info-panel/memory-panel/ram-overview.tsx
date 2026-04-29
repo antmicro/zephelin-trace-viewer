@@ -14,6 +14,8 @@ import { memo, RefObject } from "preact/compat";
 import { useRef} from "preact/hooks";
 
 import styles from '@styles/memory-panel.module.scss';
+import { useAtom } from '@speedscope/lib/atom';
+import { liveTraceTickAtom } from '../../utils/trace-stream';
 import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
 import { TotalMemoryPlot } from "@/plots/memory-plot";
@@ -53,6 +55,8 @@ const ZoomButton = memo((props: ZoomButton) => {
 const RAMOverview = memo(({ tilingComponent }: CommonPlotProps) => {
     const plotRef = useRef<TotalMemoryPlot>(null);
     const selectButtonsRef = useRef<HTMLDivElement | null>(null);
+
+    useAtom(liveTraceTickAtom);
 
     /** Selects (adds class "selected") button that triggered the event */
     const selectButton = (ref: RefObject<HTMLButtonElement>) => {

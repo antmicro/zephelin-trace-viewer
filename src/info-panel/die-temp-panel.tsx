@@ -7,6 +7,8 @@
 
 
 import { memo, useRef } from "preact/compat";
+import { useAtom } from '@speedscope/lib/atom';
+import { liveTraceTickAtom } from '../utils/trace-stream';
 import PanelTemplate from "./common";
 import { getDieTempData } from "@/utils/dietemp";
 import { DieTempPlot } from "@/plots/temp-plot";
@@ -27,6 +29,8 @@ export interface DieTempPanelProps {
  */
 const DieTempPanel = memo(({tilingComponent}: DieTempPanelProps) => {
     const plotRef = useRef<DieTempPlot>(null);
+
+    useAtom(liveTraceTickAtom);
 
     const renderPlot = (activeGroups: string[]) => {
         const displayData  = activeGroups.flatMap(name => {

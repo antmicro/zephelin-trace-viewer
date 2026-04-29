@@ -7,9 +7,14 @@
 
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
-import { rawTefEventsAtom } from '@speedscope/app-state';
 import { importProfilesFromRaw } from '@speedscope/lib/profile-loader';
+import { rawTefEventsAtom } from '@speedscope/app-state';
+import { Atom } from '@speedscope/lib/atom';
 import { useSpeedscopeLoader } from '../speedscope';
+import { GroupDataCache } from './cache';
+
+// Tracks the amount of ingested trace batches
+export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
 
 export type TraceEvent = Record<string, unknown> & { ph?: string };
 
@@ -95,9 +100,13 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 systemTraceEvents: "Trace from Zephelin Server",
             };
 
-            useSpeedscopeLoader(false)
-                .then(() => setWelcomeSt(false))
+            useSpeedscopeLoader(false, true)
                 .loadProfile(() => importProfilesFromRaw('Live Trace Snapshot', traceData))
+                .then(() => {
+                    setWelcomeSt(false);
+                    GroupDataCache.clear();
+                    liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
+                })
                 .catch(e => console.error("Snapshot injection failed:", e));
 
             if (totalCount !== undefined) {

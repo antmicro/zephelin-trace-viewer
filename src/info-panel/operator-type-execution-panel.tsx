@@ -10,6 +10,8 @@
  * The module with panel containing operator type execution time plot.
  */
 
+import { useAtom } from '@speedscope/lib/atom';
+import { liveTraceTickAtom } from '../utils/trace-stream';
 import PanelTemplate from './common';
 import tilingComponent, { CSS_ENABLING_OVERFLOW, TilingComponent } from '@/utils/tiling-component';
 import { getOpTypeExecutionData } from '@/utils/model';
@@ -47,6 +49,8 @@ function OpTypeExecutionTimePanel({ tilingComponent }: OpTypeExecutionTimeProps)
         const rawGroups = activeGroups.map(name =>
             tilingComponent.dataProvider?.(name)?.plotData.flat() ?? [],
         );
+
+        useAtom(liveTraceTickAtom);
 
         const displayData = alignGroupData(rawGroups);
 

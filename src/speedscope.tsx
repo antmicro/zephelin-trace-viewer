@@ -130,10 +130,15 @@ export function configureSpeedscope() {
 }
 
 /** Creates loaders functions that changes the Speedscope state. */
-export const useSpeedscopeLoader = (reactive = true) => new ProfileLoader({
+export const useSpeedscopeLoader = (reactive = true, isUpdate = false) => new ProfileLoader({
     setLoading: (v) => loadingAtom.set(v),
     setError: (v) => errorAtom.set(v),
-    setProfileGroup: (v) => profileGroupAtom.setProfileGroup(v),
+    setProfileGroup: (v) => {
+        if (!isUpdate) {
+            liveTraceTickAtom.set(0);
+        }
+        profileGroupAtom.setProfileGroup(v);
+    },
     setDragActive: (v) => dragActiveAtom.set(v),
     setViewMode: (v) => viewModeAtom.set(v),
     profileGroup: reactive ? useAtom(profileGroupAtom) : profileGroupAtom.get(),

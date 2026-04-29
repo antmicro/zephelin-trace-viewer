@@ -8,6 +8,8 @@
 
 import { memo, useRef } from "preact/compat";
 
+import { useAtom } from '@speedscope/lib/atom';
+import { liveTraceTickAtom } from '../utils/trace-stream';
 import PanelTemplate from "./common";
 import { getCPULoadData } from "@/utils/cpuload";
 import { CPULoadPlot } from "@/plots/load-plot";
@@ -29,6 +31,7 @@ export interface CPULoadPanelProps {
 const CPULoadPanel = memo(({tilingComponent}: CPULoadPanelProps) => {
     const plotRef = useRef<CPULoadPlot>(null);
 
+    useAtom(liveTraceTickAtom);
 
     const renderPlot = (activeGroups: string[]) => {
         const displayData  = activeGroups.map(name => {

@@ -15,6 +15,8 @@ import { JSX } from "preact";
 import styles from '@styles/memory-panel.module.scss';
 import { useRef, useState, useEffect } from "preact/hooks";
 import * as d3 from 'd3';
+import { useAtom } from '@speedscope/lib/atom';
+import { liveTraceTickAtom } from '../../utils/trace-stream';
 import PanelTemplate from "../common";
 import { CommonPlotProps, dataProvider } from ".";
 import { MemoryUsagePlot } from "@/plots/memory-plot";
@@ -39,6 +41,8 @@ function LineMarker({color, strokeWidth = "1rem", width = "1rem"}: {color: strin
 function MemoryUsageGraph({ tilingComponent }: CommonPlotProps): JSX.Element |undefined {
     const plotRef = useRef<MemoryUsagePlot>();
     const [isPlotReadySt, setIsPlotReadySt] = useState(false);
+
+    useAtom(liveTraceTickAtom);
 
     useEffect(() => {
         if (plotRef.current) {

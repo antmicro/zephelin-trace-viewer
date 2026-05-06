@@ -42,11 +42,20 @@ interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
     onToggleStreaming?: () => void,
     /** Trigger backend full buffer collection */
     onCollectTrace?: () => void,
+    /** Indicates if live-tracing is on */
+    isLiveTracingMode?: boolean,
 }
 
 
 /** The top bar of the application */
-export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=false, onToggleStreaming, onCollectTrace,
+export default memo(({
+    tilingRef,
+    displayTitle=true,
+    eventCount=0,
+    isStreaming=false,
+    onToggleStreaming,
+    onCollectTrace,
+    isLiveTracingMode,
 }: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
@@ -108,24 +117,26 @@ export default memo(({tilingRef, displayTitle=true, eventCount=0, isStreaming=fa
                 Zephelin Trace Viewer
             </div>
 
-            <div id={style["live-controls"]}>
-                <button
-                    onClick={onToggleStreaming}
-                    className={`${style["action-button"]} ${isStreaming ? style["stop-stream"] : style["start-stream"]}`}
-                >
-                    {isStreaming ? "Stop Streaming" : "Start Streaming"}
-                </button>
-                <button
-                    onClick={onCollectTrace}
-                    className={style["action-button"]}
-                    title="Pull the complete trace buffer"
-                >
-                    Collect
-                </button>
-                <span className={style["live-buffer-text"]}>
-                    Live Buffer: {eventCount}
-                </span>
-            </div>
+            {isLiveTracingMode && (
+                <div id={style["live-controls"]}>
+                    <button
+                        onClick={onToggleStreaming}
+                        className={`${style["action-button"]} ${isStreaming ? style["stop-stream"] : style["start-stream"]}`}
+                    >
+                        {isStreaming ? "Stop Streaming" : "Start Streaming"}
+                    </button>
+                    <button
+                        onClick={onCollectTrace}
+                        className={style["action-button"]}
+                        title="Pull the complete trace buffer"
+                    >
+                        Collect
+                    </button>
+                    <span className={style["live-buffer-text"]}>
+                        Live Buffer: {eventCount}
+                    </span>
+                </div>
+            )}
 
             <div id={style["right-buttons"]}>
                 {(traceLoadedSt) ? <ButtonsContainer name={panelsDiv} right={true}>

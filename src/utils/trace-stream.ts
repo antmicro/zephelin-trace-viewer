@@ -40,6 +40,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const [liveEvents, setLiveEvents] = useState<Record<string, unknown>[]>([]);
     const [eventCount, setEventCount] = useState<number>(0);
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
+    const [isConnected, setIsConnected] = useState<boolean>(false);
 
     const hasMetadataRef = useRef<boolean>(false);
     const socketRef = useRef<Socket | null>(null);
@@ -50,12 +51,18 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
         socket.on('connect', () => {
             console.log('Connected to Zephelin backend');
+            setIsConnected(true);
 
             socket.emit("rpc_request", {
                 jsonrpc: "2.0",
                 method: "trace.connect",
                 id: Date.now(),
             });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from Zephelin backend');
+            setIsConnected(false);
         });
 
         const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
@@ -171,5 +178,6 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         isStreaming,
         toggleStreaming,
         triggerCollect,
+        isConnected,
     };
 }

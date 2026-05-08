@@ -68,6 +68,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         socket.on('disconnect', () => {
             console.log('Disconnected from Zephelin backend');
             setIsConnected(false);
+            setIsStreaming(false);
         });
 
         const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
@@ -160,7 +161,10 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             id: Date.now(),
         });
 
-        setIsStreaming(!isStreaming);
+        const nextStreamingState = !isStreaming;
+        setIsStreaming(nextStreamingState);
+        liveViewportProxy.isLiveMode = nextStreamingState;
+
     };
 
     const triggerCollect = () => {

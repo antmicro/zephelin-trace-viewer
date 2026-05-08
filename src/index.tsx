@@ -75,7 +75,15 @@ export function App() {
     loadingCallbacksAtom.set({onstart() {setWelcomeSt(false);}});
     const isErrorSt = useAtom<boolean>(errorAtom);
 
-    const { eventCount, isStreaming, toggleStreaming, triggerCollect, isConnected } = useTraceStream(setWelcomeSt);
+    const {
+        eventCount,
+        isStreaming,
+        toggleStreaming,
+        triggerCollect,
+        isConnected,
+        isAutoPanEnabled,
+        toggleAutoPan,
+    } = useTraceStream(setWelcomeSt);
 
     const displayWelcome = ((welcomeSt || isErrorSt) && (!tracesBaked));
 
@@ -90,6 +98,8 @@ export function App() {
                     onToggleStreaming={toggleStreaming}
                     onCollectTrace={triggerCollect}
                     isLiveTracingMode={isConnected}
+                    isAutoPanEnabled={isAutoPanEnabled}
+                    onToggleAutoPan={toggleAutoPan}
                 />
                 <DragDropLayout id={style["tiling-container"]} enabled={!displayWelcome}>
                     <Suspense fallback={<LoadingScreen />}>

@@ -44,6 +44,10 @@ interface TopBarProps extends Pick<TilingLayoutProps, "tilingRef"> {
     onCollectTrace?: () => void,
     /** Indicates if live-tracing is on */
     isLiveTracingMode?: boolean,
+    /** Indicates if viewport is following the trace */
+    isAutoPanEnabled?: boolean,
+    /** Toggle snapback to live trace edge */
+    onToggleAutoPan?: () => void,
 }
 
 
@@ -56,6 +60,8 @@ export default memo(({
     onToggleStreaming,
     onCollectTrace,
     isLiveTracingMode,
+    isAutoPanEnabled,
+    onToggleAutoPan,
 }: TopBarProps): JSX.Element => {
     const [customDraggingSt, setCustomDraggingSt] = useState<HTMLDivElement | null>(null);
     const [traceLoadedSt, setTraceLoadedSt] = useState<boolean>(false);
@@ -131,6 +137,13 @@ export default memo(({
                         title="Pull the complete trace buffer"
                     >
                         Collect
+                    </button>
+                    <button
+                        onClick={onToggleAutoPan}
+                        className={`${style["action-button"]} ${style["resume-tailing"] || ''}`}
+                        title="Snap back to the latest trace events"
+                    >
+                        {isAutoPanEnabled ? "Stop Tailing" : "Resume Tailing"}
                     </button>
                     <span className={style["live-buffer-text"]}>
                         Live Buffer: {eventCount}

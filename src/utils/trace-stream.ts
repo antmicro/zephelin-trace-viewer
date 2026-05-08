@@ -10,6 +10,7 @@ import { io, Socket } from 'socket.io-client';
 import { importProfilesFromRaw } from '@speedscope/lib/profile-loader';
 import { rawTefEventsAtom } from '@speedscope/app-state';
 import { Atom } from '@speedscope/lib/atom';
+import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
 import { useSpeedscopeLoader } from '../speedscope';
 import { GroupDataCache } from './cache';
 
@@ -165,7 +166,16 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         setIsStreaming(nextStreamingState);
         liveViewportProxy.isLiveMode = nextStreamingState;
 
+        if (nextStreamingState) {
+            liveViewportProxy.autoPanToRight = true;
+        }
     };
+
+    const toggleAutoPan = () => {
+        liveViewportProxy.autoPanToRight = !liveViewportProxy.autoPanToRight;
+    };
+
+    const isAutoPanEnabled = liveViewportProxy.autoPanToRight;
 
     const triggerCollect = () => {
         if (!socketRef.current) {return;}
@@ -184,5 +194,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         toggleStreaming,
         triggerCollect,
         isConnected,
+        isAutoPanEnabled,
+        toggleAutoPan,
     };
 }

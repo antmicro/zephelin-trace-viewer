@@ -1,154 +1,202 @@
 /*
  * Copyright (c) 2026 Analog Devices, Inc.
+ * Copyright (c) 2026 Antmicro <www.antmicro.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import * as vscode from 'vscode';
+import { ZephelinServer } from './live-server';
+
+let sidecar: ZephelinServer | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
-	const provider = new TraceEditorProvider(context);
+    sidecar = new ZephelinServer(context);
 
-	context.subscriptions.push(
-		vscode.window.registerCustomEditorProvider(
-			TraceEditorProvider.viewType,
-			provider,
-			{
-				webviewOptions: {
-					retainContextWhenHidden: true,
-				},
-			}
-		)
-	);
+    const provider = new TraceEditorProvider(context);
+
+    context.subscriptions.push(
+        vscode.window.registerCustomEditorProvider(
+            TraceEditorProvider.viewType,
+            provider,
+            {
+                webviewOptions: {
+                    retainContextWhenHidden: true,
+                },
+            },
+        ),
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('zephelin.openLiveViewer', () => {
+            provider.openLiveViewer();
+        }),
+    );
 }
 
 export function deactivate(): void {
-	// Nothing to dispose
+    if (sidecar) {
+        sidecar.stop();
+    }
 }
 
 class TraceEditorProvider implements vscode.CustomTextEditorProvider {
-	static readonly viewType = 'zephelinTraceViewer';
+    static readonly viewType = 'zephelinTraceViewer';
 
-	constructor(private readonly context: vscode.ExtensionContext) { }
+    constructor(private readonly context: vscode.ExtensionContext) { }
 
-	async resolveCustomTextEditor(
-		document: vscode.TextDocument,
-		webviewPanel: vscode.WebviewPanel,
-		_token: vscode.CancellationToken
-	): Promise<void> {
-		const distPath = this.getDistPath();
+    /**
+     * Opens the Live Viewer in a dedicated Webview panel.
+     */
+    public async openLiveViewer(): Promise<void> {
+        const distPath = this.getDistPath();
 
-		webviewPanel.webview.options = {
-			enableScripts: true,
-			localResourceRoots: [vscode.Uri.file(distPath)],
-		};
+        const panel = vscode.window.createWebviewPanel(
+            'zephelinLiveViewer',
+            'Zephelin Trace Viewer',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                localResourceRoots: [vscode.Uri.file(distPath)],
+                retainContextWhenHidden: true,
+            },
+        );
 
-		webviewPanel.webview.html = this.getWebviewHtml(
-			webviewPanel.webview,
-			document,
-			distPath
-		);
+        if (sidecar) {
+            try {
+                await sidecar.start(8000);
+            } catch (err) {
+                vscode.window.showErrorMessage("Failed to start Zephelin backend.");
+            }
+        }
 
-		const updateWebview = () => {
-			const text = document.getText();
-			const base64 = Buffer.from(text).toString('base64');
-			webviewPanel.webview.postMessage({ command: 'reloadTrace', data: base64 });
-		};
+        panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath);
+    }
 
-		let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-		const changeSubscription = vscode.workspace.onDidChangeTextDocument(e => {
-			if (e.document.uri.toString() !== document.uri.toString()) {
-				return;
-			}
-			if (debounceTimer) {
-				clearTimeout(debounceTimer);
-			}
-			debounceTimer = setTimeout(updateWebview, 300);
-		});
+    /**
+     * Resolves the custom text editor for viewing static trace files.
+     */
+    async resolveCustomTextEditor(
+        document: vscode.TextDocument,
+        webviewPanel: vscode.WebviewPanel,
+        _token: vscode.CancellationToken,
+    ): Promise<void> {
+        const distPath = this.getDistPath();
 
-		webviewPanel.onDidDispose(() => changeSubscription.dispose());
-		this.context.subscriptions.push(changeSubscription);
-	}
+        webviewPanel.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [vscode.Uri.file(distPath)],
+        };
 
-	/**
-	 * Resolves the path to the built webapp dist/ folder.
-	 * Looks for it at `../dist` relative to the extension directory.
-	 */
-	private getDistPath(): string {
-		const extensionRoot = this.context.extensionPath;
-		return this.context.extensionMode === vscode.ExtensionMode.Development ?
-			path.join(extensionRoot, '..', 'dist'):
-			path.join(extensionRoot, 'dist');
-	}
+        webviewPanel.webview.html = this.getWebviewHtml(
+            webviewPanel.webview,
+            document.getText(),
+            distPath,
+        );
 
-	/**
-	 * Generates the webview HTML content.
-	 *
-	 * Reads the built index.html from dist/, rewrites asset paths
-	 * to webview URIs, injects the trace data as base64 into
-	 * window.initialTraces, and adds a CSP meta tag with a nonce.
-	 */
-	private getWebviewHtml(
-		webview: vscode.Webview,
-		document: vscode.TextDocument,
-		distPath: string
-	): string {
-		const nonce = this.getNonce();
-		const distUri = vscode.Uri.file(distPath);
+        const updateWebview = () => {
+            const text = document.getText();
+            const base64 = Buffer.from(text).toString('base64');
+            webviewPanel.webview.postMessage({ command: 'reloadTrace', data: base64 });
+        };
 
-		// Read the built index.html
-		const indexHtmlPath = path.join(distPath, 'index.html');
-		let html: string;
-		try {
-			html = fs.readFileSync(indexHtmlPath, 'utf-8');
-		} catch {
-			return this.getErrorHtml(
-				'Webapp not built',
-				'Could not find dist/index.html. Run <code>yarn build</code> in the project root first.'
-			);
-		}
+        let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+        const changeSubscription = vscode.workspace.onDidChangeTextDocument(e => {
+            if (e.document.uri.toString() !== document.uri.toString()) {
+                return;
+            }
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+            debounceTimer = setTimeout(updateWebview, 300);
+        });
 
-		// Base64-encode the document content for injection
-		const traceContent = document.getText();
-		const base64Content = Buffer.from(traceContent).toString('base64');
+        webviewPanel.onDidDispose(() => changeSubscription.dispose());
+        this.context.subscriptions.push(changeSubscription);
+    }
 
-		// Rewrite relative asset paths (href="./..." and src="./...") to webview URIs
-		html = html.replace(
-			/(href|src)="\.\/([^"]+)"/g,
-			(_match, attr, relativePath) => {
-				const assetUri = webview.asWebviewUri(
-					vscode.Uri.joinPath(distUri, relativePath)
-				);
-				return `${attr}="${assetUri}"`;
-			}
-		);
+    /**
+     * Resolves the path to the built webapp dist/ folder.
+     * Looks for it at `../dist` relative to the extension directory.
+     */
+    private getDistPath(): string {
+        const extensionRoot = this.context.extensionPath;
+        return this.context.extensionMode === vscode.ExtensionMode.Development ?
+            path.join(extensionRoot, '..', 'dist') :
+            path.join(extensionRoot, 'dist');
+    }
 
-		// Add nonce to all <script> tags
-		html = html.replace(
-			/<script(\s)/g,
-			`<script nonce="${nonce}"$1`
-		);
+    /**
+     * Generates the webview HTML content.
+     *
+     * Reads the built index.html from dist/, rewrites asset paths
+     * to webview URIs, injects the trace data as base64 into
+     * window.initialTraces, and adds a CSP meta tag with a nonce.
+     */
+    private getWebviewHtml(
+        webview: vscode.Webview,
+        traceContent: string,
+        distPath: string,
+    ): string {
+        const nonce = this.getNonce();
+        const distUri = vscode.Uri.file(distPath);
 
-		// Inject CSP meta tag and the initialTraces script into <head>
-		const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource};">`;
-		const traceScript = `<script nonce="${nonce}">window.initialTraces = "${base64Content}";</script>`;
+        // Read the built index.html
+        const indexHtmlPath = path.join(distPath, 'index.html');
+        let html: string;
+        try {
+            html = fs.readFileSync(indexHtmlPath, 'utf-8');
+        } catch {
+            return this.getErrorHtml(
+                'Webapp not built',
+                'Could not find dist/index.html. Run <code>yarn build</code> in the project root first.',
+            );
+        }
 
-		html = html.replace(
-			'</head>',
-			`${cspMeta}\n${traceScript}\n</head>`
-		);
+        // Rewrite relative asset paths (href="./..." and src="./...") to webview URIs
+        html = html.replace(
+            /(href|src)="\.\/([^"]+)"/g,
+            (_match, attr, relativePath) => {
+                const assetUri = webview.asWebviewUri(
+                    vscode.Uri.joinPath(distUri, relativePath),
+                );
+                return `${attr}="${assetUri}"`;
+            },
+        );
 
-		return html;
-	}
+        // Add nonce to all <script> tags
+        html = html.replace(
+            /<script(\s)/g,
+            `<script nonce="${nonce}"$1`,
+        );
 
-	/**
-	 * Returns a fallback error page if the webapp build is missing.
-	 */
-	private getErrorHtml(title: string, message: string): string {
-		return `<!DOCTYPE html>
+        // Inject CSP meta tag and the initialTraces script into <head>
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource} http://127.0.0.1:8000 ws://127.0.0.1:8000 http://vscode-webview ws://vscode-webview;">`;
+        let scriptContent = `window.ZEPHELIN_SERVER_URL = "http://127.0.0.1:8000";`;
+
+        if (traceContent) {
+            const base64Content = Buffer.from(traceContent).toString('base64');
+            scriptContent = `window.initialTraces = "${base64Content}";\n ${scriptContent}`;
+        }
+
+        const traceScript = `<script nonce="${nonce}">${scriptContent}</script>`;
+
+        html = html.replace(
+            '</head>',
+            `${cspMeta}\n${traceScript}\n</head>`,
+        );
+
+        return html;
+    }
+
+    /**
+     * Returns a fallback error page if the webapp build is missing.
+     */
+    private getErrorHtml(title: string, message: string): string {
+        return `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -185,12 +233,12 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
 	</div>
 </body>
 </html>`;
-	}
+    }
 
-	/**
-	 * Generates a random nonce string for CSP.
-	 */
-	private getNonce(): string {
-		return crypto.randomBytes(16).toString('hex');
-	}
+    /**
+     * Generates a random nonce string for CSP.
+     */
+    private getNonce(): string {
+        return crypto.randomBytes(16).toString('hex');
+    }
 }

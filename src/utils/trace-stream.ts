@@ -17,6 +17,13 @@ import { GroupDataCache } from './cache';
 // Tracks the amount of ingested trace batches
 export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
 
+// Injected by the VS Code extension
+declare global {
+    interface Window {
+        ZEPHELIN_SERVER_URL?: string;
+    }
+}
+
 export type TraceEvent = Record<string, unknown> & { ph?: string };
 
 export interface RpcNotification {
@@ -52,7 +59,16 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
-        const socket = io();
+        const vscodeServerUrl = window.ZEPHELIN_SERVER_URL;
+
+        /*
+         * If used outside of VS Code extension assume frontend is hosted
+         * by the server and let Socket.io default to window's origin.
+         */
+        const socket = vscodeServerUrl
+            ? io(vscodeServerUrl , {transports: ['websocket'] })
+            : io({ transports: ['websocket'] });
+
         socketRef.current = socket;
 
         socket.on('connect', () => {

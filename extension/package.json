@@ -40,8 +40,25 @@
 				],
 				"priority": "option"
 			}
-		]
-	},
+		],
+		"configuration": {
+      "title": "Zephelin",
+      "properties": {
+          "zephelin.backendPath": {
+              "type": "string",
+              "default": "",
+              "description": "Absolute path to Zephelin repository."
+          }
+      }
+	  },
+      "commands": [
+          {
+              "command": "zephelin.openLiveViewer",
+              "title": "Zephelin: Open Live Viewer",
+              "category": "Zephelin"
+          }
+      ]
+  },
 	"scripts": {
 		"build": "node esbuild.js",
 		"watch": "node esbuild.js --watch",

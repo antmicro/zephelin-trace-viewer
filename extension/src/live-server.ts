@@ -21,7 +21,15 @@ export class ZephelinServer {
         }
 
         const config = vscode.workspace.getConfiguration('zephelin');
+
         const repoPath = config.get<string>('backendPath');
+        const tcpServerHost = config.get<string>('tcpServerHost');
+        const tcpServerPort = config.get<number>('tcpServerPort');
+        const backendHost = config.get<string>('backendHost');
+        const buildDir = config.get<string>('buildDir') || 'build';
+        const tflmModelPaths = config.get<string[]>('tflmModelPaths');
+        const tvmModelPaths = config.get<string[]>('tvmModelPaths');
+        const tvmModelMetadataPaths = config.get<string[]>('tvmModelMetadataPaths');
 
         if (!repoPath || !fs.existsSync(repoPath)) {
             vscode.window.showErrorMessage(
@@ -31,16 +39,34 @@ export class ZephelinServer {
         }
 
         const scriptPath = path.join(repoPath, 'server', 'run_backend.py');
-        const buildDirPath = path.join(repoPath, 'build');
+        const buildDirPath = path.isAbsolute(buildDir) ? buildDir : path.join(repoPath, buildDir);
 
         const pythonCmd = 'python3';
 
         const args = [
             scriptPath,
             '--backend-port', port.toString(),
-            '--verbosity', 'DEBUG',
-            '--build-dir', buildDirPath
+            '--build-dir', buildDirPath,
         ];
+
+        if (backendHost) {
+            args.push('--backend-host', backendHost);
+        }
+        if (tcpServerHost) {
+            args.push('--tcp-server-host', tcpServerHost);
+        }
+        if (tcpServerPort) {
+            args.push('--tcp-server-port', tcpServerPort.toString());
+        }
+        if (tflmModelPaths && tflmModelPaths.length > 0) {
+            args.push('--tflm-model-paths', ...tflmModelPaths);
+        }
+        if (tvmModelPaths && tvmModelPaths.length > 0) {
+            args.push('--tvm-model-paths', ...tvmModelPaths);
+        }
+        if (tvmModelMetadataPaths && tvmModelMetadataPaths.length > 0) {
+            args.push('--tvm-model-metadata-paths', ...tvmModelMetadataPaths);
+        }
 
         this.process = spawn(pythonCmd, args, {
             cwd: repoPath,

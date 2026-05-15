@@ -42,23 +42,72 @@
 			}
 		],
 		"configuration": {
-      "title": "Zephelin",
-      "properties": {
-          "zephelin.backendPath": {
-              "type": "string",
-              "default": "",
-              "description": "Absolute path to Zephelin repository."
-          }
-      }
-	  },
-      "commands": [
-          {
-              "command": "zephelin.openLiveViewer",
-              "title": "Zephelin: Open Live Viewer",
-              "category": "Zephelin"
-          }
-      ]
-  },
+			"title": "Zephelin",
+			"properties": {
+				"zephelin.backendPath": {
+					"type": "string",
+					"default": "",
+					"description": "Absolute path to Zephelin repository."
+				},
+				"zephelin.tcpServerHost": {
+					"type": "string",
+					"default": "127.0.0.1",
+					"description": "Address of the Zephelin TCP Server (CTF trace ingestion)."
+				},
+				"zephelin.tcpServerPort": {
+					"type": "number",
+					"default": 5000,
+					"description": "Port of the Zephelin TCP server."
+				},
+				"zephelin.backendHost": {
+					"type": "string",
+					"default": "127.0.0.1",
+					"description": "Address of the Zephelin backend."
+				},
+				"zephelin.backendPort": {
+					"type": "number",
+					"default": 8000,
+					"description": "Port of the Zephelin backend."
+				},
+				"zephelin.buildDir": {
+					"type": "string",
+					"default": "build",
+					"description": "Path to the build directory. If relative, it resolves against the backendPath."
+				},
+				"zephelin.tflmModelPaths": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Paths to TFLM models."
+				},
+				"zephelin.tvmModelPaths": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Paths to TVM models."
+				},
+				"zephelin.tvmModelMetadataPaths": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Paths to TVM models metadata."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "zephelin.openLiveViewer",
+				"title": "Zephelin: Open Live Viewer",
+				"category": "Zephelin"
+			}
+		]
+	},
 	"scripts": {
 		"build": "node esbuild.js",
 		"watch": "node esbuild.js --watch",

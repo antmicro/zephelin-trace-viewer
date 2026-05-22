@@ -15,8 +15,19 @@ import { VSBrowser, EditorView, Workbench, By, until, WebView } from 'vscode-ext
 import { expect } from 'chai';
 import { ZephelinMockServer } from './mock-server';
 
+const TIMEOUTS = {
+    UI_SETTLE: 1000,
+    TAB_MOUNT: 4000,
+    ELEMENT_SEARCH: 8000,
+    CANVAS_MOUNT: 25000,
+    STREAMING: 5000,
+    GLOBAL: 60000,
+};
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 describe('Zephelin Trace Viewer - Extension Tests', function () {
-    this.timeout(60000);
+    this.timeout(TIMEOUTS.GLOBAL);
     const mockServer = new ZephelinMockServer();
 
     before(async function () {
@@ -46,19 +57,20 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
         // Focus on the VS Code window
         const body = await driver.findElement(By.tagName('body'));
         await body.click();
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await sleep(TIMEOUTS.UI_SETTLE);
 
         const prompt = await workbench.openCommandPrompt();
         await prompt.setText('> zephelin.openLiveViewer');
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await sleep(TIMEOUTS.UI_SETTLE);
         await prompt.confirm();
+
+        await sleep(TIMEOUTS.TAB_MOUNT);
     });
 
     afterEach(async function () {
         const editorView = new EditorView();
         await editorView.closeAllEditors();
-
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await sleep(TIMEOUTS.UI_SETTLE);
     });
 
     it('should open the Zephelin Trace Viewer webview', async () => {
@@ -77,28 +89,26 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
         try {
             const collectBtn = await driver.wait(
                 until.elementLocated(By.xpath("//button[contains(., 'Collect')]")),
-                5000,
+                TIMEOUTS.ELEMENT_SEARCH,
             );
-
             await collectBtn.click();
 
             const bufferStatus = await driver.wait(
                 until.elementLocated(By.xpath("//span[contains(text(), 'Live Buffer:')]")),
-                5000,
+                TIMEOUTS.ELEMENT_SEARCH,
             );
 
             await driver.wait(
                 until.elementTextContains(bufferStatus, '2'),
-                4000,
+                TIMEOUTS.ELEMENT_SEARCH,
                 "Live buffer count did not update.",
             );
 
             const canvas = await driver.wait(
                 until.elementLocated(By.tagName('canvas')),
-                5000,
+                TIMEOUTS.ELEMENT_SEARCH,
                 "Trace canvas did not mount.",
             );
-
             const isCanvasVisible = await canvas.isDisplayed();
             expect(isCanvasVisible).to.be.true;
 

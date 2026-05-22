@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('zephelin.openLiveViewer', () => {
-            provider.openLiveViewer();
+            void provider.openLiveViewer();
         }),
     );
 }
@@ -68,7 +68,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         if (sidecar) {
             try {
                 await sidecar.start(8000);
-            } catch (err) {
+            } catch {
                 vscode.window.showErrorMessage("Failed to start Zephelin backend.");
             }
         }
@@ -79,7 +79,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
     /**
      * Resolves the custom text editor for viewing static trace files.
      */
-    async resolveCustomTextEditor(
+    resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken,
@@ -114,7 +114,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             debounceTimer = setTimeout(updateWebview, 300);
         });
 
-        webviewPanel.onDidDispose(() => changeSubscription.dispose());
+        webviewPanel.onDidDispose(() => void changeSubscription.dispose());
         this.context.subscriptions.push(changeSubscription);
     }
 
@@ -159,11 +159,11 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         // Rewrite relative asset paths (href="./..." and src="./...") to webview URIs
         html = html.replace(
             /(href|src)="\.\/([^"]+)"/g,
-            (_match, attr, relativePath) => {
+            (_match: string, attr: string, relativePath: string): string => {
                 const assetUri = webview.asWebviewUri(
                     vscode.Uri.joinPath(distUri, relativePath),
                 );
-                return `${attr}="${assetUri}"`;
+                return `${attr}="${assetUri.toString()}"`;
             },
         );
 
@@ -178,7 +178,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         let scriptContent = `window.ZEPHELIN_SERVER_URL = "http://127.0.0.1:8000";`;
 
         if (traceContent) {
-            const base64Content = Buffer.from(traceContent).toString('base64');
+            const base64Content = String(Buffer.from(traceContent).toString('base64'));
             scriptContent = `window.initialTraces = "${base64Content}";\n ${scriptContent}`;
         }
 
@@ -239,6 +239,6 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
      * Generates a random nonce string for CSP.
      */
     private getNonce(): string {
-        return crypto.randomBytes(16).toString('hex');
+        return String(crypto.randomBytes(16).toString('hex'));
     }
 }

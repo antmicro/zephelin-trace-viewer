@@ -6,7 +6,7 @@
 		"extension"
 	],
 	"scripts": {
-		"eslint": "eslint src --fix",
+		"eslint": "eslint \"{src,extension}/**/*.{ts,tsx}\" --fix",
 		"stylelint": "stylelint src/**/*.scss --fix",
 		"lint": "yarn eslint && yarn stylelint",
 		"dev": "vite",

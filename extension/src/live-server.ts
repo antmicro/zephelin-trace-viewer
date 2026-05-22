@@ -26,7 +26,7 @@ export class ZephelinServer {
         const tcpServerHost = config.get<string>('tcpServerHost');
         const tcpServerPort = config.get<number>('tcpServerPort');
         const backendHost = config.get<string>('backendHost');
-        const buildDir = config.get<string>('buildDir') || 'build';
+        const buildDir = config.get<string>('buildDir') ?? 'build';
         const tflmModelPaths = config.get<string[]>('tflmModelPaths');
         const tvmModelPaths = config.get<string[]>('tvmModelPaths');
         const tvmModelMetadataPaths = config.get<string[]>('tvmModelMetadataPaths');
@@ -73,7 +73,7 @@ export class ZephelinServer {
         });
 
         this.process.stderr?.on('data', (data) => {
-            console.log(data.toString());
+            console.log(String(data));
         });
 
         try {
@@ -109,7 +109,7 @@ export class ZephelinServer {
                     resolve();
                 });
 
-                socket.on('error', (err) => {
+                socket.on('error', (_err) => {
                     socket.destroy();
                     if (Date.now() - startTime > timeoutMs) {
                         reject(new Error(`Timeout waiting for port ${port} to open.`));

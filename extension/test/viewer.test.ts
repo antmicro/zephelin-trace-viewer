@@ -5,13 +5,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+/**
+ * Tests for the live tracing in Zephelin Trace VS Code extension.
+ */
+
 import * as path from 'path';
 import { VSBrowser, EditorView, Workbench, By, until, WebView } from 'vscode-extension-tester';
 import { expect } from 'chai';
+import { ZephelinMockServer } from './mock-server';
+
 describe('Zephelin Trace Viewer - Extension Tests', function () {
     this.timeout(60000);
 
+    const mockServer = new ZephelinMockServer();
+
     before(async function () {
+        mockServer.start(8000);
+
         const browser = VSBrowser.instance;
         await browser.waitForWorkbench();
 
@@ -24,6 +35,8 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
     after(async function () {
         const editorView = new EditorView();
         await editorView.closeAllEditors();
+
+        mockServer.stop();
     });
 
     it('should open the Zephelin Trace Viewer webview', async () => {

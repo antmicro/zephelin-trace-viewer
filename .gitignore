@@ -19,9 +19,14 @@ dist-ssr
 # Extension build output
 extension/out
 extension/node_modules
+extension/out-test
+extension/LICENSE
+extension/test/.vscode-test
+test/.vscode-test
 
 # Editor directories and files
 .vscode/*
+.vscode-test/*
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json

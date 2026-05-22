@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "../out-test",
+    "esModuleInterop": true,
+    "types": ["mocha", "chai", "node"],
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"]
+}

@@ -1,0 +1,6 @@
+{
+  "chat.disableAIFeatures": true,
+  "zephelin.backendPath": "./backend-mock",
+  "zephelin.tcpServerPort": 5000,
+  "zephelin.buildDir": "dist"
+}

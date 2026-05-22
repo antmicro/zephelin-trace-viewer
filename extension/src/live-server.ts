@@ -50,6 +50,7 @@ export class ZephelinServer {
         const tflmModelPaths = this.config.tflmModelPaths;
         const tvmModelPaths = this.config.tvmModelPaths;
         const tvmModelMetadataPaths = this.config.tvmModelMetadataPaths;
+
         if (!repoPath || !fs.existsSync(repoPath)) {
             vscode.window.showErrorMessage(
                 "Zephelin: backendPath not configured. Please set 'zephelin.backendPath' in extension settings.",

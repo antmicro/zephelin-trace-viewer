@@ -17,6 +17,8 @@ export class ZephelinMockServer {
     private io: Server | undefined;
     public activeClient: Socket | undefined;
 
+    private streamInterval: NodeJS.Timeout | undefined;
+
     public start(port = 8000): void {
         this.io = new Server(port, {
             cors: { origin: '*'},
@@ -33,6 +35,7 @@ export class ZephelinMockServer {
             socket.on('disconnect', () => {
                 console.log("[MockServer] Webview disconnected.");
                 this.activeClient = undefined;
+                this.clearStream();
             });
         });
     }
@@ -45,6 +48,12 @@ export class ZephelinMockServer {
         this.activeClient = undefined;
     }
 
+    private clearStream(): void {
+        if (this.streamInterval) {
+            clearInterval(this.streamInterval);
+            this.streamInterval = undefined;
+        }
+    }
 
     private handleRpcRequest(socket: Socket, req: { method?: string }): void {
         if (req.method === 'trace.connect') {
@@ -68,6 +77,34 @@ export class ZephelinMockServer {
                 },
             });
             console.log(" [Mock] Handled trace.collect request.");
+        }
+
+        if (req.method === 'trace.stream_start') {
+            socket.emit('rpc_response', { result: { status: 'success'} });
+            console.log("[MockServer] Streaming started.");
+
+            let accumulatedCount = 0;
+            this.streamInterval = setInterval(() => {
+                accumulatedCount += 2;
+                socket.emit('rpc_notification', {
+                    jsonrpc: "2.0",
+                    method: "trace.events",
+                    params: {
+                        events: [
+                            { name: `stream_event_${accumulatedCount}`, cat: "zephyr", ph: "B", pid: 0, tid: 1, ts: 1000 * accumulatedCount },
+                            { name: `stream_event_${accumulatedCount}`, cat: "zephyr", ph: "E", pid: 0, tid: 1, ts: 1000 * accumulatedCount + 500 },
+                        ],
+                        overlap_count: 0,
+                        total_count: accumulatedCount,
+                    },
+                });
+            }, 1000);
+        }
+
+        if (req.method === 'trace.stream_stop') {
+            socket.emit('rpc_respone', { result: { status: 'success' } });
+            this.clearStream();
+            console.log("[MockServer] Streaming stopped.");
         }
     }
 }

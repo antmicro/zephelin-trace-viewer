@@ -43,10 +43,14 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
     });
 
     after(async function () {
-        const editorView = new EditorView();
-        await editorView.closeAllEditors();
-
-        mockServer.stop();
+        try {
+            const editorView = new EditorView();
+            await editorView.closeAllEditors();
+        } catch (e) {
+            console.warn(`Failed to close editors. Error: ${e}`);
+        } finally {
+            mockServer.stop();
+        }
     });
 
     beforeEach(async function () {
@@ -68,9 +72,13 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
     });
 
     afterEach(async function () {
-        const editorView = new EditorView();
-        await editorView.closeAllEditors();
-        await sleep(TIMEOUTS.UI_SETTLE);
+        try {
+            const editorView = new EditorView();
+            await editorView.closeAllEditors();
+            await sleep(TIMEOUTS.UI_SETTLE);
+        } catch (e) {
+            console.warn(`Failed to close editors. Error: ${e}`);
+        }
     });
 
     it('should open the Zephelin Trace Viewer webview', async () => {
@@ -106,7 +114,7 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
 
             const canvas = await driver.wait(
                 until.elementLocated(By.tagName('canvas')),
-                TIMEOUTS.ELEMENT_SEARCH,
+                TIMEOUTS.CANVAS_MOUNT,
                 "Trace canvas did not mount.",
             );
             const isCanvasVisible = await canvas.isDisplayed();
@@ -116,6 +124,49 @@ describe('Zephelin Trace Viewer - Extension Tests', function () {
             await webview.switchBack();
         }
     });
+
+    it('should autonomously fetch trace events continuously when streaming is started', async () => {
+        const editorView = new EditorView();
+        const webview = await editorView.openEditor('Zephelin Trace Viewer') as WebView;
+
+        await sleep(TIMEOUTS.UI_SETTLE);
+        await webview.switchToFrame();
+
+        const driver = webview.getDriver();
+
+        try {
+            const streamToggleBtn = await driver.wait(
+                until.elementLocated(By.xpath("//button[contains(., 'Start Streaming')]")),
+                TIMEOUTS.ELEMENT_SEARCH,
+            );
+            await streamToggleBtn.click();
+
+            const bufferStatus = await driver.wait(
+                until.elementLocated(By.xpath("//span[contains(text(), 'Live Buffer:')]")),
+                TIMEOUTS.ELEMENT_SEARCH,
+            );
+
+            for (let expectedCount = 2; expectedCount <= 10; expectedCount += 2) {
+                await driver.wait(
+                    until.elementTextContains(bufferStatus, expectedCount.toString()),
+                    TIMEOUTS.ELEMENT_SEARCH,
+                    `Live buffer did not update to ${expectedCount} during stream.`,
+                );
+            }
+
+            const canvas = await driver.wait(
+                until.elementLocated(By.tagName('canvas')),
+                TIMEOUTS.CANVAS_MOUNT,
+            );
+            expect(await canvas.isDisplayed()).to.be.true;
+
+            await sleep(TIMEOUTS.STREAMING);
+
+            const stopStreamBtn = await driver.wait(
+                until.elementLocated(By.xpath("//button[contains(., 'Stop Streaming')]")),
+                TIMEOUTS.ELEMENT_SEARCH,
+            );
+            await stopStreamBtn.click();
 
         } finally {
             await webview.switchBack();

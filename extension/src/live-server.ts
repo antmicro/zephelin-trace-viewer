@@ -10,26 +10,43 @@ import * as fs from 'fs';
 import * as net from 'net';
 import * as vscode from 'vscode';
 
+export interface ZephelinConfig {
+    backendPath?: string;
+    tcpServerHost?: string;
+    tcpServerPort?: number;
+    backendHost?: string;
+    backendPort?: number;
+    buildDir?: string;
+    tflmModelPaths?: string[];
+    tvmModelPaths?: string[];
+    tvmModelMetadataPaths?: string[];
+};
+
 export class ZephelinServer {
+    private config: ZephelinConfig;
     private process?: ChildProcess;
 
-    constructor(private context: vscode.ExtensionContext) { }
+    constructor(
+        private context: vscode.ExtensionContext,
+        config: ZephelinConfig,
+    ) {
+        this.config = config;
+    }
 
-    public async start(port: number): Promise<void> {
+    public async start(): Promise<void> {
         if (this.process) {
             return Promise.resolve();
         }
 
-        const config = vscode.workspace.getConfiguration('zephelin');
-
-        const repoPath = config.get<string>('backendPath');
-        const tcpServerHost = config.get<string>('tcpServerHost');
-        const tcpServerPort = config.get<number>('tcpServerPort');
-        const backendHost = config.get<string>('backendHost');
-        const buildDir = config.get<string>('buildDir') ?? 'build';
-        const tflmModelPaths = config.get<string[]>('tflmModelPaths');
-        const tvmModelPaths = config.get<string[]>('tvmModelPaths');
-        const tvmModelMetadataPaths = config.get<string[]>('tvmModelMetadataPaths');
+        const repoPath = this.config.backendPath;
+        const tcpServerHost = this.config.tcpServerHost;
+        const tcpServerPort = this.config.tcpServerPort;
+        const backendHost = this.config.backendHost;
+        const backendPort = this.config.backendPort;
+        const buildDir = this.config.buildDir ?? 'build';
+        const tflmModelPaths = this.config.tflmModelPaths;
+        const tvmModelPaths = this.config.tvmModelPaths;
+        const tvmModelMetadataPaths = this.config.tvmModelMetadataPaths;
 
         if (!repoPath || !fs.existsSync(repoPath)) {
             vscode.window.showErrorMessage(
@@ -45,12 +62,14 @@ export class ZephelinServer {
 
         const args = [
             scriptPath,
-            '--backend-port', port.toString(),
             '--build-dir', buildDirPath,
         ];
 
         if (backendHost) {
             args.push('--backend-host', backendHost);
+        }
+        if (backendPort) {
+            args.push('--backend-port', backendPort.toString());
         }
         if (tcpServerHost) {
             args.push('--tcp-server-host', tcpServerHost);
@@ -78,8 +97,8 @@ export class ZephelinServer {
 
         try {
             // Wait before server loads before opening the webview
-            await this.waitForPort(port, 10000);
-            console.log(`[Extension] Backend successfully bound to port ${port}`);
+            await this.waitForPort(backendHost, backendPort, 10000);
+            console.log(`[Extension] Backend successfully bound to port ${backendPort}`);
         } catch (error) {
             console.error(`[Extension] Failed to start backend: ${error}`);
             this.stop();
@@ -97,7 +116,7 @@ export class ZephelinServer {
     /**
      * Pings the given port every 200ms until it connects or times out.
      */
-    private waitForPort(port: number, timeoutMs: number): Promise<void> {
+    private waitForPort(address: string, port: number, timeoutMs: number): Promise<void> {
         const startTime = Date.now();
 
         return new Promise((resolve, reject) => {
@@ -112,13 +131,13 @@ export class ZephelinServer {
                 socket.on('error', (_err) => {
                     socket.destroy();
                     if (Date.now() - startTime > timeoutMs) {
-                        reject(new Error(`Timeout waiting for port ${port} to open.`));
+                        reject(new Error(`Timeout waiting for port ${port} on address ${address} to open.`));
                     } else {
                         setTimeout(checkPort, 200);
                     }
                 });
 
-                socket.connect(port, '127.0.0.1');
+                socket.connect(port, address);
             };
 
             checkPort();

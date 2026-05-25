@@ -9,13 +9,31 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { ZephelinServer } from './live-server';
+import { ZephelinConfig, ZephelinServer } from './live-server';
+
+/**
+ * Reads the Zephelin configuration from VS Code settings and merges it with
+ * optional overrides.
+ */
+function getZephelinConfig(overrides?: Partial<ZephelinConfig>): ZephelinConfig {
+    const wsConfig = vscode.workspace.getConfiguration('zephelin');
+
+    return {
+        backendPath: overrides?.backendPath ?? wsConfig.get<string>('backendPath'),
+        tcpServerHost: overrides?.tcpServerHost ?? wsConfig.get<string>('tcpServerHost'),
+        tcpServerPort: overrides?.tcpServerPort ?? wsConfig.get<number>('tcpServerPort'),
+        backendHost: overrides?.backendHost ?? wsConfig.get<string>('backendHost'),
+        backendPort: overrides?.backendPort ?? wsConfig.get<number>('backendPort'),
+        buildDir: overrides?.buildDir ?? wsConfig.get<string>('buildDir') ?? 'build',
+        tflmModelPaths: overrides?.tflmModelPaths ?? wsConfig.get<string[]>('tflmModelPaths'),
+        tvmModelPaths: overrides?.tvmModelPaths ?? wsConfig.get<string[]>('tvmModelPaths'),
+        tvmModelMetadataPaths: overrides?.tvmModelMetadataPaths ?? wsConfig.get<string[]>('tvmModelMetadataPaths'),
+    };
+}
 
 let sidecar: ZephelinServer | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
-    sidecar = new ZephelinServer(context);
-
     const provider = new TraceEditorProvider(context);
 
     context.subscriptions.push(
@@ -31,7 +49,16 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('zephelin.openLiveViewer', () => {
+        vscode.commands.registerCommand('zephelin.openLiveViewer', (externalConfig?: Partial<ZephelinConfig>) => {
+
+            if (sidecar) {
+                sidecar.stop();
+            }
+
+            const zephelinConfig = getZephelinConfig(externalConfig);
+
+            sidecar = new ZephelinServer(context, zephelinConfig);
+
             void provider.openLiveViewer();
         }),
     );
@@ -53,6 +80,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
      */
     public async openLiveViewer(): Promise<void> {
         const distPath = this.getDistPath();
+        const config = getZephelinConfig();
 
         const panel = vscode.window.createWebviewPanel(
             'zephelinLiveViewer',
@@ -67,13 +95,13 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
 
         if (sidecar) {
             try {
-                await sidecar.start(8000);
+                await sidecar.start();
             } catch {
                 vscode.window.showErrorMessage("Failed to start Zephelin backend.");
             }
         }
 
-        panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath);
+        panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath, config);
     }
 
     /**
@@ -140,9 +168,12 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         webview: vscode.Webview,
         traceContent: string,
         distPath: string,
+        config: ZephelinConfig,
     ): string {
         const nonce = this.getNonce();
         const distUri = vscode.Uri.file(distPath);
+        const zephelinServerUrl = `http://${config.backendHost}:${config.backendPort}`;
+        const wsUrl = `ws://${config.backendHost}:${config.backendPort}`;
 
         // Read the built index.html
         const indexHtmlPath = path.join(distPath, 'index.html');
@@ -174,8 +205,8 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         );
 
         // Inject CSP meta tag and the initialTraces script into <head>
-        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource} http://127.0.0.1:8000 ws://127.0.0.1:8000 http://vscode-webview ws://vscode-webview;">`;
-        let scriptContent = `window.ZEPHELIN_SERVER_URL = "http://127.0.0.1:8000";`;
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource} ${zephelinServerUrl} ${wsUrl} http://vscode-webview ws://vscode-webview;">`;
+        let scriptContent = `window.ZEPHELIN_SERVER_URL = "${zephelinServerUrl}";`;
 
         if (traceContent) {
             const base64Content = String(Buffer.from(traceContent).toString('base64'));

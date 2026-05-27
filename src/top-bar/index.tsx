@@ -146,7 +146,7 @@ export default memo(({
                         {isAutoPanEnabled ? "Stop Tailing" : "Resume Tailing"}
                     </button>
                     <span className={style["live-buffer-text"]}>
-                        Live Buffer: {eventCount}
+                        Live Buffer: <span className={style["counter-value"]}>{eventCount}</span>
                     </span>
                 </div>
             )}

@@ -96,6 +96,11 @@
             font-weight: bold;
             font-size: 14px;
             white-space: nowrap;
+
+            background-color: var(--colors-gray-1);
+            border: 1px solid var(--colors-gray-3);
+            border-radius: 4px;
+            padding: 4px 10px;
         }
 
         .action-button {
@@ -285,5 +290,12 @@
             @include panel-button-custom-styles;
             @include panel-button-common-styles;
         }
+    }
+
+    .counter-value {
+        display: inline-block;
+        width: 6ch;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
     }
 }

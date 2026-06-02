@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
 import { Atom } from '@speedscope/lib/atom';
 import { metadataAtom } from '@speedscope/app-state';
@@ -13,6 +13,9 @@ import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
 import { useSpeedscopeLoader } from '../speedscope';
 import { GroupDataCache } from './cache';
 import { LiveTraceParser } from './live-trace-parser';
+
+// 30 FPS
+const TRACE_RENDER_THROTTLE_MS = 33;
 
 // Tracks the amount of ingested trace batches
 export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
@@ -49,6 +52,17 @@ export interface RpcResponse {
     error?: string;
 }
 
+function useThrottle<T extends (...args: any[]) => void>(callback: T, delay: number) {
+    const lastCall = useRef(0);
+    return useCallback((...args: Parameters<T>) => {
+        const now = performance.now();
+        if (now - lastCall.current >= delay) {
+            callback(...args);
+            lastCall.current = now;
+        }
+    }, [callback, delay]);
+}
+
 export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const [eventCount, setEventCount] = useState<number>(0);
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
@@ -57,6 +71,17 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const parserRef = useRef<LiveTraceParser | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const hasMetadataRef = useRef<boolean>(false);
+
+    const renderTraceBlocks = useThrottle((snapshotGroup) => {
+        useSpeedscopeLoader(false, true)
+            .loadProfile(() => Promise.resolve(snapshotGroup))
+            .then(() => {
+                setWelcomeSt(false);
+                GroupDataCache.clear();
+                liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
+            })
+            .catch(e => console.error("Snapshot injection failed:", e));
+    }, TRACE_RENDER_THROTTLE_MS);
 
     useEffect(() => {
         const vscodeServerUrl = window.ZEPHELIN_SERVER_URL;
@@ -106,15 +131,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             const hasTraceEvents = incomingEvents.some(e => e.ph === 'B' || e.ph === 'E');
             if (hasTraceEvents) {
                 const snapshotGroup = parserRef.current.getSnapshot();
-
-                useSpeedscopeLoader(false, true)
-                    .loadProfile(() => Promise.resolve(snapshotGroup))
-                    .then(() => {
-                        setWelcomeSt(false);
-                        GroupDataCache.clear();
-                        liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
-                    })
-                    .catch(e => console.error("Snapshot injection failed:", e));
+                renderTraceBlocks(snapshotGroup);
             } else {
                 if (parserRef.current) {
                     metadataAtom.set(parserRef.current.getRawMetadata());

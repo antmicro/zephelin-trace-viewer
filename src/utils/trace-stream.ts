@@ -55,6 +55,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
     const parserRef = useRef<LiveTraceParser | null>(null);
     const socketRef = useRef<Socket | null>(null);
+    const hasMetadataRef = useRef<boolean>(false);
 
     useEffect(() => {
         const vscodeServerUrl = window.ZEPHELIN_SERVER_URL;
@@ -90,8 +91,16 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             if (incomingEvents.length === 0) {return;}
 
             parserRef.current ??= new LiveTraceParser('Live Trace Stream');
-
             parserRef.current.ingest(incomingEvents);
+
+            if (!hasMetadataRef.current && socketRef.current) {
+                hasMetadataRef.current = true;
+                socketRef.current.emit("rpc_request", {
+                    jsonrpc: "2.0",
+                    method: "trace.metadata",
+                    id: Date.now(),
+                });
+            }
 
             const snapshotGroup = parserRef.current.getSnapshot();
 

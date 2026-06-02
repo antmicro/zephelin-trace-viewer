@@ -9,12 +9,23 @@ import { CallTreeProfileBuilder, ProfileGroup, Profile } from '@speedscope/lib/p
 import { TimeFormatter } from '@speedscope/lib/value-formatters';
 import { partitionByPidTid, convertToEventQueues,
     frameInfoForEvent, selectQueueToTakeFromNext, TraceEvent, BTraceEvent, ETraceEvent, ImportableTraceEvent,
+    pidTidKey,
 } from '@speedscope/import/trace-event';
+
+interface NamedMetadataEvent extends TraceEvent {
+    args?: {
+        name?: string;
+    };
+}
 
 /** Class for incremental trace profile building. */
 export class LiveTraceParser {
     private builders = new Map<string, CallTreeProfileBuilder>();
     private frameStacks = new Map<string, BTraceEvent[]>();
+
+    private processNames = new Map<number, string>();
+    private threadNames = new Map<string, string>();
+    private rawMetadata: TraceEvent[] = [];
 
     private name: string;
     private liveEdge = 0;
@@ -25,15 +36,26 @@ export class LiveTraceParser {
 
     // Handle incoming events
     public ingest(events: TraceEvent[]) {
-        const traceEvents = events.filter((e): e is ImportableTraceEvent =>
-            e.ph === 'B' || e.ph === 'E',
-        );
+        const metadataEvents: TraceEvent[] = [];
+        const traceEvents: ImportableTraceEvent[] = [];
 
-        if (traceEvents.length === 0) {return;}
+        for (const e of events) {
+            if (e.ph === 'M'){
+                metadataEvents.push(e);
+            } else if (e.ph === 'B' || e.ph === 'E') {
+                traceEvents.push(e as ImportableTraceEvent);
+            }
+        }
 
-        const partitioned = partitionByPidTid(traceEvents);
-        for (const [profileKey, threadEvents] of partitioned.entries()) {
-            this.processThreadChunk(profileKey, threadEvents);
+        if (metadataEvents.length > 0) {
+            this.processMetadata(metadataEvents);
+        }
+
+        if (traceEvents.length > 0) {
+            const partitioned = partitionByPidTid(traceEvents);
+            for (const [profileKey, threadEvents] of partitioned.entries()) {
+                this.processThreadChunk(profileKey, threadEvents);
+            }
         }
     }
 
@@ -108,19 +130,21 @@ export class LiveTraceParser {
 
     // Returns instance of a profile builder for a given thread
     private getOrCreateProfileBuilder(profileKey: string, pid: number, tid: number) {
-        if (!this.builders.has(profileKey)) {
-            const builder = new CallTreeProfileBuilder();
+        let builder = this.builders.get(profileKey);
+        let frameStack = this.frameStacks.get(profileKey);
+
+        if (!builder || !frameStack) {
+            builder = new CallTreeProfileBuilder();
             builder.setValueFormatter(new TimeFormatter('microseconds'));
-            builder.setName(`pid ${pid}, tid ${tid}`);
+            builder.setName(this.getFormattedProfileName(pid, tid));
+
+            frameStack = [];
 
             this.builders.set(profileKey, builder);
-            this.frameStacks.set(profileKey, []);
+            this.frameStacks.set(profileKey, frameStack);
         }
 
-        return {
-            builder: this.builders.get(profileKey)!,
-            frameStack: this.frameStacks.get(profileKey)!,
-        };
+        return { builder, frameStack };
     }
 
     // Safely closes the event
@@ -134,5 +158,69 @@ export class LiveTraceParser {
         frameStack.pop();
 
         builder.leaveFrame(bFrameInfo, e.ts);
+    }
+
+    // Save metadata event and trigger the rename
+    private processMetadata(metadataEvents: TraceEvent[]) {
+        for (const rawEv of metadataEvents) {
+            const ev = rawEv as NamedMetadataEvent;
+
+            // Save the event so it can be processed downstream
+            this.rawMetadata.push(ev);
+
+            if (!ev.args?.name) { continue; }
+
+            const metadataName = ev.args.name;
+
+            const isProcess = ev.name === 'process_name' || ev.name === 'PROCESS';
+            const isThread = ev.name === 'thread_name' || ev.name === 'THREAD';
+
+            if (isProcess) {
+                this.processNames.set(ev.pid, metadataName);
+                this.updateBuilderNamesForPid(ev.pid);
+            } else if (isThread) {
+                const key = pidTidKey(ev.pid, ev.tid);
+
+                const currentName = this.threadNames.get(key);
+                // Do not override valid name with 'unknown'
+                if (metadataName === 'unknown' && currentName) {
+                    continue;
+                }
+
+                this.threadNames.set(key, metadataName);
+                this.updateBuilderNameForTid(ev.pid, ev.tid);
+            }
+        }
+    }
+
+    // Formats the profile name based on what is available
+    private getFormattedProfileName(pid: number, tid: number): string {
+        const processName = this.processNames.get(pid);
+        const threadName = this.threadNames.get(pidTidKey(pid, tid));
+
+        if (processName && threadName) {return `${processName} (pid ${pid}), ${threadName} (tid ${tid})`;}
+        if (processName)               {return `${processName} (pid ${pid}, tid ${tid})`;}
+        if (threadName)                {return `${threadName} (pid ${pid}, tid ${tid})`;}
+
+        return `pid ${pid}, tid ${tid}`;
+    }
+
+    // Update the name of UI tab
+    private updateBuilderNamesForPid(pid: number) {
+        for (const [profileKey, builder] of this.builders.entries()) {
+            if (profileKey.startsWith(`${pid}:`)) {
+                const tid = parseInt(profileKey.split(':')[1], 10);
+                builder.setName(this.getFormattedProfileName(pid, tid));
+            }
+        }
+    }
+
+    // Update the name of UI tab
+    private updateBuilderNameForTid(pid: number, tid: number) {
+        const key = pidTidKey(pid, tid);
+        const builder = this.builders.get(key);
+        if (builder) {
+            builder.setName(this.getFormattedProfileName(pid, tid));
+        }
     }
 }

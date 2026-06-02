@@ -7,12 +7,11 @@
 
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
-import { importProfilesFromRaw } from '@speedscope/lib/profile-loader';
-import { rawTefEventsAtom } from '@speedscope/app-state';
 import { Atom } from '@speedscope/lib/atom';
 import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
 import { useSpeedscopeLoader } from '../speedscope';
 import { GroupDataCache } from './cache';
+import { LiveTraceParser } from './live-trace-parser';
 
 // Tracks the amount of ingested trace batches
 export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
@@ -54,8 +53,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [isConnected, setIsConnected] = useState<boolean>(false);
 
-    const liveEventsRef = useRef<TraceEvent[]>([]);
-    const hasMetadataRef = useRef<boolean>(false);
+    const parserRef = useRef<LiveTraceParser | null>(null);
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
@@ -89,37 +87,16 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         });
 
         const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
-            if (incomingEvents.length === 0) { return incomingEvents; }
+            if (incomingEvents.length === 0) {return;}
 
-            const prevEvents = liveEventsRef.current;
-            const newMetadata = incomingEvents.filter(e => e.ph === 'M');
-            const newTrace = incomingEvents.filter(e => e.ph !== 'M');
+            parserRef.current ??= new LiveTraceParser('Live Trace Stream');
 
-            const safeIndex = Math.max(0, prevEvents.length - overlap);
-            const safePreviousEvents = prevEvents.slice(0, safeIndex);
+            parserRef.current.ingest(incomingEvents);
 
-            const updatedEvents = [...newMetadata, ...safePreviousEvents, ...newTrace];
-            liveEventsRef.current = updatedEvents;
-
-            rawTefEventsAtom.set(updatedEvents);
-
-            if (!hasMetadataRef.current) {
-                hasMetadataRef.current = true;
-                socketRef.current.emit("rpc_request", {
-                    jsonrpc: "2.0",
-                    method: "trace.metadata",
-                    id: Date.now(),
-                });
-            }
-
-            const traceData = {
-                traceEvents: updatedEvents,
-                displayTimeUnit: "ns",
-                systemTraceEvents: "Trace from Zephelin Server",
-            };
+            const snapshotGroup = parserRef.current.getSnapshot();
 
             useSpeedscopeLoader(false, true)
-                .loadProfile(() => importProfilesFromRaw('Live Trace Snapshot', traceData))
+                .loadProfile(() => Promise.resolve(snapshotGroup))
                 .then(() => {
                     setWelcomeSt(false);
                     GroupDataCache.clear();

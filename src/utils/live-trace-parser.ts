@@ -21,6 +21,7 @@ interface NamedMetadataEvent extends TraceEvent {
 /** Class for incremental trace profile building. */
 export class LiveTraceParser {
     private builders = new Map<string, CallTreeProfileBuilder>();
+    // Tracks currently opened events
     private frameStacks = new Map<string, BTraceEvent[]>();
 
     private processNames = new Map<number, string>();
@@ -88,7 +89,7 @@ export class LiveTraceParser {
     private closeOpenFrames(builder: CallTreeProfileBuilder, profileSnapshot: Profile) {
         let currentValue = builder.lastValue;
 
-        for (let i = builder.appendOrderStack.length - 1; i > 0; i--) {
+        for (let i = builder.appendOrderStack.length - 1; i >= 0; i--) {
             const node = builder.appendOrderStack[i];
             const delta = this.liveEdge - currentValue;
 
@@ -153,6 +154,16 @@ export class LiveTraceParser {
 
         // Ignore if there is no matching B event
         if (!b) {return;}
+
+        // Attach stats to the UI node
+        const activeNode = builder.appendOrderStack[builder.appendOrderStack.length - 1];
+        if (activeNode?.frame) {
+            activeNode.frame.args ??= {};
+            const bArgs = activeNode.frame.args as Record<string, unknown>;
+            const eArgs = e.args as Record<string, unknown> | undefined;
+
+            bArgs.end = eArgs?.end ?? eArgs ?? {};
+        }
 
         const bFrameInfo = frameInfoForEvent(b);
         frameStack.pop();

@@ -364,7 +364,18 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         // Sync on import
         const syncProfiles = () => {
             if (loadingAtom.get()) {return;}
-            instanceProfileGroupAtom.set(cloneProfile(profileGroupAtom.get()));
+
+            const nextProfileGroup = cloneProfile(profileGroupAtom.get());
+            const currentProfileGroup = instanceProfileGroupAtom.get();
+
+            if (nextProfileGroup && currentProfileGroup) {
+                const currentIndex = currentProfileGroup.indexToView;
+                if (currentIndex < nextProfileGroup.profiles.length) {
+                    nextProfileGroup.indexToView = currentIndex;
+                }
+            }
+
+            instanceProfileGroupAtom.set(nextProfileGroup);
         };
 
         // Sync view if e.g. other panel requests

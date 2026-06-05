@@ -86,6 +86,10 @@ export class LiveTraceParser {
         };
     }
 
+    public getRawMetadata(): TraceEvent[] {
+        return [...this.rawMetadata];
+    }
+
     private closeOpenFrames(builder: CallTreeProfileBuilder, profileSnapshot: Profile) {
         let currentValue = builder.lastValue;
 

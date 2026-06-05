@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
 import { Atom } from '@speedscope/lib/atom';
+import { metadataAtom } from '@speedscope/app-state';
 import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
 import { useSpeedscopeLoader } from '../speedscope';
 import { GroupDataCache } from './cache';
@@ -102,16 +103,23 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 });
             }
 
-            const snapshotGroup = parserRef.current.getSnapshot();
+            const hasTraceEvents = incomingEvents.some(e => e.ph === 'B' || e.ph === 'E');
+            if (hasTraceEvents) {
+                const snapshotGroup = parserRef.current.getSnapshot();
 
-            useSpeedscopeLoader(false, true)
-                .loadProfile(() => Promise.resolve(snapshotGroup))
-                .then(() => {
-                    setWelcomeSt(false);
-                    GroupDataCache.clear();
-                    liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
-                })
-                .catch(e => console.error("Snapshot injection failed:", e));
+                useSpeedscopeLoader(false, true)
+                    .loadProfile(() => Promise.resolve(snapshotGroup))
+                    .then(() => {
+                        setWelcomeSt(false);
+                        GroupDataCache.clear();
+                        liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
+                    })
+                    .catch(e => console.error("Snapshot injection failed:", e));
+            } else {
+                if (parserRef.current) {
+                    metadataAtom.set(parserRef.current.getRawMetadata());
+                }
+            }
 
             if (totalCount !== undefined) {
                 setEventCount(totalCount);

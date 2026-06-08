@@ -543,13 +543,16 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
         return isPanelFocused(allowed ? ev : undefined) && allowed;
     };
 
+    const isLoaderActive = useAtom(loadingAtom);
+    const isLiveStream = liveTraceTickAtom.get() > 0;
+
     return (
         <div className={style['speedscope-container']}>
             <ProfileSearchContextProvider  activeProfileState={activeProfileState}>
                 <Application
                 // Global
                     hashParams={useAtom(hashParamsAtom)}
-                    loading={useAtom(loadingAtom)}
+                    loading={isLoaderActive && !isLiveStream}
                     error={useAtom(errorAtom)}
                     dragActive={useAtom(dragActiveAtom)}
                     customWelcomeMessage={useAtom(customWelcomeMessagesAtom)}

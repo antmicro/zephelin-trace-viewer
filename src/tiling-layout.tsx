@@ -254,12 +254,14 @@ export default memo(({tilingRef}: TilingLayoutProps) => {
 
         // Check if loading of a trace has started
         if (loadingAtom.get()) {
-            GroupDataCache.clear();
             return;
         }
+        GroupDataCache.clear();
+
         // Delete all panels apart from Speedscope and info panel
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>)).forEach(removeNode);
         lastTabIdBeforeOverflow = null;
+        getAllComponents().forEach(comp => comp.calculateData());
 
         // On each metadata update, create available panels
         getAllComponents().filter((v) => ![Speedscope, InfoPanel].includes(v as TilingComponent<object>) && v.available.get()).forEach(addNode);

@@ -134,6 +134,9 @@ export const useSpeedscopeLoader = (reactive = true, isUpdate = false) => new Pr
     setLoading: (v) => loadingAtom.set(v),
     setError: (v) => errorAtom.set(v),
     setProfileGroup: (v) => {
+        if (isUpdate && v === null) {
+            return;
+        }
         if (!isUpdate) {
             liveTraceTickAtom.set(0);
         }
@@ -372,6 +375,13 @@ const Speedscope = memo(({ tilingComponent }: SpeedscopeProps): JSX.Element => {
                 const currentIndex = currentProfileGroup.indexToView;
                 if (currentIndex < nextProfileGroup.profiles.length) {
                     nextProfileGroup.indexToView = currentIndex;
+                }
+
+                const len = Math.min(nextProfileGroup.profiles.length, currentProfileGroup.profiles.length);
+                for (let i = 0; i < len; i++) {
+                    nextProfileGroup.profiles[i].chronoViewState = currentProfileGroup.profiles[i].chronoViewState;
+                    nextProfileGroup.profiles[i].leftHeavyViewState = currentProfileGroup.profiles[i].leftHeavyViewState;
+                    nextProfileGroup.profiles[i].sandwichViewState = currentProfileGroup.profiles[i].sandwichViewState;
                 }
             }
 

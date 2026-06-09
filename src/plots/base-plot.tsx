@@ -670,7 +670,17 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
         const dataChanged = prevProps.plotData !== this.props.plotData;
 
         if (dataChanged) {
+            const oldAnnotations = [...this.annotations];
+            const oldZoom = this.d3fcSvgNode?.__zoom;
+
             this._updateScaleDomains();
+            if (this.d3fcSvgNode && oldZoom) {
+                this.d3fcSvgNode.__zoom = oldZoom;
+
+                this.xScale.domain(oldZoom.rescaleX(this.xScaleBase).domain());
+                this.yScale.domain(oldZoom.rescaleY(this.yScaleBase).domain());
+            }
+
             if (prevProps.plotData?.length !== this.props.plotData?.length) {
                 this._createSeries();
             } else {
@@ -685,6 +695,13 @@ export default abstract class Plot<D, T extends PlotBaseProps<D> = PlotBaseProps
 
                 const yTickFormat = this._yTickFormat();
                 if (yTickFormat) { this.series.yTickFormat(yTickFormat); }
+            }
+
+            for (const oldAnn of oldAnnotations) {
+                const newPoint = this._findClosestPoint(oldAnn.x, oldAnn.y);
+                if (newPoint) {
+                    this._addAnnotation(newPoint);
+                }
             }
         }
 

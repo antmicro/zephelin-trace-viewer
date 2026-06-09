@@ -325,9 +325,9 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
     theme: Theme,
 ) => {
     const redraw = () => plotRef.current?.redraw();
-    const profileLookup = useMemo<Map<string, ProfileContext[]>>(() => {
+    const profileGroup = profileGroupAtom.get();
 
-        const profileGroup = profileGroupAtom.get();
+    const profileLookup = useMemo<Map<string, ProfileContext[]>>(() => {
         if (!profileGroup) {return new Map();}
 
         // Create a lookup that maps group to its profiles and operations they contain
@@ -367,7 +367,7 @@ export const useFrameCallbacks = <D extends FrameEvent, T extends PlotPropsWithT
         });
 
         return lookup;
-    }, []);
+    }, [profileGroup]);
 
     return {
         onFrameSelect: redraw,

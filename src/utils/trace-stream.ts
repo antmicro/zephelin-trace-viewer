@@ -17,6 +17,9 @@ import { LiveTraceParser } from './live-trace-parser';
 // 30 FPS
 const TRACE_RENDER_THROTTLE_MS = 33;
 
+// 2 FPS
+const INFO_PANEL_THROTTLE_MS = 500;
+
 // Tracks the amount of ingested trace batches
 export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
 
@@ -72,14 +75,15 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const socketRef = useRef<Socket | null>(null);
     const hasMetadataRef = useRef<boolean>(false);
 
+    const updateInfoPanels = useThrottle(() => {
+        GroupDataCache.clear();
+        liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
+    }, INFO_PANEL_THROTTLE_MS);
+
     const renderTraceBlocks = useThrottle((snapshotGroup) => {
         useSpeedscopeLoader(false, true)
             .loadProfile(() => Promise.resolve(snapshotGroup))
-            .then(() => {
-                setWelcomeSt(false);
-                GroupDataCache.clear();
-                liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
-            })
+            .then(() => setWelcomeSt(false))
             .catch(e => console.error("Snapshot injection failed:", e));
     }, TRACE_RENDER_THROTTLE_MS);
 
@@ -132,6 +136,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             if (hasTraceEvents) {
                 const snapshotGroup = parserRef.current.getSnapshot();
                 renderTraceBlocks(snapshotGroup);
+                updateInfoPanels();
             } else {
                 if (parserRef.current) {
                     metadataAtom.set(parserRef.current.getRawMetadata());

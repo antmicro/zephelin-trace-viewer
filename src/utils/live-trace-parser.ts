@@ -87,7 +87,10 @@ export class LiveTraceParser {
     }
 
     public getRawMetadata(): TraceEvent[] {
-        return [...this.rawMetadata];
+        return this.rawMetadata.map(ev => ({
+            ...ev,
+            groupName: this.name,
+        }));
     }
 
     private closeOpenFrames(builder: CallTreeProfileBuilder, profileSnapshot: Profile) {

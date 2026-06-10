@@ -76,6 +76,10 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const hasMetadataRef = useRef<boolean>(false);
 
     const updateInfoPanels = useThrottle(() => {
+        if (parserRef.current) {
+            const rawMetadata = parserRef.current.getRawMetadata();
+            metadataAtom.set(rawMetadata);
+        }
         GroupDataCache.clear();
         liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);
     }, INFO_PANEL_THROTTLE_MS);
@@ -137,10 +141,6 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 const snapshotGroup = parserRef.current.getSnapshot();
                 renderTraceBlocks(snapshotGroup);
                 updateInfoPanels();
-            } else {
-                if (parserRef.current) {
-                    metadataAtom.set(parserRef.current.getRawMetadata());
-                }
             }
 
             if (totalCount !== undefined) {

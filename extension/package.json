@@ -118,7 +118,7 @@
 		"watch": "node esbuild.js --watch",
 		"package": "yarn build && vsce package --no-dependencies",
 		"publish": "yarn package && vsce publish --no-dependencies \"$@\"",
-		"ui-test": "tsc -p ./test/tsconfig.json && extest setup-and-run \"./out-test/**/*.test.js\" --code_settings ./test/test-workspace/.vscode/settings.json"
+		"ui-test": "tsc -p ./test/tsconfig.json && extest setup-and-run -c 1.122.1 \"./out-test/**/*.test.js\" --code_settings ./test/test-workspace/.vscode/settings.json"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.85.0",

@@ -28,6 +28,7 @@ export class LiveTraceParser {
     private processNames = new Map<number, string>();
     private threadNames = new Map<string, string>();
     private rawMetadata: TraceEvent[] = [];
+    private rawTraceEvents: TraceEvent[] = [];
 
     private name: string;
     private liveEdge = 0;
@@ -46,6 +47,7 @@ export class LiveTraceParser {
                 metadataEvents.push(e);
             } else if (e.ph === 'B' || e.ph === 'E') {
                 traceEvents.push(e as ImportableTraceEvent);
+                this.rawTraceEvents.push(e);
             }
         }
 
@@ -85,6 +87,10 @@ export class LiveTraceParser {
             indexToView: 0,
             profiles: snapshots,
         };
+    }
+
+    public getRawEvents(): TraceEvent[] {
+        return [...this.rawMetadata, ...this.rawTraceEvents];
     }
 
     public getRawMetadata(): TraceEvent[] {

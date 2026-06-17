@@ -9,7 +9,7 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
 import { Rect } from '@speedscope/lib/math';
 import { Atom } from '@speedscope/lib/atom';
-import { metadataAtom } from '@speedscope/app-state';
+import { metadataAtom, rawTefEventsAtom } from '@speedscope/app-state';
 import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
 import { useSpeedscopeLoader } from '../speedscope';
 import { GroupDataCache } from './cache';
@@ -78,6 +78,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         if (parserRef.current) {
             const rawMetadata = parserRef.current.getRawMetadata();
             metadataAtom.set(rawMetadata);
+            rawTefEventsAtom.set(parserRef.current.getRawEvents());
         }
         GroupDataCache.clear();
         liveTraceTickAtom.set(liveTraceTickAtom.get() + 1);

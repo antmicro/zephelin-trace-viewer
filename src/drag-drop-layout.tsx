@@ -94,6 +94,10 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, chi
 
     // Handle loading-related keyboard events independently from Speedscope panels
     const handleLoaderKeydownEvents = (ev: KeyboardEvent) => {
+        const isBrowseShortcut = ev.key.toLowerCase() === 'o' && (ev.ctrlKey || ev.metaKey);
+        if (!isBrowseShortcut) {
+            return;
+        }
         const loader = useSpeedscopeLoader(false);
         loader.onWindowKeyDown(ev)
             .then(onDropEnd)
@@ -103,7 +107,7 @@ export default memo(({enabled=true, id, onDropStart, onDropEnd, onDropAbort, chi
     useEffect(() => {
         window.addEventListener('keydown', handleLoaderKeydownEvents);
         return () => window.removeEventListener('keydown', handleLoaderKeydownEvents);
-    });
+    }, []);
 
     return (
         <div

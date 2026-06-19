@@ -20,6 +20,7 @@ function getZephelinConfig(overrides?: Partial<ZephelinConfig>): ZephelinConfig 
 
     return {
         backendPath: overrides?.backendPath ?? wsConfig.get<string>('backendPath'),
+        pythonPath: overrides?.pythonPath ?? wsConfig.get<string>('pythonPath'),
         tcpServerHost: overrides?.tcpServerHost ?? wsConfig.get<string>('tcpServerHost'),
         tcpServerPort: overrides?.tcpServerPort ?? wsConfig.get<number>('tcpServerPort'),
         backendHost: overrides?.backendHost ?? wsConfig.get<string>('backendHost'),

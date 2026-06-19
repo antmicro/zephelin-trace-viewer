@@ -49,6 +49,11 @@
 					"default": "",
 					"description": "Absolute path to Zephelin repository."
 				},
+				"zephelin.pythonPath": {
+					"type": "string",
+					"default": "",
+					"description": "Absolute path to Python executable. Used to run the live tracing server."
+				},
 				"zephelin.tcpServerHost": {
 					"type": "string",
 					"default": "127.0.0.1",

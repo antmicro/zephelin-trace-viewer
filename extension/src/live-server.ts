@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 
 export interface ZephelinConfig {
     backendPath?: string;
+    pythonPath?: string;
     tcpServerHost?: string;
     tcpServerPort?: number;
     backendHost?: string;
@@ -58,7 +59,7 @@ export class ZephelinServer {
         const scriptPath = path.join(repoPath, 'server', 'run_backend.py');
         const buildDirPath = path.isAbsolute(buildDir) ? buildDir : path.join(repoPath, buildDir);
 
-        const pythonCmd = 'python3';
+        const pythonCmd = this.resolvePythonCommand();
 
         const args = [
             scriptPath,
@@ -111,6 +112,17 @@ export class ZephelinServer {
             this.process.kill();
             this.process = undefined;
         }
+    }
+
+    /**
+     * Resolves the Python executable.
+     */
+    private resolvePythonCommand(): Promise<string> {
+        if (this.config.pythonPath) {
+            return this.config.pythonPath;
+        }
+
+        return 'python';
     }
 
     /**

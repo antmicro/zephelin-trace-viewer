@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { io, Socket } from 'socket.io-client';
+import { Rect } from '@speedscope/lib/math';
 import { Atom } from '@speedscope/lib/atom';
 import { metadataAtom } from '@speedscope/app-state';
 import { liveViewportProxy } from '@speedscope/views/live-viewport-proxy';
@@ -157,6 +158,20 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             else if (data.method === 'trace.status') {
                 setEventCount(data.params.total_count);
             }
+            else if (data.method === 'trace.reset') {
+                console.log("Reset detected. Clearing UI state.");
+
+                parserRef.current = new LiveTraceParser('Live Trace Stream');
+                hasMetadataRef.current = false;
+
+                setEventCount(0);
+                liveTraceTickAtom.set(0);
+                GroupDataCache.clear();
+
+                liveViewportProxy.configSpaceViewportRect = Rect.empty;
+                liveViewportProxy.autoPanToRight = true;
+            }
+
         });
 
         socket.on('rpc_response', (data: RpcResponse) => {

@@ -37,7 +37,6 @@ export interface RpcNotification {
     method: string;
     params: {
         events?: TraceEvent[];
-        overlap_count?: number;
         total_count: number;
     };
 }
@@ -48,7 +47,6 @@ export interface RpcResponse {
         message?: string;
         data?: {
             events: TraceEvent[];
-            overlap_count?: number;
             total_count: number;
         };
     };
@@ -121,7 +119,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             setIsStreaming(false);
         });
 
-        const processIncomingTrace = (incomingEvents: TraceEvent[], overlap: number, totalCount: number) => {
+        const processIncomingTrace = (incomingEvents: TraceEvent[], totalCount: number) => {
             if (incomingEvents.length === 0) {return;}
 
             parserRef.current ??= new LiveTraceParser('Live Trace Stream');
@@ -153,7 +151,6 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             if (data.method === 'trace.events' && data.params.events) {
                 processIncomingTrace(
                     data.params.events,
-                    data.params.overlap_count ?? 0,
                     data.params.total_count,
                 );
             }
@@ -167,7 +164,6 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 if (data.result.data?.events) {
                     processIncomingTrace(
                         data.result.data.events,
-                        data.result.data.overlap_count ?? 0,
                         data.result.data.total_count,
                     );
                 }

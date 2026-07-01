@@ -24,6 +24,7 @@ export class LiveTraceParser {
     // Tracks currently opened events
     private frameStacks = new Map<string, BTraceEvent[]>();
 
+    private highestTimestamps = new Map<string, number>();
     private processNames = new Map<number, string>();
     private threadNames = new Map<string, string>();
     private rawMetadata: TraceEvent[] = [];
@@ -107,13 +108,36 @@ export class LiveTraceParser {
         }
     }
 
+    private filterLateEvents(profileKey: string, events: ImportableTraceEvent[]) {
+        let highestTs = this.highestTimestamps.get(profileKey) ?? -Infinity;
+        const validEvents: ImportableTraceEvent[] = [];
+
+        for (const e of events) {
+            if (e.ts < highestTs) {
+                console.warn(`Dropped out-of-order event for ${profileKey}: ts ${e.ts} < highest seen ts ${highestTs}`, e);
+                continue;
+            }
+            highestTs = e.ts;
+            validEvents.push(e);
+        }
+
+        this.highestTimestamps.set(profileKey, highestTs);
+
+        return validEvents;
+    }
+
     // Parses ingested trace events
     private processThreadChunk(profileKey: string, events: ImportableTraceEvent[]) {
         if (events.length === 0) {return;}
-        const { pid, tid } = events[0];
+
+        const validEvents = this.filterLateEvents(profileKey, events);
+
+        if (validEvents.length === 0) {return;}
+
+        const { pid, tid } = validEvents[0];
 
         const { builder, frameStack } = this.getOrCreateProfileBuilder(profileKey, pid, tid);
-        const [bEventQueue, eEventQueue] = convertToEventQueues(events);
+        const [bEventQueue, eEventQueue] = convertToEventQueues(validEvents);
 
         while (bEventQueue.length > 0 || eEventQueue.length > 0) {
             const queueName = selectQueueToTakeFromNext(bEventQueue, eEventQueue, frameStack[frameStack.length - 1]);

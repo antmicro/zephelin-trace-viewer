@@ -112,8 +112,9 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken,
-    ): Promise<void> {
+    ): void {
         const distPath = this.getDistPath();
+        const config = getZephelinConfig();
 
         webviewPanel.webview.options = {
             enableScripts: true,
@@ -124,6 +125,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             webviewPanel.webview,
             document.getText(),
             distPath,
+            config,
         );
 
         const updateWebview = () => {

@@ -1,0 +1,8 @@
+{
+    "traceEvents": [
+        { "name": "static_event", "cat": "zephyr", "ph": "B", "pid": 0, "tid": 1, "ts": 1000 },
+        { "name": "static_nested", "cat": "zephyr", "ph": "B", "pid": 0, "tid": 1, "ts": 1500 },
+        { "name": "static_nested", "cat": "zephyr", "ph": "E", "pid": 0, "tid": 1, "ts": 2000 },
+        { "name": "static_event", "cat": "zephyr", "ph": "E", "pid": 0, "tid": 1, "ts": 3000 }
+    ]
+}

@@ -28,6 +28,7 @@ export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
 declare global {
     interface Window {
         ZEPHELIN_SERVER_URL?: string;
+        ZEPHELIN_STATIC?: boolean;
     }
 }
 
@@ -92,6 +93,10 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     }, TRACE_RENDER_THROTTLE_MS);
 
     useEffect(() => {
+        if (window.ZEPHELIN_STATIC) {
+            return;
+        }
+
         const vscodeServerUrl = window.ZEPHELIN_SERVER_URL;
 
         /*

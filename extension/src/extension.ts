@@ -102,7 +102,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             }
         }
 
-        panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath, config);
+        panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath, config, true);
     }
 
     /**
@@ -126,6 +126,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             document.getText(),
             distPath,
             config,
+            false,
         );
 
         const updateWebview = () => {
@@ -172,6 +173,7 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         traceContent: string,
         distPath: string,
         config: ZephelinConfig,
+        live: boolean,
     ): string {
         const nonce = this.getNonce();
         const distUri = vscode.Uri.file(distPath);
@@ -207,9 +209,13 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             `<script nonce="${nonce}"$1`,
         );
 
+        const backendSources = live ? `${zephelinServerUrl} ${wsUrl} ` : '';
+
         // Inject CSP meta tag and the initialTraces script into <head>
-        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource} ${zephelinServerUrl} ${wsUrl} http://vscode-webview ws://vscode-webview;">`;
-        let scriptContent = `window.ZEPHELIN_SERVER_URL = "${zephelinServerUrl}";`;
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; img-src ${webview.cspSource} data:; font-src ${webview.cspSource} https://fonts.gstatic.com; connect-src ${webview.cspSource} ${backendSources}http://vscode-webview ws://vscode-webview;">`;
+        let scriptContent = live
+            ? `window.ZEPHELIN_SERVER_URL = "${zephelinServerUrl}";`
+            : `window.ZEPHELIN_STATIC = true;`;
 
         if (traceContent) {
             const base64Content = String(Buffer.from(traceContent).toString('base64'));

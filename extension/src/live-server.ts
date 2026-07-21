@@ -92,6 +92,7 @@ export class ZephelinServer {
 
         this.process = spawn(pythonCmd, args, {
             cwd: repoPath,
+            stdio: ['ignore', 'inherit', 'pipe'],
         });
 
         this.process.stderr?.on('data', (data) => {

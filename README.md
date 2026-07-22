@@ -18,7 +18,7 @@ It is built on top of:
 * [Zephelin](https://antmicro.github.io/zephelin) library for collecting traces from Zephyr applications,
 * [Speedscope](https://github.com/jlfwong/speedscope) tool for analyzing traces.
 
-[Zephelin documentation](https://antmicro.github.io/zephelin) | [Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer)
+[Zephelin documentation](https://antmicro.github.io/zephelin) | [Zephelin library](https://github.com/antmicro/zephelin) | [Trace Viewer](https://antmicro.github.io/zephelin-trace-viewer)
 
 ![](./imgs/trace_viewer_view.png)
 

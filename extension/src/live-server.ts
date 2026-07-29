@@ -138,7 +138,7 @@ export class ZephelinServer {
     /**
      * Resolves the Python executable.
      */
-    private resolvePythonCommand(): Promise<string> {
+    private resolvePythonCommand(): string {
         if (this.config.pythonPath) {
             return this.config.pythonPath;
         }

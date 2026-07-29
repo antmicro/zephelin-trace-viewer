@@ -23,6 +23,8 @@ export interface ZephelinConfig {
     tflmModelPaths?: string[];
     tvmModelPaths?: string[];
     tvmModelMetadataPaths?: string[];
+    mockTraceFile?: string;
+    mockPlaybackSpeed?: number;
 };
 
 export class ZephelinServer {
@@ -50,6 +52,8 @@ export class ZephelinServer {
         const tflmModelPaths = this.config.tflmModelPaths;
         const tvmModelPaths = this.config.tvmModelPaths;
         const tvmModelMetadataPaths = this.config.tvmModelMetadataPaths;
+        const mockTraceFile = this.config.mockTraceFile;
+        const mockPlaybackSpeed = this.config.mockPlaybackSpeed;
 
         if (!repoPath || !fs.existsSync(repoPath)) {
             vscode.window.showErrorMessage(
@@ -88,6 +92,12 @@ export class ZephelinServer {
         }
         if (tvmModelMetadataPaths && tvmModelMetadataPaths.length > 0) {
             args.push('--tvm-model-metadata-paths', ...tvmModelMetadataPaths);
+        }
+        if (mockTraceFile) {
+            args.push('--mock-trace-file', mockTraceFile);
+            if (mockPlaybackSpeed) {
+                args.push('--mock-playback-speed', mockPlaybackSpeed.toString());
+            }
         }
 
         this.process = spawn(pythonCmd, args, {

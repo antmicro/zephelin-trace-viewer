@@ -102,6 +102,16 @@
 					},
 					"default": [],
 					"description": "Paths to TVM models metadata."
+				},
+				"zephelin.mockTraceFile": {
+					"type": "string",
+					"default": "",
+					"description": "Absolute path to a recorded trace file. When set, the backend runs in mock mode and replays this trace instead of ingesting live CTF data."
+				},
+				"zephelin.mockPlaybackSpeed": {
+					"type": "number",
+					"default": 1,
+					"description": "Playback speed multiplier for the mock trace file."
 				}
 			}
 		},

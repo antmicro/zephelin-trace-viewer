@@ -29,6 +29,8 @@ function getZephelinConfig(overrides?: Partial<ZephelinConfig>): ZephelinConfig 
         tflmModelPaths: overrides?.tflmModelPaths ?? wsConfig.get<string[]>('tflmModelPaths'),
         tvmModelPaths: overrides?.tvmModelPaths ?? wsConfig.get<string[]>('tvmModelPaths'),
         tvmModelMetadataPaths: overrides?.tvmModelMetadataPaths ?? wsConfig.get<string[]>('tvmModelMetadataPaths'),
+        mockTraceFile: overrides?.mockTraceFile ?? wsConfig.get<string>('mockTraceFile'),
+        mockPlaybackSpeed: overrides?.mockPlaybackSpeed ?? wsConfig.get<number>('mockPlaybackSpeed'),
     };
 }
 

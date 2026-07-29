@@ -119,7 +119,7 @@ export class ZephelinServer {
 
         try {
             // Wait before server loads before opening the webview
-            await this.waitForPort(backendHost, backendPort, 10000);
+            await this.waitForPort(backendHost, backendPort, 60000);
             console.log(`[Extension] Backend successfully bound to port ${backendPort}`);
         } catch (error) {
             console.error(`[Extension] Failed to start backend: ${error}`);

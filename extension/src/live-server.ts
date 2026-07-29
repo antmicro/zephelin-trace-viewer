@@ -100,13 +100,21 @@ export class ZephelinServer {
             }
         }
 
-        this.process = spawn(pythonCmd, args, {
+        console.log(`[Extension] Spawning backend: ${pythonCmd} ${args.join(' ')}`);
+        const child = spawn(pythonCmd, args, {
             cwd: repoPath,
             stdio: ['ignore', 'inherit', 'pipe'],
         });
+        this.process = child;
 
-        this.process.stderr?.on('data', (data) => {
+        child.stderr?.on('data', (data) => {
             console.log(String(data));
+        });
+        child.on('error', (err) => {
+            console.error(`[Extension] Failed to spawn backend: ${err}`);
+        });
+        child.on('exit', (code, signal) => {
+            console.log(`[Extension] Backend process exited (code=${code}, signal=${signal})`);
         });
 
         try {

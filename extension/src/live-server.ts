@@ -27,6 +27,9 @@ export interface ZephelinConfig {
     mockPlaybackSpeed?: number;
 };
 
+/** How long to let the backend exit cleanly before forcefully killing it. */
+const SHUTDOWN_GRACE_MS = 5000;
+
 export class ZephelinServer {
     private config: ZephelinConfig;
     private process?: ChildProcess;
@@ -123,16 +126,39 @@ export class ZephelinServer {
             console.log(`[Extension] Backend successfully bound to port ${backendPort}`);
         } catch (error) {
             console.error(`[Extension] Failed to start backend: ${error}`);
-            this.stop();
+            await this.stop();
             throw error;
         }
     }
 
-    public stop() {
-        if (this.process) {
-            this.process.kill();
-            this.process = undefined;
+    /**
+     * Stops the backend and waits for it to exit.
+     */
+    public async stop(): Promise<void> {
+        const child = this.process;
+
+        if (!child) {
+            return;
         }
+
+        this.process = undefined;
+
+        if (child.exitCode !== null || child.signalCode !== null) {
+            return;
+        }
+
+        await new Promise<void>((resolve) => {
+            const killTimer = setTimeout(() => {
+                child.kill('SIGKILL');
+            }, SHUTDOWN_GRACE_MS);
+
+            child.once('exit', () => {
+                clearTimeout(killTimer);
+                resolve();
+            });
+
+            child.kill();
+        });
     }
 
     /**

@@ -52,10 +52,10 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('zephelin.openLiveViewer', (externalConfig?: Partial<ZephelinConfig>) => {
+        vscode.commands.registerCommand('zephelin.openLiveViewer', async (externalConfig?: Partial<ZephelinConfig>) => {
 
             if (sidecar) {
-                sidecar.stop();
+                await sidecar.stop();
             }
 
             const zephelinConfig = getZephelinConfig(externalConfig);
@@ -67,10 +67,8 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 }
 
-export function deactivate(): void {
-    if (sidecar) {
-        sidecar.stop();
-    }
+export function deactivate(): Promise<void> | undefined {
+    return sidecar?.stop();
 }
 
 class TraceEditorProvider implements vscode.CustomTextEditorProvider {

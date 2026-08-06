@@ -30,9 +30,13 @@ export interface ZephelinConfig {
 /** How long to let the backend exit cleanly before forcefully killing it. */
 const SHUTDOWN_GRACE_MS = 5000;
 
+/** How long to wait for a stopped backend to release its port. */
+const PORT_RELEASE_TIMEOUT_MS = 5000;
+
 export class ZephelinServer {
     private config: ZephelinConfig;
     private process?: ChildProcess;
+    private stopping?: Promise<void>;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -132,9 +136,17 @@ export class ZephelinServer {
     }
 
     /**
-     * Stops the backend and waits for it to exit.
+     * Stops the backend and waits for it to exit and release its port.
      */
     public async stop(): Promise<void> {
+        this.stopping ??= this.doStop().finally(() => {
+            this.stopping = undefined;
+        });
+
+        return this.stopping;
+    }
+
+    private async doStop(): Promise<void> {
         const child = this.process;
 
         if (!child) {
@@ -149,6 +161,9 @@ export class ZephelinServer {
 
         await new Promise<void>((resolve) => {
             const killTimer = setTimeout(() => {
+                console.warn(
+                    `[Extension] Backend did not exit within ${SHUTDOWN_GRACE_MS}ms. Sending SIGKILL.`,
+                );
                 child.kill('SIGKILL');
             }, SHUTDOWN_GRACE_MS);
 
@@ -158,6 +173,57 @@ export class ZephelinServer {
             });
 
             child.kill();
+        });
+
+        /*
+         * Hold the port until it is free so waitForPort
+         * cannot be satisfied by the process being replaced.
+         */
+        const { backendHost, backendPort } = this.config;
+
+        if (backendHost && backendPort) {
+            const released = await this.waitForPortFree(
+                backendHost,
+                backendPort,
+                PORT_RELEASE_TIMEOUT_MS,
+            );
+
+            if (!released) {
+                console.warn(
+                    `[Extension] Port ${backendPort} is still held after stopping the backend.`,
+                );
+            }
+        }
+    }
+
+    /**
+     * Resolves true once nothing is listening on the port, false on timeout.
+     */
+    private waitForPortFree(address: string, port: number, timeoutMs: number): Promise<boolean> {
+        const startTime = Date.now();
+
+        return new Promise((resolve) => {
+            const checkPort = () => {
+                const socket = new net.Socket();
+
+                socket.on('connect', () => {
+                    socket.destroy();
+                    if (Date.now() - startTime > timeoutMs) {
+                        resolve(false);
+                    } else {
+                        setTimeout(checkPort, 200);
+                    }
+                });
+
+                socket.on('error', () => {
+                    socket.destroy();
+                    resolve(true);
+                });
+
+                socket.connect(port, address);
+            };
+
+            checkPort();
         });
     }
 

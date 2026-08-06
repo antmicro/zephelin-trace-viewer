@@ -176,6 +176,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
                 liveViewportProxy.configSpaceViewportRect = Rect.empty;
                 liveViewportProxy.autoPanToRight = true;
+                liveViewportProxy.hasUserZoomed = false;
             }
 
         });

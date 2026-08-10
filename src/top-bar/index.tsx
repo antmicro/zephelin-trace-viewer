@@ -22,6 +22,7 @@ import ChevronDownIcon from "@speedscope/views/icons/chevron-down";
 import { DragTooltip, TilingComponentButton } from "./tiling-component-button";
 import { ButtonsContainer } from "./buttons-container";
 import { getComponentsAtom, TilingComponent } from "@/utils/tiling-component";
+import { exportSpeedscopeFile, exportTefFile } from "@/utils/export-trace";
 import { TilingLayoutProps } from "@/tiling-layout";
 import CirclePlusIcon from "@/icons/circle-plus";
 import LogoIcon from "@/icons/logo";
@@ -98,13 +99,13 @@ export default memo(({
                     </button>
                     {traceLoadedSt && !isErrorSt ? (
                         <>
-                            <button onClick={loader.saveSpeedscopeFile}>
+                            <button onClick={exportSpeedscopeFile}>
                                 <ExportIcon />
                                 <p>Export trace</p>
                             </button>
 
                             {hasTefData ? (
-                                <button onClick={loader.saveTEFFile}>
+                                <button onClick={exportTefFile}>
                                     <ExportIcon /><p>Export trace (with model metadata)</p>
                                 </button>
                             ) : null}

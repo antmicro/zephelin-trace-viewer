@@ -34,6 +34,51 @@ function getZephelinConfig(overrides?: Partial<ZephelinConfig>): ZephelinConfig 
     };
 }
 
+/** The message the webview sends to have a file written to disk */
+interface SaveFileMessage {
+    command: string;
+    data: {
+        filename: string;
+        contents: string;
+    };
+}
+
+/**
+ * Asks the user where to put an exported trace and writes it there.
+ */
+async function saveExportedFile(file: SaveFileMessage['data'], defaultDirectory?: vscode.Uri): Promise<void> {
+    const extension = path.extname(file.filename).replace(/^\./, '');
+    const directory = defaultDirectory ?? vscode.workspace.workspaceFolders?.[0]?.uri;
+
+    const target = await vscode.window.showSaveDialog({
+        defaultUri: directory ? vscode.Uri.joinPath(directory, file.filename) : undefined,
+        saveLabel: 'Export',
+        filters: { [extension.toUpperCase()]: [extension], 'All files': ['*'] },
+    });
+
+    if (!target) {
+        return;
+    }
+
+    try {
+        await vscode.workspace.fs.writeFile(target, Buffer.from(file.contents, 'utf-8'));
+    } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Failed to export ${file.filename}: ${reason}`);
+    }
+}
+
+/**
+ * Handles the file save requests coming from the webview.
+ */
+function registerSaveFileHandler(webview: vscode.Webview, defaultDirectory?: vscode.Uri): vscode.Disposable {
+    return webview.onDidReceiveMessage((message: SaveFileMessage) => {
+        if (message.command === 'saveFile') {
+            void saveExportedFile(message.data, defaultDirectory);
+        }
+    });
+}
+
 let sidecar: ZephelinServer | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -103,6 +148,10 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             }
         }
 
+        const saveSubscription = registerSaveFileHandler(panel.webview);
+        panel.onDidDispose(() => void saveSubscription.dispose());
+        this.context.subscriptions.push(saveSubscription);
+
         panel.webview.html = this.getWebviewHtml(panel.webview, "", distPath, config, true);
     }
 
@@ -147,8 +196,16 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
             debounceTimer = setTimeout(updateWebview, 300);
         });
 
-        webviewPanel.onDidDispose(() => void changeSubscription.dispose());
-        this.context.subscriptions.push(changeSubscription);
+        const saveSubscription = registerSaveFileHandler(
+            webviewPanel.webview,
+            vscode.Uri.joinPath(document.uri, '..'),
+        );
+
+        webviewPanel.onDidDispose(() => {
+            changeSubscription.dispose();
+            saveSubscription.dispose();
+        });
+        this.context.subscriptions.push(changeSubscription, saveSubscription);
     }
 
     /**

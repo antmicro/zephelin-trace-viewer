@@ -21,6 +21,11 @@ const TRACE_RENDER_THROTTLE_MS = 33;
 // 2 FPS
 const INFO_PANEL_THROTTLE_MS = 500;
 
+/*
+ * Shortcut tearing down and respawning the backend's bt2 thread.
+ */
+const HARD_RESET_SHORTCUT = 'KeyR';
+
 // Tracks the amount of ingested trace batches
 export const liveTraceTickAtom = new Atom<number>(0, 'live-trace-tick');
 
@@ -44,6 +49,7 @@ export interface RpcNotification {
 }
 
 export interface RpcResponse {
+    id?: number | string;
     result?: {
         status: string;
         message?: string;
@@ -74,6 +80,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const parserRef = useRef<LiveTraceParser | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const hasMetadataRef = useRef<boolean>(false);
+    const pendingHardResetRef = useRef<number | null>(null);
 
     const updateInfoPanels = useThrottle(() => {
         if (parserRef.current) {
@@ -126,6 +133,19 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             setIsStreaming(false);
         });
 
+        const clearUIState = () => {
+            parserRef.current = new LiveTraceParser('Live Trace Stream');
+            hasMetadataRef.current = false;
+
+            setEventCount(0);
+            liveTraceTickAtom.set(0);
+            GroupDataCache.clear();
+
+            liveViewportProxy.configSpaceViewportRect = Rect.empty;
+            liveViewportProxy.autoPanToRight = true;
+            liveViewportProxy.hasUserZoomed = false;
+        };
+
         const processIncomingTrace = (incomingEvents: TraceEvent[], totalCount: number) => {
             if (incomingEvents.length === 0) {return;}
 
@@ -166,22 +186,25 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             }
             else if (data.method === 'trace.reset') {
                 console.log("Reset detected. Clearing UI state.");
-
-                parserRef.current = new LiveTraceParser('Live Trace Stream');
-                hasMetadataRef.current = false;
-
-                setEventCount(0);
-                liveTraceTickAtom.set(0);
-                GroupDataCache.clear();
-
-                liveViewportProxy.configSpaceViewportRect = Rect.empty;
-                liveViewportProxy.autoPanToRight = true;
-                liveViewportProxy.hasUserZoomed = false;
+                clearUIState();
             }
 
         });
 
         socket.on('rpc_response', (data: RpcResponse) => {
+            const isPendingHardReset = data?.id !== undefined
+                && data.id === pendingHardResetRef.current;
+
+            if (isPendingHardReset) {
+                pendingHardResetRef.current = null;
+                console.log("Sending RPC: trace.connect");
+                socket.emit("rpc_request", {
+                    jsonrpc: "2.0",
+                    method: "trace.connect",
+                    id: Date.now(),
+                });
+            }
+
             if (data?.result?.status === 'success') {
                 if (data.result.data?.events) {
                     processIncomingTrace(
@@ -194,7 +217,35 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             }
         });
 
+        /*
+         * The backend only soft-resets the trace buffer when the socket drops, so tearing
+         * down and respawning the bt2 thread needs an explicit shortcut.
+         */
+        const handleHardResetKey = (ev: KeyboardEvent) => {
+            const matches = ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey
+                && ev.code === HARD_RESET_SHORTCUT;
+            if (!matches || pendingHardResetRef.current !== null) {return;}
+
+            ev.preventDefault();
+
+            const requestId = Date.now();
+            pendingHardResetRef.current = requestId;
+
+            console.log("Sending RPC: trace.disconnect");
+            socket.emit("rpc_request", {
+                jsonrpc: "2.0",
+                method: "trace.disconnect",
+                id: requestId,
+            });
+
+            setIsStreaming(false);
+            liveViewportProxy.isLiveMode = false;
+            clearUIState();
+        };
+        window.addEventListener('keydown', handleHardResetKey);
+
         return () => {
+            window.removeEventListener('keydown', handleHardResetKey);
             socket.disconnect();
         };
     }, [setWelcomeSt]);

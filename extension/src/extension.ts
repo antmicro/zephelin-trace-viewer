@@ -97,8 +97,9 @@ class TraceEditorProvider implements vscode.CustomTextEditorProvider {
         if (sidecar) {
             try {
                 await sidecar.start();
-            } catch {
-                vscode.window.showErrorMessage("Failed to start Zephelin backend.");
+            } catch (error) {
+                const reason = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Failed to start Zephelin backend. ${reason}`);
             }
         }
 

@@ -33,6 +33,11 @@ const SHUTDOWN_GRACE_MS = 5000;
 /** How long to wait for a stopped backend to release its port. */
 const PORT_RELEASE_TIMEOUT_MS = 5000;
 
+/**
+ * How much of the backend's stderr to quote back when it fails to start.
+ */
+const STDERR_TAIL_LINES = 3;
+
 export class ZephelinServer {
     private config: ZephelinConfig;
     private process?: ChildProcess;
@@ -62,15 +67,25 @@ export class ZephelinServer {
         const mockTraceFile = this.config.mockTraceFile;
         const mockPlaybackSpeed = this.config.mockPlaybackSpeed;
 
-        if (!repoPath || !fs.existsSync(repoPath)) {
-            vscode.window.showErrorMessage(
-                "Zephelin: backendPath not configured. Please set 'zephelin.backendPath' in extension settings.",
+        if (!repoPath) {
+            throw new Error(
+                "'zephelin.backendPath' is not set. Point it at your Zephelin repository, "
+                + 'the directory containing server/run_backend.py.',
             );
-            throw new Error("Configuration missing.");
+        }
+        if (!fs.existsSync(repoPath)) {
+            throw new Error(`'zephelin.backendPath' points at '${repoPath}', which does not exist.`);
         }
 
         const scriptPath = path.join(repoPath, 'server', 'run_backend.py');
         const buildDirPath = path.isAbsolute(buildDir) ? buildDir : path.join(repoPath, buildDir);
+
+        if (!fs.existsSync(scriptPath)) {
+            throw new Error(
+                `'${repoPath}' does not look like a Zephelin repository - `
+                + `there is no '${scriptPath}'.`,
+            );
+        }
 
         const pythonCmd = this.resolvePythonCommand();
 
@@ -114,19 +129,41 @@ export class ZephelinServer {
         });
         this.process = child;
 
+        let stderrTail: string[] = [];
+
         child.stderr?.on('data', (data) => {
-            console.log(String(data));
-        });
-        child.on('error', (err) => {
-            console.error(`[Extension] Failed to spawn backend: ${err}`);
+            const text = String(data);
+            console.log(text);
+            stderrTail = [...stderrTail, ...text.split('\n').filter(l => l.trim() !== '')]
+                .slice(-STDERR_TAIL_LINES);
         });
         child.on('exit', (code, signal) => {
             console.log(`[Extension] Backend process exited (code=${code}, signal=${signal})`);
         });
 
+        const died = new Promise<never>((_resolve, reject) => {
+            child.on('error', (err: NodeJS.ErrnoException) => {
+                reject(new Error(err.code === 'ENOENT'
+                    ? `Python executable '${pythonCmd}' was not found. Set 'zephelin.pythonPath' `
+                        + 'to the interpreter of the environment Zephelin is installed in.'
+                    : `Could not run '${pythonCmd}': ${err.message}`));
+            });
+            child.on('close', (code, signal) => {
+                const how = signal ? `was killed by ${signal}` : `exited with code ${code}`;
+                reject(new Error(
+                    `The backend ${how} before it started listening. `
+                    + (stderrTail.length > 0
+                        ? stderrTail.join(' ')
+                        : 'It printed nothing - check that Zephelin is installed in the '
+                            + 'Python environment used to run it.'),
+                ));
+            });
+        });
+        died.catch(() => undefined);
+
         try {
             // Wait before server loads before opening the webview
-            await this.waitForPort(backendHost, backendPort, 60000);
+            await Promise.race([this.waitForPort(backendHost, backendPort, 60000), died]);
             console.log(`[Extension] Backend successfully bound to port ${backendPort}`);
         } catch (error) {
             console.error(`[Extension] Failed to start backend: ${error}`);
@@ -231,11 +268,19 @@ export class ZephelinServer {
      * Resolves the Python executable.
      */
     private resolvePythonCommand(): string {
-        if (this.config.pythonPath) {
-            return this.config.pythonPath;
+        const configured = this.config.pythonPath;
+
+        if (!configured) {
+            return 'python';
         }
 
-        return 'python';
+        if (configured.includes(path.sep) && !fs.existsSync(configured)) {
+            throw new Error(
+                `'zephelin.pythonPath' points at '${configured}', which does not exist.`,
+            );
+        }
+
+        return configured;
     }
 
     /**

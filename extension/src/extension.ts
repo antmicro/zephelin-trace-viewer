@@ -26,6 +26,7 @@ function getZephelinConfig(overrides?: Partial<ZephelinConfig>): ZephelinConfig 
         backendHost: overrides?.backendHost ?? wsConfig.get<string>('backendHost'),
         backendPort: overrides?.backendPort ?? wsConfig.get<number>('backendPort'),
         buildDir: overrides?.buildDir ?? wsConfig.get<string>('buildDir') ?? 'build',
+        zephyrBase: overrides?.zephyrBase ?? wsConfig.get<string>('zephyrBase'),
         tflmModelPaths: overrides?.tflmModelPaths ?? wsConfig.get<string[]>('tflmModelPaths'),
         tvmModelPaths: overrides?.tvmModelPaths ?? wsConfig.get<string[]>('tvmModelPaths'),
         tvmModelMetadataPaths: overrides?.tvmModelMetadataPaths ?? wsConfig.get<string[]>('tvmModelMetadataPaths'),

@@ -20,6 +20,7 @@ export interface ZephelinConfig {
     backendHost?: string;
     backendPort?: number;
     buildDir?: string;
+    zephyrBase?: string;
     tflmModelPaths?: string[];
     tvmModelPaths?: string[];
     tvmModelMetadataPaths?: string[];
@@ -60,6 +61,7 @@ export class ZephelinServer {
         const tcpServerPort = this.config.tcpServerPort;
         const backendHost = this.config.backendHost;
         const backendPort = this.config.backendPort;
+        const zephyrBase = this.config.zephyrBase;
         const buildDir = this.config.buildDir ?? 'build';
         const tflmModelPaths = this.config.tflmModelPaths;
         const tvmModelPaths = this.config.tvmModelPaths;
@@ -123,9 +125,16 @@ export class ZephelinServer {
         }
 
         console.log(`[Extension] Spawning backend: ${pythonCmd} ${args.join(' ')}`);
+        if (zephyrBase) {
+            console.log(`[Extension] Backend ZEPHYR_BASE: ${zephyrBase}`);
+        }
         const child = spawn(pythonCmd, args, {
             cwd: repoPath,
             stdio: ['ignore', 'inherit', 'pipe'],
+            env: {
+                ...process.env,
+                ...(zephyrBase ? { ZEPHYR_BASE: zephyrBase } : {}),
+            },
         });
         this.process = child;
 

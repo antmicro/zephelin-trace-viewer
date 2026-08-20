@@ -79,6 +79,10 @@
 					"default": "build",
 					"description": "Path to the build directory. If relative, it resolves against the backendPath."
 				},
+				"zephelin.zephyrBase": {
+					"type": "string",
+					"description": "Path to the Zephyr repository the backend reads CTF metadata from. Exported to the backend as ZEPHYR_BASE. Leave empty to use the ZEPHYR_BASE already present in the environment."
+				},
 				"zephelin.tflmModelPaths": {
 					"type": "array",
 					"items": {

@@ -86,6 +86,7 @@ export class LiveTraceParser {
             name: this.name,
             indexToView: 0,
             profiles: snapshots,
+            metadata: this.getRawMetadata() as ProfileGroup['metadata'],
         };
     }
 

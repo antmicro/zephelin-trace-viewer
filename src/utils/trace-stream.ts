@@ -82,6 +82,29 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     const hasMetadataRef = useRef<boolean>(false);
     const pendingHardResetRef = useRef<number | null>(null);
 
+    const isStreamingRef = useRef<boolean>(false);
+
+    const setStreaming = useCallback((streaming: boolean) => {
+        if (!socketRef.current || isStreamingRef.current === streaming) {return;}
+
+        const targetMethod = streaming ? "trace.stream_start" : "trace.stream_stop";
+
+        console.log(`Sending RPC: ${targetMethod}`);
+
+        socketRef.current.emit("rpc_request", {
+            jsonrpc: "2.0",
+            method: targetMethod,
+            id: Date.now(),
+        });
+
+        isStreamingRef.current = streaming;
+        setIsStreaming(streaming);
+        liveViewportProxy.isLiveMode = streaming;
+
+        if (streaming) {
+            liveViewportProxy.autoPanToRight = true;
+        }
+    }, []);
     const updateInfoPanels = useThrottle(() => {
         if (parserRef.current) {
             const rawMetadata = parserRef.current.getRawMetadata();
@@ -251,25 +274,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
     }, [setWelcomeSt]);
 
     const toggleStreaming = () => {
-        if (!socketRef.current) {return;}
-
-        const targetMethod = isStreaming ? "trace.stream_stop" : "trace.stream_start";
-
-        console.log(`Sending RPC: ${targetMethod}`);
-
-        socketRef.current.emit("rpc_request", {
-            jsonrpc: "2.0",
-            method: targetMethod,
-            id: Date.now(),
-        });
-
-        const nextStreamingState = !isStreaming;
-        setIsStreaming(nextStreamingState);
-        liveViewportProxy.isLiveMode = nextStreamingState;
-
-        if (nextStreamingState) {
-            liveViewportProxy.autoPanToRight = true;
-        }
+        setStreaming(!isStreamingRef.current);
     };
 
     const toggleAutoPan = () => {

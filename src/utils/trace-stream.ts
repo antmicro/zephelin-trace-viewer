@@ -107,6 +107,13 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             liveViewportProxy.autoPanToRight = true;
         }
     }, []);
+
+    const forgetStreaming = useCallback(() => {
+        isStreamingRef.current = false;
+        hasAutoStartedRef.current = false;
+        setIsStreaming(false);
+    }, []);
+
     const updateInfoPanels = useThrottle(() => {
         if (parserRef.current) {
             const rawMetadata = parserRef.current.getRawMetadata();
@@ -155,7 +162,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
         socket.on('disconnect', () => {
             console.log('Disconnected from Zephelin backend');
             setIsConnected(false);
-            setIsStreaming(false);
+            forgetStreaming();
         });
 
         const autoStartStreaming = (totalCount: number) => {
@@ -273,7 +280,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
                 id: requestId,
             });
 
-            setIsStreaming(false);
+            forgetStreaming();
             liveViewportProxy.isLiveMode = false;
             clearUIState();
         };
@@ -283,7 +290,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             window.removeEventListener('keydown', handleHardResetKey);
             socket.disconnect();
         };
-    }, [setWelcomeSt]);
+    }, [setWelcomeSt, setStreaming, forgetStreaming]);
 
     const toggleStreaming = () => {
         setStreaming(!isStreamingRef.current);

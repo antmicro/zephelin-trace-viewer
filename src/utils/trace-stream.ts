@@ -84,6 +84,8 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
 
     const isStreamingRef = useRef<boolean>(false);
 
+    const hasAutoStartedRef = useRef<boolean>(false);
+
     const setStreaming = useCallback((streaming: boolean) => {
         if (!socketRef.current || isStreamingRef.current === streaming) {return;}
 
@@ -156,9 +158,18 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             setIsStreaming(false);
         });
 
+        const autoStartStreaming = (totalCount: number) => {
+            if (hasAutoStartedRef.current || isStreamingRef.current || !totalCount) {return;}
+
+            hasAutoStartedRef.current = true;
+            console.log(`First event registered (${totalCount}), starting the stream`);
+            setStreaming(true);
+        };
+
         const clearUIState = () => {
             parserRef.current = new LiveTraceParser('Live Trace Stream');
             hasMetadataRef.current = false;
+            hasAutoStartedRef.current = false;
 
             setEventCount(0);
             liveTraceTickAtom.set(0);
@@ -206,6 +217,7 @@ export function useTraceStream(setWelcomeSt: (state: boolean) => void) {
             }
             else if (data.method === 'trace.status') {
                 setEventCount(data.params.total_count);
+                autoStartStreaming(data.params.total_count);
             }
             else if (data.method === 'trace.reset') {
                 console.log("Reset detected. Clearing UI state.");
